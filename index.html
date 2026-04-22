@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>KORWIL SINE</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff; /* Putih bersih */
+      color: #000000;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    /* Kartu menu tetap menggunakan desain glassmorphism tapi lebih bersih */
+    .entrance-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid #e2e8f0;
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      width: 90%;
+      max-width: 350px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+      transition: all 0.4s ease;
+    }
+
+    .link-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem;
+      background: #f8fafc;
+      margin-bottom: 0.6rem;
+      border-radius: 0.75rem;
+      border: 1px solid #f1f5f9;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: #475569;
+    }
+
+    .link-item:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+      transform: scale(1.02);
+    }
+
+    .hidden-gate {
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      display: none;
+    }
+
+    .gate-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      display: block;
+    }
+
+    /* Tombol pemicu transparan agar benar-benar blank */
+    #unlock-trigger {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: default;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AREA KLIK TRANSPARAN (Memenuhi Layar) -->
+  <div id="unlock-trigger" title="Klik untuk akses"></div>
+
+  <!-- PORTAL MENU (Muncul setelah diklik) -->
+  <div id="portal-menu" class="entrance-card hidden-gate z-10">
+    <div class="mb-6 text-left">
+      <h2 class="text-xl font-bold tracking-tight text-slate-900">Akses Sistem</h2>
+      <p class="text-slate-400 text-[11px]">Silahkan pilih halaman tujuan</p>
+    </div>
+
+    <nav class="flex flex-col">
+      <!-- Link ke Beranda.html -->
+      <a href="Beranda.html" class="link-item">
+        <i data-lucide="home" class="w-4 h-4"></i>
+        <span class="text-sm font-semibold">Beranda Utama</span>
+      </a>
+
+      <!-- Link ke Profil.html -->
+      <a href="Profil.html" class="link-item">
+        <i data-lucide="user" class="w-4 h-4"></i>
+        <span class="text-sm font-semibold">Profil User</span>
+      </a>
+
+      <!-- Anda bisa menambah link lain di sini -->
+    </nav>
+
+    <button onclick="toggleGate()" class="mt-6 text-[10px] text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest font-bold">
+      Sembunyikan
+    </button>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    function toggleGate() {
+      const menu = document.getElementById('portal-menu');
+      const trigger = document.getElementById('unlock-trigger');
+      
+      if (menu.classList.contains('gate-visible')) {
+        menu.classList.remove('gate-visible');
+        menu.classList.add('hidden-gate');
+        trigger.style.display = "block";
+      } else {
+        menu.classList.remove('hidden-gate');
+        menu.classList.add('gate-visible');
+        trigger.style.display = "none";
+      }
+    }
+
+    // Klik di mana saja di area putih untuk buka menu
+    document.getElementById('unlock-trigger').addEventListener('click', toggleGate);
+  </script>
+</body>
+</html>
