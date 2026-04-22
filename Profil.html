@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>KORWIL SINE E-PRESENSI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e6f0fa 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.2), 0 2px 5px rgba(0,0,0,0.02);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 30px 50px -15px rgba(0, 0, 0, 0.25);
+    }
+    .nav-link {
+      transition: all 0.2s;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+    }
+    .nav-link:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .btn-action {
+      transition: all 0.25s ease;
+    }
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
+    .logo-circle {
+      background: linear-gradient(145deg, #218380, #1a6b68);
+      box-shadow: 0 15px 30px -10px rgba(33, 131, 128, 0.4);
+    }
+    @keyframes softPulse {
+      0% { opacity: 0.7; transform: scale(0.98);}
+      100% { opacity: 1; transform: scale(1);}
+    }
+    .pulse-soft {
+      animation: softPulse 1.8s infinite alternate;
+    }
+  </style>
+</head>
+<body class="p-5">
+  <div class="w-full max-w-4xl mx-auto">
+    
+    <nav class="flex justify-center gap-2 mb-6 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-sm w-fit mx-auto">
+        <a href="index.html" class="nav-link flex items-center gap-2 bg-white shadow-sm text-teal-700">
+            <i data-lucide="home" style="width: 16px;"></i> Home
+        </a>
+        <a href="beranda.html" class="nav-link flex items-center gap-2">
+            <i data-lucide="layout-dashboard" style="width: 16px;"></i> Beranda
+        </a>
+        <a href="kontak.html" class="nav-link flex items-center gap-2">
+            <i data-lucide="phone" style="width: 16px;"></i> Kontak
+        </a>
+    </nav>
+
+    <div class="glass-card overflow-hidden w-full">
+      <div class="bg-white/50 px-6 pt-8 pb-2 border-b border-slate-100 flex justify-between items-center flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="bg-teal-50 p-2 rounded-xl">
+            <i data-lucide="map-pin" class="text-teal-700" style="width: 22px; height: 22px;"></i>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-3 py-1 rounded-full">KORWIL PENDIDIKAN KEC. SINE</span>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 text-amber-700 font-bold text-[10px] px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-tighter">
+          <i data-lucide="shield-check" style="width: 14px;"></i>
+          Resmi | E-Presensi
+        </div>
+      </div>
+
+      <div class="p-8 md:p-12 flex flex-col items-center text-center">
+        <div class="logo-circle w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center mb-6 pulse-soft">
+          <i data-lucide="smartphone" class="text-white" style="width: 70px; height: 70px; stroke-width: 1.5;"></i>
+        </div>
+        
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-800">
+          KORWIL SINE <span class="text-teal-700">E-PRESENSI</span>
+        </h1>
+        <p class="text-slate-500 text-sm font-medium mt-2">Aplikasi manajemen kehadiran tenaga pendidik</p>
+        
+        <div class="mt-8 mb-4 w-full flex flex-col items-center gap-4">
+            <a href="https://github.com/yorian99/yor/raw/refs/heads/main/base.apk" 
+               download 
+               class="btn-action inline-flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all duration-200 group w-full sm:w-auto text-base">
+              <i data-lucide="download-cloud" class="group-hover:animate-bounce" style="width: 22px; height: 22px;"></i>
+              <span>UNDUH APK SEKARANG</span>
+            </a>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <a href="beranda.html" class="btn-action flex items-center gap-2 bg-white border border-slate-200 px-5 py-3 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm">
+                    <i data-lucide="book-open" class="text-teal-600" style="width: 18px;"></i> Panduan
+                </a>
+                <a href="#" class="btn-action flex items-center gap-2 bg-white border border-slate-200 px-5 py-3 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm">
+                    <i data-lucide="info" class="text-blue-600" style="width: 18px;"></i> Cek Status
+                </a>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3 text-[10px] text-slate-400 mt-6">
+          <span class="bg-slate-100 px-3 py-1 rounded-md italic font-medium">Versi 2.0.1 (Stable)</span>
+          <span class="bg-slate-100 px-3 py-1 rounded-md italic font-medium">Size: 28MB</span>
+        </div>
+
+        <div class="mt-10 text-[11px] text-slate-400 border-t border-slate-100 pt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
+          <span class="flex items-center gap-1"><i data-lucide="lock" style="width: 12px;"></i> Enkripsi SSL Aman</span>
+          <span class="flex items-center gap-1"><i data-lucide="database" style="width: 12px;"></i> Real-time Database</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-50/80 px-6 py-4 text-center text-[10px] text-slate-400 font-bold tracking-widest flex justify-between items-center border-t border-slate-100">
+        <span>© 2026 KORWIL SINE</span>
+        <div class="flex gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span>SERVER ONLINE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
