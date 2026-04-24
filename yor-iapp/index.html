@@ -2,142 +2,199 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>KORWIL SINE</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-    
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #ffffff; /* Putih bersih */
-      color: #000000;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin: 0;
-    }
-
-    /* Kartu menu tetap menggunakan desain glassmorphism tapi lebih bersih */
-    .entrance-card {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid #e2e8f0;
-      border-radius: 1.5rem;
-      padding: 2.5rem;
-      width: 90%;
-      max-width: 350px;
-      text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-      transition: all 0.4s ease;
-    }
-
-    .link-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.85rem 1.25rem;
-      background: #f8fafc;
-      margin-bottom: 0.6rem;
-      border-radius: 0.75rem;
-      border: 1px solid #f1f5f9;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      color: #475569;
-    }
-
-    .link-item:hover {
-      background: #f1f5f9;
-      border-color: #cbd5e1;
-      color: #0f172a;
-      transform: scale(1.02);
-    }
-
-    .hidden-gate {
-      opacity: 0;
-      transform: translateY(20px);
-      pointer-events: none;
-      display: none;
-    }
-
-    .gate-visible {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-      display: block;
-    }
-
-    /* Tombol pemicu transparan agar benar-benar blank */
-    #unlock-trigger {
-      width: 100vw;
-      height: 100vh;
-      position: absolute;
-      top: 0;
-      left: 0;
-      cursor: default;
-      z-index: 1;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>SDN Jagir 1 Sine | Berkarakter, Berprestasi, Berwawasan Global</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- AREA KLIK TRANSPARAN (Memenuhi Layar) -->
-  <div id="unlock-trigger" title="Klik untuk akses"></div>
-
-  <!-- PORTAL MENU (Muncul setelah diklik) -->
-  <div id="portal-menu" class="entrance-card hidden-gate z-10">
-    <div class="mb-6 text-left">
-      <h2 class="text-xl font-bold tracking-tight text-slate-900">Akses Sistem</h2>
-      <p class="text-slate-400 text-[11px]">Silahkan pilih halaman tujuan</p>
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="logo">
+      <h1>SDN JAGIR 1 SINE</h1>
+      <p>Berkarakter · Berprestasi · Global</p>
     </div>
-
-    <nav class="flex flex-col">
-      <!-- Link ke Beranda.html -->
-      <a href="Beranda.html" class="link-item">
-        <i data-lucide="home" class="w-4 h-4"></i>
-        <span class="text-sm font-semibold">Beranda Utama</span>
-      </a>
-
-      <!-- Link ke Profil.html -->
-      <a href="Profil.html" class="link-item">
-        <i data-lucide="user" class="w-4 h-4"></i>
-        <span class="text-sm font-semibold">Profil User</span>
-      </a>
-
-      <!-- Anda bisa menambah link lain di sini -->
-    </nav>
-
-    <button onclick="toggleGate()" class="mt-6 text-[10px] text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest font-bold">
-      Sembunyikan
-    </button>
+    <div class="menu-toggle" id="mobile-menu">
+      <i class="fas fa-bars"></i>
+    </div>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#home">Beranda</a></li>
+      <li><a href="#tentang">Tentang</a></li>
+      <li><a href="#program">Program</a></li>
+      <li><a href="#prestasi">Prestasi</a></li>
+      <li><a href="#berita">Berita</a></li>
+      <li><a href="#daftar">Pendaftaran</a></li>
+    </ul>
   </div>
+</nav>
 
-  <script>
-    lucide.createIcons();
+<!-- Hero Section -->
+<section id="home" class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <span class="hero-badge"><i class="fas fa-star-of-life"></i> Sekolah Penggerak</span>
+      <h1>Membangun Generasi Cerdas, Berakhlak Mulia</h1>
+      <p>SDN Jagir 1 Sine siap mencetak generasi unggul yang berkarakter, berprestasi, dan berwawasan global sejak usia dini.</p>
+      <div class="btn-group">
+        <a href="#tentang" class="btn-primary">Kenali Kami <i class="fas fa-arrow-right"></i></a>
+        <button id="videoModalBtn" class="btn-outline" style="background:transparent; border:2px solid #2b7a4b; color:#2b7a4b;"><i class="fas fa-play"></i> Tonton Video</button>
+      </div>
+    </div>
+    <div class="hero-image" style="background-image: url('../images/hero-bg.jpg'); background-size: cover; background-position: center; border-radius: 32px;"></div>
+  </div>
+</section>
 
-    function toggleGate() {
-      const menu = document.getElementById('portal-menu');
-      const trigger = document.getElementById('unlock-trigger');
-      
-      if (menu.classList.contains('gate-visible')) {
-        menu.classList.remove('gate-visible');
-        menu.classList.add('hidden-gate');
-        trigger.style.display = "block";
-      } else {
-        menu.classList.remove('hidden-gate');
-        menu.classList.add('gate-visible');
-        trigger.style.display = "none";
-      }
-    }
+<!-- 4 Feature Cards -->
+<section class="features">
+  <div class="container">
+    <h2 class="section-title">Keunggulan Sekolah Kami</h2>
+    <p class="section-sub">Fasilitas dan pendekatan terbaik untuk perkembangan siswa</p>
+    <div class="grid-4">
+      <div class="feature-card"><i class="fas fa-book-open"></i><h3>Kurikulum Merdeka</h3><p>Pembelajaran inovatif berbasis proyek dan penguatan profil pelajar Pancasila.</p></div>
+      <div class="feature-card"><i class="fas fa-chalkboard-user"></i><h3>Guru Profesional</h3><p>Tenaga pendidik berpengalaman dan berdedikasi tinggi.</p></div>
+      <div class="feature-card"><i class="fas fa-trophy"></i><h3>Prestasi Gemilang</h3><p>Juara olimpiade, seni, dan olahraga tingkat kabupaten & provinsi.</p></div>
+      <div class="feature-card"><i class="fas fa-tree"></i><h3>Lingkungan Nyaman</h3><p>Lahan hijau, ruang kelas interaktif, dan perpustakaan digital.</p></div>
+    </div>
+  </div>
+</section>
 
-    // Klik di mana saja di area putih untuk buka menu
-    document.getElementById('unlock-trigger').addEventListener('click', toggleGate);
-  </script>
+<!-- About Section (Tentang Kami) -->
+<section id="tentang" class="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text">
+        <h2 class="section-title" style="text-align:left;">Tentang SDN Jagir 1 Sine</h2>
+        <p style="margin-bottom: 16px;">SD Negeri Jagir 1 Sine adalah sekolah dasar unggulan di Kecamatan Sine, Kabupaten Ngawi. Berkomitmen membentuk karakter siswa yang religius, disiplin, dan berprestasi.</p>
+        <div class="about-stats">
+          <span class="stat-badge"><i class="fas fa-award"></i> Akreditasi A</span>
+          <span class="stat-badge"><i class="fas fa-laptop-code"></i> Kurikulum Merdeka</span>
+          <span class="stat-badge"><i class="fas fa-futbol"></i> 15+ Ekskul</span>
+        </div>
+        <p>Dengan fasilitas lengkap dan pendekatan humanis, kami membantu setiap anak menemukan potensi terbaiknya.</p>
+        <div style="margin-top:24px;"><a href="#program" class="btn-primary" style="background:#2b7a4b;">Program Unggulan →</a></div>
+      </div>
+      <div class="about-image" style="background-image: url('../images/about-img.jpg');"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Program Unggulan -->
+<section id="program" class="programs">
+  <div class="container">
+    <h2 class="section-title">Program Unggulan</h2>
+    <p class="section-sub">Kami menyiapkan siswa menjadi generasi tangguh, kreatif, dan berdaya saing global</p>
+    <div class="grid-4">
+      <div class="program-card"><i class="fas fa-microscope"></i><h3>Akademik Plus</h3><p>Bimbingan OSN, literasi numerasi, dan sains interaktif.</p></div>
+      <div class="program-card"><i class="fas fa-palette"></i><h3>Ekstrakurikuler</h3><p>Seni tari, pramuka, futsal, drumband, dan robotic.</p></div>
+      <div class="program-card"><i class="fas fa-hand-sparkles"></i><h3>Pengembangan Karakter</h3><p>Kepemimpinan, gotong royong, dan pembiasaan sholat dhuha.</p></div>
+      <div class="program-card"><i class="fas fa-globe-asia"></i><h3>Wawasan Global</h3><p>English day, pertukaran budaya, dan proyek penguatan profil pancasila.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Prestasi Kami -->
+<section id="prestasi" class="achievements">
+  <div class="container">
+    <h2 class="section-title" style="color:white;">Prestasi Membanggakan</h2>
+    <p class="section-sub" style="color:#ceeedf;">Bukti dedikasi dan kerja keras warga sekolah</p>
+    <div class="achievement-grid">
+      <div><div class="achievement-number">85+</div><div>Prestasi Siswa</div><small>Akademik & Non-Akademik</small></div>
+      <div><div class="achievement-number">30+</div><div>Lomba Tingkat Provinsi</div><small>Juara 1-3</small></div>
+      <div><div class="achievement-number">7+</div><div>Lomba Nasional</div><small>OPSI, FLS2N</small></div>
+      <div><div class="achievement-number">96%</div><div>Lulusan Diterima di SMP Favorit</div><small>Negeri & Swasta Unggulan</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- Berita Terkini -->
+<section id="berita" class="berita">
+  <div class="container">
+    <h2 class="section-title">Berita & Agenda Terkini</h2>
+    <p class="section-sub">Kegiatan terbaru dari SDN Jagir 1 Sine</p>
+    <div class="berita-grid">
+      <div class="berita-card">
+        <div class="berita-img" style="background-image: url('../images/berita1.jpg'); background-size: cover;"></div>
+        <div class="berita-content"><span class="berita-date"><i class="far fa-calendar-alt"></i> 12 April 2026</span><h3 style="margin: 10px 0;">Juara 1 Olimpiade Matematika tingkat Kabupaten</h3><p>Anak didik kami berhasil menyabet medali emas. Prestasi membanggakan!</p><a href="#" style="color:#2b7a4b; font-weight:600;">Baca Selengkapnya →</a></div>
+      </div>
+      <div class="berita-card">
+        <div class="berita-img" style="background-image: url('../images/berita2.jpg'); background-size: cover;"></div>
+        <div class="berita-content"><span class="berita-date"><i class="far fa-calendar-alt"></i> 2 Mei 2026</span><h3 style="margin: 10px 0;">Peringatan Hardiknas & Karya P5</h3><p>Gelar karya siswa meriahkan Hari Pendidikan Nasional.</p><a href="#" style="color:#2b7a4b; font-weight:600;">Baca Selengkapnya →</a></div>
+      </div>
+      <div class="berita-card">
+        <div class="berita-img" style="background-image: url('../images/berita3.jpg'); background-size: cover;"></div>
+        <div class="berita-content"><span class="berita-date"><i class="far fa-calendar-alt"></i> 18 Maret 2026</span><h3 style="margin: 10px 0;">Kunjungan Edukasi ke Perpustakaan Digital</h3><p>Siswa belajar coding dan literasi digital.</p><a href="#" style="color:#2b7a4b; font-weight:600;">Baca Selengkapnya →</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Pendaftaran -->
+<section id="daftar" class="cta-section">
+  <div class="container">
+    <div class="form-card">
+      <h2 style="font-size: 1.9rem; margin-bottom: 8px;">✨ Bergabunglah Bersama Kami</h2>
+      <p style="margin-bottom: 24px;">Daftarkan putra-putri anda menjadi bagian keluarga besar SDN Jagir 1 Sine. Cetak generasi berkarakter dan berprestasi.</p>
+      <form id="registrationForm">
+        <div class="form-group"><input type="text" placeholder="Nama Lengkap" id="nama" required></div>
+        <div class="form-group"><input type="email" placeholder="Email Orang Tua/Wali" id="email" required></div>
+        <div class="form-group"><input type="text" placeholder="No. Telepon" id="telp"></div>
+        <div class="form-group"><textarea rows="3" placeholder="Pesan / Kelas yang diminati ..." id="pesan"></textarea></div>
+        <button type="submit" class="btn-primary" style="width:100%;">Kirim Pendaftaran <i class="fas fa-paper-plane"></i></button>
+        <p style="font-size:0.75rem; margin-top:12px;">*Pendaftaran akan dihubungi panitia PPDB.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h3 style="color:white; margin-bottom: 16px;">SDN JAGIR 1 SINE</h3>
+        <p>Membentuk generasi berkarakter, berprestasi, dan berwawasan global sejak dini.</p>
+      </div>
+      <div>
+        <h4 style="color:white;">Informasi</h4>
+        <p><i class="fas fa-map-marker-alt"></i> Jl. Jagir No. 1, Desa Jagir, Kec. Sine, Kab. Ngawi, Jawa Timur 63264</p>
+        <p><i class="fas fa-phone-alt"></i> (0351) 8823xxx</p>
+        <p><i class="fas fa-envelope"></i> sdnjagir1@sine.sch.id</p>
+      </div>
+      <div>
+        <h4 style="color:white;">Ikuti Kami</h4>
+        <div class="social-icons">
+          <a href="#"><i class="fab fa-facebook"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+          <a href="#"><i class="fab fa-tiktok"></i></a>
+        </div>
+        <p style="margin-top: 16px;">#SekolahBerprestasi #SDNJagirHebat</p>
+      </div>
+    </div>
+    <div class="copyright">
+      © 2026 SDN Jagir 1 Sine - All rights reserved. Didukung semangat gotong royong.
+    </div>
+  </div>
+</footer>
+
+<!-- Modal Video -->
+<div id="videoModal" class="modal-video">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <video controls poster="../images/video-poster.jpg" width="100%">
+      <source src="../videos/promo.mp4" type="video/mp4">
+      Browser tidak mendukung video. Silakan upload file video ke folder /videos/promo.mp4
+    </video>
+    <p style="color:white; text-align:center; background:#111; margin:0; padding:8px;">🎥 Video profil sekolah - (ganti dengan file video Anda di folder videos/promo.mp4)</p>
+  </div>
+</div>
+
+<!-- Custom JS -->
+<script src="js/script.js"></script>
 </body>
 </html>
