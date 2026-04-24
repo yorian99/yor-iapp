@@ -1,0 +1,177 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+/* Header */
+header {
+    background: #1b5e20;
+    color: white;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.logo-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+.logo-text h1 {
+    font-size: 1.2rem;
+}
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 1.5rem;
+}
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+}
+.menu-toggle {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+@media (max-width: 768px) {
+    nav ul {
+        display: none;
+        flex-direction: column;
+        background: #1b5e20;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+    nav ul.show {
+        display: flex;
+    }
+    .menu-toggle {
+        display: block;
+    }
+}
+/* Hero */
+.hero {
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    color: white;
+    padding: 80px 0;
+    text-align: center;
+}
+.hero h1 {
+    font-size: 2.5rem;
+    margin: 20px 0;
+}
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    margin: 0 8px;
+}
+.btn-primary {
+    background: #ffc107;
+    color: #1b5e20;
+}
+.btn-outline {
+    border: 2px solid white;
+    color: white;
+}
+/* Features & Cards */
+.feature-grid, .program-grid, .ekskul-grid, .prestasi-stats, .jalur-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+.feature-card, .program-card, .ekskul-card, .berita-card {
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+.feature-card:hover { transform: translateY(-5px); }
+.section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+.achievement-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+.number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #2e7d32;
+    display: block;
+}
+footer {
+    background: #1b5e20;
+    color: white;
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+/* Form styles */
+form {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #f4f4f4;
+    padding: 2rem;
+    border-radius: 12px;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+button {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+.jadwal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+}
+.jadwal-table th, .jadwal-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}

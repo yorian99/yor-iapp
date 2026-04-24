@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPDB - SMA Negeri 1 Bangun Bangsa</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>...</header>
+    <main>
+        <section class="page-hero"><div class="container"><h1>Penerimaan Peserta Didik Baru</h1><p>PPDB 2025/2026</p></div></section>
+        
+        <section class="jalur">
+            <div class="container">
+                <h2>Jalur Pendaftaran</h2>
+                <div class="jalur-grid">
+                    <div><h3>Jalur Zonasi</h3><p>Kuota 50% - Domisili zona ditetapkan</p></div>
+                    <div><h3>Jalur Prestasi</h3><p>Kuota 30% - Prestasi akademik/non-akademik</p></div>
+                    <div><h3>Jalur Afirmasi</h3><p>Kuota 15% - Ekonomi tidak mampu & disabilitas</p></div>
+                    <div><h3>Jalur Perpindahan Tugas Orang Tua</h3><p>Kuota 5%</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="jadwal-ppdb">
+            <div class="container">
+                <h2>Jadwal PPDB 2025/2026</h2>
+                <table class="jadwal-table">
+                    <tr><th>Pengumuman</th><th>Pendaftaran Online</th><th>Verifikasi Berkas</th><th>Pengumuman Hasil</th><th>Daftar Ulang</th><th>MPLS</th></tr>
+                    <tr><td>20-24 Mei 2025</td><td>26 Mei - 14 Juni 2025</td><td>26 Mei - 16 Juni 2025</td><td>20 Juni 2025</td><td>23-26 Juni 2025</td><td>14 Juli 2025</td></tr>
+                </table>
+            </div>
+        </section>
+
+        <section class="form-ppdb">
+            <div class="container">
+                <h2>Formulir Pendaftaran Online</h2>
+                <form id="ppdbForm">
+                    <div class="form-group"><label>Nama Lengkap</label><input type="text" id="nama" required></div>
+                    <div class="form-group"><label>NISN</label><input type="text" id="nisn" required></div>
+                    <div class="form-group"><label>Tempat, Tanggal Lahir</label><input type="text" id="ttl" required></div>
+                    <div class="form-group"><label>Jalur Pilihan</label><select id="jalur"><option value="Zonasi">Zonasi</option><option value="Prestasi">Prestasi</option><option value="Afirmasi">Afirmasi</option><option value="Perpindahan Tugas">Perpindahan Tugas</option></select></div>
+                    <div class="form-group"><label>Alamat</label><textarea id="alamat" required></textarea></div>
+                    <div class="form-group"><label>No. Telepon</label><input type="tel" id="telepon" required></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+                    <button type="submit" class="btn btn-primary">Daftar Sekarang</button>
+                    <div id="ppdbMessage"></div>
+                </form>
+            </div>
+        </section>
+    </main>
+    <footer>...</footer>
+    <script src="js/ppdb.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
