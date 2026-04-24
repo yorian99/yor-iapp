@@ -1,200 +1,75 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>SDN Jagir 1 Sine | Berkarakter, Berprestasi, Berwawasan Global</title>
-  <!-- Google Fonts & Font Awesome -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beranda - SDN YORI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-<!-- Navbar -->
-<nav class="navbar">
-  <div class="nav-container">
-    <div class="logo">
-      <h1>SDN JAGIR 1 SINE</h1>
-      <p>Berkarakter · Berprestasi · Global</p>
-    </div>
-    <div class="menu-toggle" id="mobile-menu">
-      <i class="fas fa-bars"></i>
-    </div>
-    <ul class="nav-links" id="nav-links">
-      <li><a href="#home">Beranda</a></li>
-      <li><a href="#tentang">Tentang</a></li>
-      <li><a href="#program">Program</a></li>
-      <li><a href="#prestasi">Prestasi</a></li>
-      <li><a href="#berita">Berita</a></li>
-      <li><a href="#daftar">Pendaftaran</a></li>
-    </ul>
-  </div>
-</nav>
-
-<!-- Hero Section -->
-<section id="home" class="hero">
-  <div class="container">
-    <div class="hero-content">
-      <span class="hero-badge"><i class="fas fa-star-of-life"></i> Sekolah Penggerak</span>
-      <h1>Membangun Generasi Cerdas, Berakhlak Mulia</h1>
-      <p>SDN Jagir 1 Sine siap mencetak generasi unggul yang berkarakter, berprestasi, dan berwawasan global sejak usia dini.</p>
-      <div class="btn-group">
-        <a href="#tentang" class="btn-primary">Kenali Kami <i class="fas fa-arrow-right"></i></a>
-        <button id="videoModalBtn" class="btn-outline" style="background:transparent; border:2px solid #2b7a4b; color:#2b7a4b;"><i class="fas fa-play"></i> Tonton Video</button>
-      </div>
-    </div>
-    <div class="hero-image" style="background-image: url('../images/hero-bg.jpg'); background-size: cover; background-position: center; border-radius: 32px;"></div>
-  </div>
-</section>
-
-<!-- 4 Feature Cards -->
-<section class="features">
-  <div class="container">
-    <h2 class="section-title">Keunggulan Sekolah Kami</h2>
-    <p class="section-sub">Fasilitas dan pendekatan terbaik untuk perkembangan siswa</p>
-    <div class="grid-4">
-      <div class="feature-card"><i class="fas fa-book-open"></i><h3>Kurikulum Merdeka</h3><p>Pembelajaran inovatif berbasis proyek dan penguatan profil pelajar Pancasila.</p></div>
-      <div class="feature-card"><i class="fas fa-chalkboard-user"></i><h3>Guru Profesional</h3><p>Tenaga pendidik berpengalaman dan berdedikasi tinggi.</p></div>
-      <div class="feature-card"><i class="fas fa-trophy"></i><h3>Prestasi Gemilang</h3><p>Juara olimpiade, seni, dan olahraga tingkat kabupaten & provinsi.</p></div>
-      <div class="feature-card"><i class="fas fa-tree"></i><h3>Lingkungan Nyaman</h3><p>Lahan hijau, ruang kelas interaktif, dan perpustakaan digital.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- About Section (Tentang Kami) -->
-<section id="tentang" class="about">
-  <div class="container">
-    <div class="about-grid">
-      <div class="about-text">
-        <h2 class="section-title" style="text-align:left;">Tentang SDN Jagir 1 Sine</h2>
-        <p style="margin-bottom: 16px;">SD Negeri Jagir 1 Sine adalah sekolah dasar unggulan di Kecamatan Sine, Kabupaten Ngawi. Berkomitmen membentuk karakter siswa yang religius, disiplin, dan berprestasi.</p>
-        <div class="about-stats">
-          <span class="stat-badge"><i class="fas fa-award"></i> Akreditasi A</span>
-          <span class="stat-badge"><i class="fas fa-laptop-code"></i> Kurikulum Merdeka</span>
-          <span class="stat-badge"><i class="fas fa-futbol"></i> 15+ Ekskul</span>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-900">SDN YORI</h1>
+            <div class="space-x-6">
+                <a href="index.html" class="text-blue-600 font-semibold">Beranda</a>
+                <a href="tentang.html" class="hover:text-blue-600">Tentang Kami</a>
+                <a href="akademik.html" class="hover:text-blue-600">Akademik</a>
+                <a href="ekstrakurikuler.html" class="hover:text-blue-600">Ekstrakurikuler</a>
+                <a href="prestasi.html" class="hover:text-blue-600">Prestasi</a>
+                <a href="berita.html" class="hover:text-blue-600">Berita</a>
+                <a href="#" class="bg-blue-900 text-white px-4 py-2 rounded">Daftar Sekarang</a>
+            </div>
         </div>
-        <p>Dengan fasilitas lengkap dan pendekatan humanis, kami membantu setiap anak menemukan potensi terbaiknya.</p>
-        <div style="margin-top:24px;"><a href="#program" class="btn-primary" style="background:#2b7a4b;">Program Unggulan →</a></div>
-      </div>
-      <div class="about-image" style="background-image: url('../images/about-img.jpg');"></div>
-    </div>
-  </div>
-</section>
+    </nav>
 
-<!-- Program Unggulan -->
-<section id="program" class="programs">
-  <div class="container">
-    <h2 class="section-title">Program Unggulan</h2>
-    <p class="section-sub">Kami menyiapkan siswa menjadi generasi tangguh, kreatif, dan berdaya saing global</p>
-    <div class="grid-4">
-      <div class="program-card"><i class="fas fa-microscope"></i><h3>Akademik Plus</h3><p>Bimbingan OSN, literasi numerasi, dan sains interaktif.</p></div>
-      <div class="program-card"><i class="fas fa-palette"></i><h3>Ekstrakurikuler</h3><p>Seni tari, pramuka, futsal, drumband, dan robotic.</p></div>
-      <div class="program-card"><i class="fas fa-hand-sparkles"></i><h3>Pengembangan Karakter</h3><p>Kepemimpinan, gotong royong, dan pembiasaan sholat dhuha.</p></div>
-      <div class="program-card"><i class="fas fa-globe-asia"></i><h3>Wawasan Global</h3><p>English day, pertukaran budaya, dan proyek penguatan profil pancasila.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- Prestasi Kami -->
-<section id="prestasi" class="achievements">
-  <div class="container">
-    <h2 class="section-title" style="color:white;">Prestasi Membanggakan</h2>
-    <p class="section-sub" style="color:#ceeedf;">Bukti dedikasi dan kerja keras warga sekolah</p>
-    <div class="achievement-grid">
-      <div><div class="achievement-number">85+</div><div>Prestasi Siswa</div><small>Akademik & Non-Akademik</small></div>
-      <div><div class="achievement-number">30+</div><div>Lomba Tingkat Provinsi</div><small>Juara 1-3</small></div>
-      <div><div class="achievement-number">7+</div><div>Lomba Nasional</div><small>OPSI, FLS2N</small></div>
-      <div><div class="achievement-number">96%</div><div>Lulusan Diterima di SMP Favorit</div><small>Negeri & Swasta Unggulan</small></div>
-    </div>
-  </div>
-</section>
-
-<!-- Berita Terkini -->
-<section id="berita" class="berita">
-  <div class="container">
-    <h2 class="section-title">Berita & Agenda Terkini</h2>
-    <p class="section-sub">Kegiatan terbaru dari SDN Jagir 1 Sine</p>
-    <div class="berita-grid">
-      <div class="berita-card">
-        <div class="berita-img" style="background-image: url('../images/berita1.jpg'); background-size: cover;"></div>
-        <div class="berita-content"><span class="berita-date"><i class="far fa-calendar-alt"></i> 12 April 2026</span><h3 style="margin: 10px 0;">Juara 1 Olimpiade Matematika tingkat Kabupaten</h3><p>Anak didik kami berhasil menyabet medali emas. Prestasi membanggakan!</p><a href="#" style="color:#2b7a4b; font-weight:600;">Baca Selengkapnya →</a></div>
-      </div>
-      <div class="berita-card">
-        <div class="berita-img" style="background-image: url('../images/berita2.jpg'); background-size: cover;"></div>
-        <div class="berita-content"><span class="berita-date"><i class="far fa-calendar-alt"></i> 2 Mei 2026</span><h3 style="margin: 10px 0;">Peringatan Hardiknas & Karya P5</h3><p>Gelar karya siswa meriahkan Hari Pendidikan Nasional.</p><a href="#" style="color:#2b7a4b; font-weight:600;">Baca Selengkapnya →</a></div>
-      </div>
-      <div class="berita-card">
-        <div class="berita-img" style="background-image: url('../images/berita3.jpg'); background-size: cover;"></div>
-        <div class="berita-content"><span class="berita-date"><i class="far fa-calendar-alt"></i> 18 Maret 2026</span><h3 style="margin: 10px 0;">Kunjungan Edukasi ke Perpustakaan Digital</h3><p>Siswa belajar coding dan literasi digital.</p><a href="#" style="color:#2b7a4b; font-weight:600;">Baca Selengkapnya →</a></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA Pendaftaran -->
-<section id="daftar" class="cta-section">
-  <div class="container">
-    <div class="form-card">
-      <h2 style="font-size: 1.9rem; margin-bottom: 8px;">✨ Bergabunglah Bersama Kami</h2>
-      <p style="margin-bottom: 24px;">Daftarkan putra-putri anda menjadi bagian keluarga besar SDN Jagir 1 Sine. Cetak generasi berkarakter dan berprestasi.</p>
-      <form id="registrationForm">
-        <div class="form-group"><input type="text" placeholder="Nama Lengkap" id="nama" required></div>
-        <div class="form-group"><input type="email" placeholder="Email Orang Tua/Wali" id="email" required></div>
-        <div class="form-group"><input type="text" placeholder="No. Telepon" id="telp"></div>
-        <div class="form-group"><textarea rows="3" placeholder="Pesan / Kelas yang diminati ..." id="pesan"></textarea></div>
-        <button type="submit" class="btn-primary" style="width:100%;">Kirim Pendaftaran <i class="fas fa-paper-plane"></i></button>
-        <p style="font-size:0.75rem; margin-top:12px;">*Pendaftaran akan dihubungi panitia PPDB.</p>
-      </form>
-    </div>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer>
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <h3 style="color:white; margin-bottom: 16px;">SDN JAGIR 1 SINE</h3>
-        <p>Membentuk generasi berkarakter, berprestasi, dan berwawasan global sejak dini.</p>
-      </div>
-      <div>
-        <h4 style="color:white;">Informasi</h4>
-        <p><i class="fas fa-map-marker-alt"></i> Jl. Jagir No. 1, Desa Jagir, Kec. Sine, Kab. Ngawi, Jawa Timur 63264</p>
-        <p><i class="fas fa-phone-alt"></i> (0351) 8823xxx</p>
-        <p><i class="fas fa-envelope"></i> sdnjagir1@sine.sch.id</p>
-      </div>
-      <div>
-        <h4 style="color:white;">Ikuti Kami</h4>
-        <div class="social-icons">
-          <a href="#"><i class="fab fa-facebook"></i></a>
-          <a href="#"><i class="fab fa-instagram"></i></a>
-          <a href="#"><i class="fab fa-youtube"></i></a>
-          <a href="#"><i class="fab fa-tiktok"></i></a>
+    <header class="relative h-[500px] flex items-center text-white">
+        <img src="https://images.unsplash.com/photo-1523050853064-dbad3507016e?auto=format&fit=crop&q=80" class="absolute inset-0 w-full h-full object-cover brightness-50" />
+        <div class="container mx-auto px-6 relative z-10">
+            <h2 class="text-5xl font-bold mb-4">Membangun Generasi Unggul<br>untuk Masa Depan Indonesia</h2>
+            <p class="max-w-xl mb-6">SDN YORI berkomitmen memberikan pendidikan terbaik yang mendorong siswa untuk berkembang dan berprestasi.</p>
+            <button class="bg-blue-700 px-6 py-3 rounded-lg mr-4">Kenali Kami Lebih Lanjut</button>
+            <button class="border border-white px-6 py-3 rounded-lg">Tonton Video</button>
         </div>
-        <p style="margin-top: 16px;">#SekolahBerprestasi #SDNJagirHebat</p>
-      </div>
-    </div>
-    <div class="copyright">
-      © 2026 SDN Jagir 1 Sine - All rights reserved. Didukung semangat gotong royong.
-    </div>
-  </div>
-</footer>
+    </header>
 
-<!-- Modal Video -->
-<div id="videoModal" class="modal-video">
-  <div class="modal-content">
-    <span class="close-modal">&times;</span>
-    <video controls poster="../images/video-poster.jpg" width="100%">
-      <source src="../videos/promo.mp4" type="video/mp4">
-      Browser tidak mendukung video. Silakan upload file video ke folder /videos/promo.mp4
-    </video>
-    <p style="color:white; text-align:center; background:#111; margin:0; padding:8px;">🎥 Video profil sekolah - (ganti dengan file video Anda di folder videos/promo.mp4)</p>
-  </div>
-</div>
+    <section class="container mx-auto px-6 py-16 grid grid-cols-4 gap-6">
+        <div class="bg-blue-900 p-6 text-white rounded-xl text-center">
+            <h3 class="text-3xl font-bold">120+</h3>
+            <p>Prestasi Siswa</p>
+        </div>
+        <div class="bg-blue-800 p-6 text-white rounded-xl text-center">
+            <h3 class="text-3xl font-bold">35+</h3>
+            <p>Lomba Nasional</p>
+        </div>
+        <div class="bg-blue-700 p-6 text-white rounded-xl text-center">
+            <h3 class="text-3xl font-bold">15+</h3>
+            <p>Lomba Internasional</p>
+        </div>
+        <div class="bg-blue-600 p-6 text-white rounded-xl text-center">
+            <h3 class="text-3xl font-bold">98%</h3>
+            <p>Lulusan Terbaik</p>
+        </div>
+    </section>
 
-<!-- Custom JS -->
-<script src="js/script.js"></script>
+    <footer class="bg-blue-950 text-white py-12 mt-12">
+        <div class="container mx-auto px-6 grid grid-cols-3 gap-8">
+            <div>
+                <h4 class="text-xl font-bold mb-4">SDN YORI</h4>
+                <p>Berkarakter, Berprestasi, Berwawasan Global.</p>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold mb-4">Navigasi</h4>
+                <ul class="space-y-2">
+                    <li><a href="index.html">Beranda</a></li>
+                    <li><a href="tentang.html">Tentang Kami</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold mb-4">Kontak</h4>
+                <p>Jl. Pendidikan No. 1, Kota Bangsa</p>
+                <p>(024) 1234567</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
