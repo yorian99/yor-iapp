@@ -3,73 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beranda - SDN YORI</title>
+    <title>Tentang Kami - SDN YORI</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50">
-    <nav class="bg-white shadow-md sticky top-0 z-50">
+<body class="bg-gray-50 text-gray-800">
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-900">SDN YORI</h1>
-            <div class="space-x-6">
-                <a href="index.html" class="text-blue-600 font-semibold">Beranda</a>
-                <a href="tentang.html" class="hover:text-blue-600">Tentang Kami</a>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white font-bold">Y</div>
+                <h1 class="text-xl font-bold text-blue-900 uppercase">SDN YORI</h1>
+            </div>
+            <div class="hidden md:flex space-x-6 text-sm font-medium">
+                <a href="index.html" class="hover:text-blue-600">Beranda</a>
+                <a href="tentang.html" class="text-blue-600">Tentang Kami</a>
                 <a href="akademik.html" class="hover:text-blue-600">Akademik</a>
                 <a href="ekstrakurikuler.html" class="hover:text-blue-600">Ekstrakurikuler</a>
                 <a href="prestasi.html" class="hover:text-blue-600">Prestasi</a>
                 <a href="berita.html" class="hover:text-blue-600">Berita</a>
-                <a href="#" class="bg-blue-900 text-white px-4 py-2 rounded">Daftar Sekarang</a>
             </div>
+            <a href="#" class="bg-blue-900 text-white px-5 py-2 rounded-md text-sm font-bold">Daftar Sekarang</a>
         </div>
     </nav>
 
-    <header class="relative h-[500px] flex items-center text-white">
-        <img src="https://images.unsplash.com/photo-1523050853064-dbad3507016e?auto=format&fit=crop&q=80" class="absolute inset-0 w-full h-full object-cover brightness-50" />
-        <div class="container mx-auto px-6 relative z-10">
-            <h2 class="text-5xl font-bold mb-4">Membangun Generasi Unggul<br>untuk Masa Depan Indonesia</h2>
-            <p class="max-w-xl mb-6">SDN YORI berkomitmen memberikan pendidikan terbaik yang mendorong siswa untuk berkembang dan berprestasi.</p>
-            <button class="bg-blue-700 px-6 py-3 rounded-lg mr-4">Kenali Kami Lebih Lanjut</button>
-            <button class="border border-white px-6 py-3 rounded-lg">Tonton Video</button>
-        </div>
-    </header>
+    <div class="bg-blue-900 py-20 text-center text-white">
+        <h2 class="text-4xl font-bold uppercase">Mengenal SDN YORI</h2>
+        <p class="mt-4 text-blue-200">Sejarah panjang mencetak generasi berprestasi sejak 1998.</p>
+    </div>
 
-    <section class="container mx-auto px-6 py-16 grid grid-cols-4 gap-6">
-        <div class="bg-blue-900 p-6 text-white rounded-xl text-center">
-            <h3 class="text-3xl font-bold">120+</h3>
-            <p>Prestasi Siswa</p>
-        </div>
-        <div class="bg-blue-800 p-6 text-white rounded-xl text-center">
-            <h3 class="text-3xl font-bold">35+</h3>
-            <p>Lomba Nasional</p>
-        </div>
-        <div class="bg-blue-700 p-6 text-white rounded-xl text-center">
-            <h3 class="text-3xl font-bold">15+</h3>
-            <p>Lomba Internasional</p>
-        </div>
-        <div class="bg-blue-600 p-6 text-white rounded-xl text-center">
-            <h3 class="text-3xl font-bold">98%</h3>
-            <p>Lulusan Terbaik</p>
-        </div>
-    </section>
-
-    <footer class="bg-blue-950 text-white py-12 mt-12">
-        <div class="container mx-auto px-6 grid grid-cols-3 gap-8">
+    <section class="container mx-auto px-6 py-16">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=1000" class="rounded-xl shadow-2xl" alt="School">
             <div>
-                <h4 class="text-xl font-bold mb-4">SDN YORI</h4>
-                <p>Berkarakter, Berprestasi, Berwawasan Global.</p>
-            </div>
-            <div>
-                <h4 class="text-lg font-semibold mb-4">Navigasi</h4>
-                <ul class="space-y-2">
-                    <li><a href="index.html">Beranda</a></li>
-                    <li><a href="tentang.html">Tentang Kami</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-lg font-semibold mb-4">Kontak</h4>
-                <p>Jl. Pendidikan No. 1, Kota Bangsa</p>
-                <p>(024) 1234567</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+                <h3 class="text-blue-900 font-bold uppercase tracking-widest text-sm">Profil Sekolah</h3>
+                <h4 class="text-3xl font-bold mt-2 mb-4">Visi & Misi</h4>
+                <div class="space-y-4">
+                    <div class="p-4 bg-white shadow rounded-lg border-l-4 border-blue-900">
+                        <h5 class="font-bold text-blue-900">VISI</h5>
+                        <p>Menjadi sekolah unggul dalam prestasi dan berkarakter Pancasila.</p>
+                    </div>
+                    <div class="p-4 bg-white shadow rounded
