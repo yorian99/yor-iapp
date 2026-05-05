@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDN JAGIR 1 - Official Website</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 180px);
+            overflow: hidden;
+            background: #f3f4f6;
+            border-radius: 12px;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .menu-btn {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .active-btn {
+            color: #1e40af !important;
+            font-weight: 700;
+        }
+        .active-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #3b82f6;
+        }
+        /* Loading spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex flex-col lg:flex-row items-center justify-between">
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 mb-4 lg:mb-0">
+                <div class="bg-blue-900 p-2 rounded flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-blue-900 leading-none tracking-tight">SDN JAGIR 1</h1>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-1 font-bold">Bangun Bangsa</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Links (Sesuai Urutan Gambar) -->
+            <nav class="flex flex-wrap justify-center items-center gap-6 lg:gap-8">
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Beranda
+                </button>
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Tentang Kami
+                </button>
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Akademik
+                </button>
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Ekstrakurikuler
+                </button>
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Prestasi
+                </button>
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Berita
+                </button>
+                <!-- PPDB dipindah ke sebelum Kontak -->
+                <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="menu-btn text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors active-btn">
+                    PPDB
+                </button>
+                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
+                    Kontak
+                </button>
+                
+                <!-- Action Button -->
+                <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="bg-blue-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-800 transition-all shadow-md">
+                    Daftar Sekarang
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto p-4 max-w-7xl">
+        <!-- Breadcrumb & Status -->
+        <div id="status-bar" class="mb-4 flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-100 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div id="loader" class="loader"></div>
+                <span class="text-xs text-gray-400 uppercase tracking-wider font-bold">Halaman:</span>
+                <span id="page-title" class="text-sm font-bold text-blue-900">PPDB</span>
+            </div>
+            <div class="text-[10px] text-gray-400 font-mono hidden sm:block" id="current-url">
+                https://www.yoriapp.site/jagirppdb
+            </div>
+        </div>
+
+        <div class="iframe-container bg-white border border-gray-200">
+            <!-- Iframe Content -->
+            <iframe 
+                id="main-frame" 
+                src="https://www.yoriapp.site/jagirppdb" 
+                onload="hideLoader()"
+                title="Konten Utama Web Sekolah">
+            </iframe>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-4 mt-auto">
+        <div class="container mx-auto px-6 text-center lg:text-left flex flex-col lg:flex-row justify-between items-center gap-4 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+            <p>© 2024 SDN JAGIR 1 SURABAYA</p>
+            <div class="flex gap-4">
+                <span>Integritas</span>
+                <span>•</span>
+                <span>Kreativitas</span>
+                <span>•</span>
+                <span>Prestasi</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const iframe = document.getElementById('main-frame');
+        const loader = document.getElementById('loader');
+        const pageTitleText = document.getElementById('page-title');
+        const currentUrlText = document.getElementById('current-url');
+
+        function loadPage(url, btn) {
+            // Tampilkan loader
+            loader.style.display = 'inline-block';
+            
+            // Ubah src Iframe
+            iframe.src = url;
+
+            // Update UI Teks
+            const btnName = btn.innerText.trim();
+            pageTitleText.innerText = btnName;
+            currentUrlText.innerText = url === 'about:blank' ? 'Halaman Internal (Kosong)' : url;
+
+            // Update Styling Tombol Aktif
+            document.querySelectorAll('.menu-btn').forEach(b => {
+                b.classList.remove('active-btn');
+            });
+            
+            // Tambahkan class aktif jika bukan tombol "Daftar Sekarang"
+            if(btn.classList.contains('menu-btn')) {
+                btn.classList.add('active-btn');
+            }
+
+            // Fallback jika memuat halaman kosong
+            if (url === 'about:blank') {
+                setTimeout(() => {
+                    hideLoader();
+                }, 500);
+            }
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
