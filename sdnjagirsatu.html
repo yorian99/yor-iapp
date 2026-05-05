@@ -32,15 +32,10 @@
             height: 100%;
             border: none;
         }
-        /* Logo Refresh */
         .logo-fresh {
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)) saturate(1.2);
             transition: transform 0.3s ease;
         }
-        .logo-fresh:hover {
-            transform: scale(1.05);
-        }
-        /* Navigation Styling */
         .menu-btn {
             position: relative;
             transition: all 0.2s ease;
@@ -50,6 +45,7 @@
         .menu-btn:hover {
             color: #2563eb;
         }
+        /* Highlight tombol aktif */
         .active-btn {
             color: #1e40af !important;
             font-weight: 700;
@@ -64,7 +60,6 @@
             background: linear-gradient(90deg, #2563eb, #38bdf8);
             border-radius: 2px;
         }
-        /* Loading spinner */
         .loader {
             border: 2px solid #e2e8f0;
             border-top: 2px solid #2563eb;
@@ -86,44 +81,37 @@
 <body class="bg-slate-50 text-slate-900">
 
     <div class="main-wrapper">
-        <!-- Header / Navbar -->
         <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
             <div class="container mx-auto px-6 py-4 flex flex-col lg:flex-row items-center justify-between">
                 
-                <!-- Logo & Title Section -->
                 <div class="flex items-center space-x-4 mb-4 lg:mb-0">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" 
                          alt="Logo SDN JAGIR 1" 
-                         class="h-14 w-auto object-contain logo-fresh"
-                         onerror="this.src='https://placehold.co/100x120?text=SDN'">
+                         class="h-14 w-auto object-contain logo-fresh">
                     <div class="border-l-2 border-slate-100 pl-4">
                         <h1 class="text-xl font-extrabold text-slate-800 leading-none tracking-tight">SDN JAGIR 1</h1>
                         <p class="text-[10px] text-blue-600 uppercase tracking-[0.15em] mt-1.5 font-bold">Cerdas • Beradab • Inovatif</p>
                     </div>
                 </div>
                 
-                <!-- Navigation Links -->
                 <nav class="flex items-center gap-5 lg:gap-8 overflow-x-auto w-full lg:w-auto nav-scroll pb-2 lg:pb-0">
-                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
+                    <!-- Tombol Beranda sekarang memiliki class 'active-btn' secara default -->
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest active-btn">
                         Beranda
                     </button>
                     <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
                         Tentang
                     </button>
-                    <!-- Menu Baru: Guru & Staf -->
                     <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
-                        Guru
+                        Guru dan Staf
                     </button>
                     <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
-                        Staf
+                        Ekstrakurikuler
                     </button>
                     <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
                         Akademik
                     </button>
-                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
-                        Berita
-                    </button>
-                    <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest active-btn">
+                    <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="menu-btn text-[11px] font-bold uppercase tracking-widest">
                         PPDB
                     </button>
                     
@@ -134,22 +122,22 @@
             </div>
         </header>
 
-        <!-- Status Bar -->
         <div class="bg-slate-900 px-6 py-1.5 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div id="loader" class="loader"></div>
-                <span id="page-title" class="text-[10px] font-semibold text-blue-300 uppercase tracking-widest">PPDB Online System</span>
+                <!-- Judul awal disesuaikan menjadi BERANDA -->
+                <span id="page-title" class="text-[10px] font-semibold text-blue-300 uppercase tracking-widest">BERANDA</span>
             </div>
             <div class="flex items-center gap-4">
                 <span class="text-[9px] text-slate-400 font-medium hidden sm:block italic">Portal Resmi SDN JAGIR 1 Ngawi</span>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="iframe-container">
+            <!-- src diarahkan ke 'about:blank' (Halaman Beranda Anda) sebagai default -->
             <iframe 
                 id="main-frame" 
-                src="https://www.yoriapp.site/jagirppdb" 
+                src="about:blank" 
                 onload="hideLoader()"
                 title="Konten Utama">
             </iframe>
@@ -166,8 +154,14 @@
             iframe.src = url;
 
             const btnName = btn.innerText.trim();
-            pageTitleText.innerText = (btnName === 'DAFTAR SEKARANG' || btnName === 'PPDB') ? 'PPDB ONLINE SYSTEM' : btnName;
+            // Logika teks status bar
+            if (btnName === 'DAFTAR SEKARANG' || btnName === 'PPDB') {
+                pageTitleText.innerText = 'PPDB ONLINE SYSTEM';
+            } else {
+                pageTitleText.innerText = btnName;
+            }
 
+            // Reset semua tombol, lalu aktifkan yang diklik
             document.querySelectorAll('.menu-btn').forEach(b => {
                 b.classList.remove('active-btn');
             });
@@ -176,6 +170,7 @@
                 btn.classList.add('active-btn');
             }
 
+            // Simulasi loading jika link kosong
             if (url === 'about:blank') {
                 setTimeout(() => {
                     hideLoader();
