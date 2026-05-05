@@ -7,14 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Mencegah scroll pada body utama */
+        }
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
         .iframe-container {
-            position: relative;
+            flex-grow: 1;
             width: 100%;
-            height: calc(100vh - 180px);
-            overflow: hidden;
             background: #f3f4f6;
-            border-radius: 12px;
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            position: relative;
         }
         iframe {
             width: 100%;
@@ -24,6 +32,7 @@
         .menu-btn {
             position: relative;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         .active-btn {
             color: #1e40af !important;
@@ -32,19 +41,20 @@
         .active-btn::after {
             content: '';
             position: absolute;
-            bottom: -5px;
+            bottom: -2px;
             left: 0;
             width: 100%;
-            height: 2px;
+            height: 3px;
             background-color: #3b82f6;
+            border-radius: 2px;
         }
         /* Loading spinner */
         .loader {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #3b82f6;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             animation: spin 1s linear infinite;
             display: none;
         }
@@ -52,76 +62,75 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* Custom scrollbar for nav */
+        .nav-scroll::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
 
-    <!-- Header / Navbar -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex flex-col lg:flex-row items-center justify-between">
-            <!-- Logo & Title -->
-            <div class="flex items-center space-x-3 mb-4 lg:mb-0">
-                <div class="bg-blue-900 p-2 rounded flex items-center justify-center">
-                    <i class="fas fa-graduation-cap text-white text-xl"></i>
+    <div class="main-wrapper">
+        <!-- Header / Navbar -->
+        <header class="bg-white shadow-sm z-50 border-b border-gray-100">
+            <div class="container mx-auto px-4 py-3 flex flex-col lg:flex-row items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3 mb-3 lg:mb-0">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Lambang_Kabupaten_Ngawi.png" 
+                         alt="Logo SDN JAGIR 1" 
+                         class="h-12 w-auto object-contain"
+                         onerror="this.src='https://placehold.co/100x120?text=LOGO'">
+                    <div>
+                        <h1 class="text-lg font-black text-blue-900 leading-none tracking-tight">SDN JAGIR 1</h1>
+                        <p class="text-[9px] text-gray-500 uppercase tracking-[0.2em] mt-1 font-bold">Bangun Bangsa • Ngawi</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-xl font-black text-blue-900 leading-none tracking-tight">SDN JAGIR 1</h1>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-1 font-bold">Bangun Bangsa</p>
-                </div>
-            </div>
-            
-            <!-- Navigation Links (Sesuai Urutan Gambar) -->
-            <nav class="flex flex-wrap justify-center items-center gap-6 lg:gap-8">
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Beranda
-                </button>
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Tentang Kami
-                </button>
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Akademik
-                </button>
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Ekstrakurikuler
-                </button>
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Prestasi
-                </button>
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Berita
-                </button>
-                <!-- PPDB dipindah ke sebelum Kontak -->
-                <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="menu-btn text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors active-btn">
-                    PPDB
-                </button>
-                <button onclick="loadPage('about:blank', this)" class="menu-btn text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors">
-                    Kontak
-                </button>
                 
-                <!-- Action Button -->
-                <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="bg-blue-900 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-800 transition-all shadow-md">
-                    Daftar Sekarang
-                </button>
-            </nav>
-        </div>
-    </header>
+                <!-- Navigation Links -->
+                <nav class="flex items-center gap-4 lg:gap-7 overflow-x-auto w-full lg:w-auto nav-scroll pb-2 lg:pb-0">
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Beranda
+                    </button>
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Tentang Kami
+                    </button>
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Akademik
+                    </button>
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Eskul
+                    </button>
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Prestasi
+                    </button>
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Berita
+                    </button>
+                    <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-blue-800 transition-colors active-btn">
+                        PPDB
+                    </button>
+                    <button onclick="loadPage('about:blank', this)" class="menu-btn text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-blue-700 transition-colors">
+                        Kontak
+                    </button>
+                    
+                    <button onclick="loadPage('https://www.yoriapp.site/jagirppdb', this)" class="bg-blue-900 text-white px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 transition-all shadow-sm">
+                        Daftar
+                    </button>
+                </nav>
+            </div>
+        </header>
 
-    <!-- Main Content Area -->
-    <main class="container mx-auto p-4 max-w-7xl">
-        <!-- Breadcrumb & Status -->
-        <div id="status-bar" class="mb-4 flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-100 shadow-sm">
-            <div class="flex items-center gap-3">
+        <!-- Dynamic Status Info (Optional, minimal) -->
+        <div class="bg-blue-50 px-4 py-1 flex items-center justify-between border-b border-blue-100">
+            <div class="flex items-center gap-2">
                 <div id="loader" class="loader"></div>
-                <span class="text-xs text-gray-400 uppercase tracking-wider font-bold">Halaman:</span>
-                <span id="page-title" class="text-sm font-bold text-blue-900">PPDB</span>
+                <span id="page-title" class="text-[10px] font-bold text-blue-800 uppercase tracking-tighter">PPDB ONLINE</span>
             </div>
-            <div class="text-[10px] text-gray-400 font-mono hidden sm:block" id="current-url">
-                https://www.yoriapp.site/jagirppdb
-            </div>
+            <span class="text-[9px] text-blue-400 font-mono hidden sm:block">SDN JAGIR 1 OFFICIAL SYSTEM</span>
         </div>
 
-        <div class="iframe-container bg-white border border-gray-200">
-            <!-- Iframe Content -->
+        <!-- Full Page Iframe Content -->
+        <div class="iframe-container">
             <iframe 
                 id="main-frame" 
                 src="https://www.yoriapp.site/jagirppdb" 
@@ -129,55 +138,32 @@
                 title="Konten Utama Web Sekolah">
             </iframe>
         </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-100 py-4 mt-auto">
-        <div class="container mx-auto px-6 text-center lg:text-left flex flex-col lg:flex-row justify-between items-center gap-4 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-            <p>© 2024 SDN JAGIR 1 SURABAYA</p>
-            <div class="flex gap-4">
-                <span>Integritas</span>
-                <span>•</span>
-                <span>Kreativitas</span>
-                <span>•</span>
-                <span>Prestasi</span>
-            </div>
-        </div>
-    </footer>
+    </div>
 
     <script>
         const iframe = document.getElementById('main-frame');
         const loader = document.getElementById('loader');
         const pageTitleText = document.getElementById('page-title');
-        const currentUrlText = document.getElementById('current-url');
 
         function loadPage(url, btn) {
-            // Tampilkan loader
             loader.style.display = 'inline-block';
-            
-            // Ubah src Iframe
             iframe.src = url;
 
-            // Update UI Teks
             const btnName = btn.innerText.trim();
-            pageTitleText.innerText = btnName;
-            currentUrlText.innerText = url === 'about:blank' ? 'Halaman Internal (Kosong)' : url;
+            pageTitleText.innerText = btnName === 'DAFTAR' ? 'PPDB ONLINE' : btnName;
 
-            // Update Styling Tombol Aktif
             document.querySelectorAll('.menu-btn').forEach(b => {
                 b.classList.remove('active-btn');
             });
             
-            // Tambahkan class aktif jika bukan tombol "Daftar Sekarang"
             if(btn.classList.contains('menu-btn')) {
                 btn.classList.add('active-btn');
             }
 
-            // Fallback jika memuat halaman kosong
             if (url === 'about:blank') {
                 setTimeout(() => {
                     hideLoader();
-                }, 500);
+                }, 400);
             }
         }
 
