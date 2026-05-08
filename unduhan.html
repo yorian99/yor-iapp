@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unduh E-Presensi Korwil Sine - YoriApp</title>
     
-    <link rel="icon" href="https://github.com/yorian99/yor-iapp/blob/main/favicon.png?raw=true" type="image/png">
+    <link rel="icon" href="favicon.png" type="image/x-icon">
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -22,6 +22,36 @@
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
         }
+        .status-pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            margin-right: 6px;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .status-pulse-red {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444; /* Merah */
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0.4);
+    animation: pulse-red 2s infinite;
+}
+        @keyframes pulse-red {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
     </style>
 </head>
 <body class="text-slate-800 flex flex-col justify-between min-h-screen">
@@ -53,7 +83,7 @@
 
                     <h1 class="text-3xl font-extrabold text-slate-900 mb-2">E-Presensi Korwil Sine</h1>
                     <p class="text-slate-500 mb-8 leading-relaxed">
-                        Silakan unduh aplikasi presensi digital resmi untuk Korwil Sine melalui tombol di bawah ini. Pastikan Anda mengizinkan instalasi dari sumber tidak dikenal pada perangkat Android Anda.
+                        Silakan unduh aplikasi presensi digital resmi melalui salah satu server di bawah ini.
                     </p>
 
                     <div class="grid grid-cols-2 gap-4 w-full mb-8">
@@ -67,13 +97,47 @@
                         </div>
                     </div>
 
-                    <a href="https://raw.githubusercontent.com/yorian99/yor-iapp/refs/heads/main/app/app-release.apk" 
-                       class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 text-lg">
-                        <i class="fa-solid fa-cloud-arrow-down"></i>
-                        Unduh Aplikasi Sekarang
-                    </a>
+                    <div class="flex flex-col gap-6 w-full mb-8">
+                        
+                        <div class="text-left">
+                            <div class="flex items-center mb-2 px-1">
+                                <span class="status-pulse"></span>
+                                <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Server 1 Aktif</span>
+                            </div>
+                            <a href="https://github.com/yorian99/yor-iapp/raw/refs/heads/main/app/app-release.apk" 
+                               class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-blue-100 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 text-lg">
+                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                                Unduh via Server 1
+                            </a>
+                        </div>
 
-                    <div class="mt-8 flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100">
+                        <div class="text-left">
+                            <div class="flex items-center mb-2 px-1">
+                                <span class="status-pulse"></span>
+                                <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Server 2 Aktif</span>
+                            </div>
+                            <a href="https://github.com/yorian99/yor-iapp/raw/refs/heads/main/app/E-PRESENSI%20SINE%202.apk" 
+                               class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-slate-200 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 text-lg">
+                                <i class="fa-solid fa-server"></i>
+                                Unduh via Server 2
+                            </a>
+                        </div>
+
+                        <div class="text-left">
+                            <div class="flex items-center mb-2 px-1">
+                                <span class="status-pulse-red"></span>
+                                <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Server 3 Belum Aktif</span>
+                            </div>
+                            <a href="#" 
+                               class="w-full bg-slate-100 border-2 border-dashed border-slate-300 text-slate-400 font-bold py-4 px-8 rounded-2xl transition-all flex items-center justify-center gap-3 text-lg cursor-not-allowed">
+                                <i class="fa-solid fa-link-slash"></i>
+                                Server 3 Belum Tersedia
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-2 flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100">
                         <i class="fa-solid fa-circle-info text-amber-500 mt-1"></i>
                         <p class="text-xs text-amber-700 leading-relaxed">
                             <strong>Catatan:</strong> Jika muncul peringatan "File mungkin berbahaya", pilih "Tetap Download". Ini adalah prosedur standar untuk file APK yang diunduh di luar Play Store.
