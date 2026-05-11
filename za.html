@@ -47,35 +47,36 @@
   <script type="text/babel">
     const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
-    // ==================== KONFIGURASI API ====================
-    // GANTI URL_INI dengan URL Google Apps Script Web App yang sudah dideploy
-    // Pastikan Web App di-deploy dengan akses "Anyone" dan sudah menyertakan CORS
-    const API_BASE_URL = "https://script.google.com/macros/s/AKfycbx9dIBo8LWYGGI1hmlaIvuEUegfXKpW9nNHcMaaiS5BEGhTT0jFOUQ94tnu-xfmuhfNHQ/exec"; // <-- GANTI DENGAN URL ASLI ANDA
-    
-    // Helper fetch dengan timeout dan error handling
-    const apiFetch = async (action, options = {}) => {
-      const url = new URL(API_BASE_URL);
-      url.searchParams.append('action', action);
-      const response = await fetch(url.toString(), {
-        ...options,
-        headers: { 'Content-Type': 'application/json', ...options.headers }
-      });
-      const data = await response.json();
-      if (!data.success) throw new Error(data.message || `Gagal mengambil data ${action}`);
-      return data;
-    };
-    
-    const getStudentsAPI = () => apiFetch('getStudents').then(res => res.data);
-    const getTokensAPI = () => apiFetch('getTokens').then(res => res.data);
-    const getJadwalAPI = () => apiFetch('getJadwal').then(res => res.data);
-    const getKartuAPI = () => apiFetch('getKartu').then(res => res.data);
-    const saveStudentsAPI = (students) => fetch(API_BASE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(students)
-    }).then(res => res.json());
+    // ==================== KONFIGURASI BACKEND ====================
+    const BASE_URL = "https://script.google.com/macros/s/AKfycbx9dIBo8LWYGGI1hmlaIvuEUegfXKpW9nNHcMaaiS5BEGhTT0jFOUQ94tnu-xfmuhfNHQ/exec";
 
-    // ==================== KOMPONEN UTAMA (tanpa perubahan tampilan) ====================
+    // Fungsi panggil GET API (action)
+    async function fetchGet(action) {
+      const url = `${BASE_URL}?action=${action}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Gagal mengambil data');
+      return data;
+    }
+
+    // Fungsi panggil POST API (sinkronisasi)
+    async function fetchPost(payload) {
+      const res = await fetch(BASE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Gagal menyimpan data');
+      return data;
+    }
+
+    // ==================== KOMPONEN ICON ====================
     const Icon = ({ name, size = 18, className = "" }) => {
       const iconRef = useRef(null);
       useEffect(() => {
@@ -93,6 +94,7 @@
       });
     };
 
+    // ==================== APP UTAMA ====================
     const App = () => {
       const [view, setView] = useState('home');
       const [dbStudents, setDbStudents] = useState([]);
@@ -107,84 +109,55 @@
       const [jadwalItems, setJadwalItems] = useState([]);
       const [loadingJadwal, setLoadingJadwal] = useState(false);
       const [showVideoModal, setShowVideoModal] = useState(false);
-      const [isDemoMode, setIsDemoMode] = useState(false);
       const [isClient, setIsClient] = useState(false);
       const [loadingKartu, setLoadingKartu] = useState(false);
+      const [loadingInitial, setLoadingInitial] = useState(true);
 
-      // Refresh lucide setelah setiap render
+      // Refresh lucide icons setiap render
       useEffect(() => {
         if (window.lucide) window.lucide.createIcons();
       });
 
-      // Inisialisasi data: gunakan API jika tersedia, fallback demo jika gagal
+      // Load data awal dari API
       useEffect(() => {
         setIsClient(true);
-        // Cek apakah API_BASE_URL valid (bukan placeholder)
-        if (API_BASE_URL && API_BASE_URL !== "https://script.google.com/macros/s/AKfycby.../exec") {
-          setIsDemoMode(false);
-          // Ambil semua data awal
-          Promise.all([
-            getStudentsAPI().catch(() => []),
-            getTokensAPI().catch(() => []),
-            getKartuAPI().catch(() => [])
-          ]).then(([students, tokensData, kartuData]) => {
-            setDbStudents(students);
-            setTokens(tokensData);
-            setKartuStudents(kartuData);
-            if (tokensData && tokensData.length > 0) setSelectedDate(tokensData[0].tanggal);
-          }).catch(err => {
-            console.error("Gagal memuat data dari API, masuk mode demo", err);
-            setIsDemoMode(true);
-            loadDemoData();
-          });
-        } else {
-          setIsDemoMode(true);
-          loadDemoData();
-        }
+        const loadInitialData = async () => {
+          try {
+            const [studentsRes, tokensRes, kartuRes] = await Promise.all([
+              fetchGet('getStudents'),
+              fetchGet('getTokens'),
+              fetchGet('getKartu')
+            ]);
+            setDbStudents(studentsRes.data || []);
+            setTokens(tokensRes.data || []);
+            setKartuStudents(kartuRes.data || []);
+            if (tokensRes.data && tokensRes.data.length > 0) {
+              setSelectedDate(tokensRes.data[0].tanggal);
+            }
+          } catch (err) {
+            console.error(err);
+            showToast('Gagal memuat data dari server', 'error');
+          } finally {
+            setLoadingInitial(false);
+          }
+        };
+        loadInitialData();
       }, []);
 
-      const loadDemoData = () => {
-        setDbStudents([
-          { id: 'demo1', nisn: '1234567890', nama: 'AHMAD FAUZAN', kelas: '6', rombel: 'SDN SINE 1 SINE' },
-          { id: 'demo2', nisn: '1234567891', nama: 'SITI NURHALIZA', kelas: '6', rombel: 'SDN SINE 1 SINE' },
-          { id: 'demo3', nisn: '1234567892', nama: 'BUDI PRASETYO', kelas: '6', rombel: 'SD MUHAMMADIYAH' },
-        ]);
-        setKartuStudents([
-          { id: 'k1', nisn: '1234567890', nama: 'AHMAD FAUZAN', kelas: '6', rombel: 'SDN SINE 1 SINE' },
-          { id: 'k2', nisn: '1234567891', nama: 'SITI NURHALIZA', kelas: '6', rombel: 'SDN SINE 1 SINE' },
-          { id: 'k3', nisn: '1234567892', nama: 'BUDI PRASETYO', kelas: '6', rombel: 'SD MUHAMMADIYAH' },
-        ]);
-        setTokens([{ tanggal: '10-15 Mei 2026' }]);
-        setSelectedDate('10-15 Mei 2026');
-        setJadwalItems([
-          { jadwal: "Ujian Akhir Semester", tanggal: "10-15 Mei 2026", token: "UAS2026", link_nilai: "#", link_unduh: "#" }
-        ]);
-      };
-
-      const loadKartuData = useCallback(() => {
-        if (!isDemoMode) {
-          setLoadingKartu(true);
-          getKartuAPI()
-            .then(data => { setKartuStudents(data); setLoadingKartu(false); })
-            .catch(err => { console.error(err); setKartuStudents([]); setLoadingKartu(false); showToast('Gagal memuat data kartu', 'error'); });
-        } else {
-          showToast('Mode demo, data kartu statis', 'info');
-        }
-      }, [isDemoMode]);
-
-      const refreshKartuData = () => {
-        if (!isDemoMode) loadKartuData();
-        else showToast('Mode demo, data kartu statis', 'info');
-      };
-
+      // Load jadwal ketika view 'jadwal' aktif
       useEffect(() => {
-        if (view === 'jadwal' && !isDemoMode) {
+        if (view === 'jadwal') {
           setLoadingJadwal(true);
-          getJadwalAPI()
-            .then(data => { setJadwalItems(data); setLoadingJadwal(false); })
-            .catch(err => { console.error(err); setJadwalItems([]); setLoadingJadwal(false); showToast('Gagal memuat data jadwal', 'error'); });
+          fetchGet('getJadwal')
+            .then(res => setJadwalItems(res.data || []))
+            .catch(err => {
+              console.error(err);
+              showToast('Gagal memuat jadwal', 'error');
+              setJadwalItems([]);
+            })
+            .finally(() => setLoadingJadwal(false));
         }
-      }, [view, isDemoMode]);
+      }, [view]);
 
       const showToast = useCallback((text, type = 'success') => {
         setSyncMessage({ show: true, text, type });
@@ -198,6 +171,34 @@
         deadline.setHours(0, 0, 0, 0);
         return today > deadline;
       }, []);
+
+      // Fungsi refresh data siswa & kartu
+      const refreshStudents = async () => {
+        try {
+          const res = await fetchGet('getStudents');
+          setDbStudents(res.data || []);
+        } catch (err) {
+          showToast('Gagal refresh data siswa', 'error');
+        }
+      };
+
+      const loadKartuData = async () => {
+        setLoadingKartu(true);
+        try {
+          const res = await fetchGet('getKartu');
+          setKartuStudents(res.data || []);
+        } catch (err) {
+          console.error(err);
+          showToast('Gagal memuat data kartu', 'error');
+          setKartuStudents([]);
+        } finally {
+          setLoadingKartu(false);
+        }
+      };
+
+      const refreshKartuData = () => {
+        loadKartuData();
+      };
 
       const handlePaste = () => {
         if (isInputClosed) {
@@ -238,32 +239,16 @@
           return;
         }
         setIsSaving(true);
-        if (!isDemoMode) {
-          try {
-            const res = await saveStudentsAPI(newEntries);
-            if (res && res.success) {
-              const freshData = await getStudentsAPI();
-              setDbStudents(freshData);
-              setNewEntries([]);
-              setShowSuccessModal(true);
-              showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
-            } else {
-              showToast(res?.message || 'Gagal menyimpan data', 'error');
-            }
-          } catch (err) {
-            console.error(err);
-            showToast('Koneksi ke server terputus', 'error');
-          } finally {
-            setIsSaving(false);
-          }
-        } else {
-          setTimeout(() => {
-            setDbStudents(prev => [...prev, ...newEntries]);
-            setNewEntries([]);
-            setIsSaving(false);
-            setShowSuccessModal(true);
-            showToast('Sinkronisasi berhasil (mode demo)!', 'success');
-          }, 1500);
+        try {
+          await fetchPost(newEntries);
+          await refreshStudents();
+          setNewEntries([]);
+          setShowSuccessModal(true);
+          showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
+        } catch (err) {
+          showToast(err.message || 'Gagal menyimpan data', 'error');
+        } finally {
+          setIsSaving(false);
         }
       };
 
@@ -274,7 +259,7 @@
 
       const sortedPreview = useMemo(() => [...dbStudents].sort((a, b) => String(a.rombel).localeCompare(String(b.rombel)) || String(a.nama).localeCompare(String(b.nama))), [dbStudents]);
 
-      // Komponen KartuUjianView (tidak berubah, menggunakan kartuStudents)
+      // ==================== KOMPONEN KARTU UJIAN ====================
       const KartuUjianView = () => {
         const lembagaList = ["SD MUHAMMADIYAH", "SDIT AL ISLAM", "SDIT AL-IKSAN", "SDN GENDOL 1", "SDN GIRIKERTO 1", "SDN GIRIKERTO 2", "SDN HARGOSARI 1", "SDN HARGOSARI 2", "SDN JAGIR 1", "SDN JAGIR 2", "SDN JAGIR 3", "SDN JAGIR 4", "SDN KAUMAN 1", "SDN KETANGGUNG 1", "SDN KUNIRAN 1", "SDN KUNIRAN 2", "SDN KUNIRAN 3", "SDN NGRENDENG 2", "SDN PANDANSARI", "SDN POCOL", "SDN SINE 1", "SDN SINE 3", "SDN SUMBEREJO 1", "SDN SUMBERSARI 1", "SDN SUMBERSARI 2", "SDN TULAKAN 1", "SDN TULAKAN 2", "SDN TULAKAN 3", "SDN TULAKAN 4", "SDN TULAKAN 6", "SDN WONOSARI 1", "SDN WONOSARI 2"];
         const [filterLembaga, setFilterLembaga] = useState("SEMUA");
@@ -290,6 +275,38 @@
           return kartuStudents.filter(s => (s.rombel || "").trim().toUpperCase() === filterLembaga.trim().toUpperCase());
         }, [kartuStudents, filterLembaga]);
         
+        const renderCardHTML = (student, examDate) => {
+          const nama = student.nama || "TIDAK TERDAFTAR";
+          const lembaga = student.rombel || "-";
+          const kelas = student.kelas || "-";
+          const kodePeserta = student.nisn || "-";
+          const tanggalTampil = examDate || "Menunggu Jadwal";
+          const tanggalSplit = tanggalTampil.split(' - ');
+          const tgl1 = tanggalSplit[0] || tanggalTampil;
+          const tgl2 = tanggalSplit[1] || '';
+          return `<div class="kartu-print-item w-full max-w-2xl flex flex-row border border-gray-300 rounded-2xl overflow-hidden mb-5 shadow-sm bg-white" style="page-break-inside: avoid; break-inside: avoid; height: 235px;">
+            <div class="bg-teal-custom w-[30%] p-4 flex flex-col items-center justify-center text-center text-white" style="background-color: #218380;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Ngawi" crossorigin="anonymous" class="w-16 h-auto mb-3 drop-shadow-md">
+              <p class="text-[10px] font-medium leading-tight mt-1" style="color: white;">Tidak ada kebanggaan<br>dari kesuksesan<br>tanpa kejujuran</p>
+            </div>
+            <div class="w-[70%] p-5 relative">
+              <div class="absolute top-3 right-5 text-right text-[11px] text-gray-700 font-medium"><p>${tgl1}</p><p>${tgl2}</p></div>
+              <h2 class="text-xl text-teal-custom font-semibold tracking-wide mb-0" style="color: #218380;">Kartu Ujian</h2>
+              <p class="text-[11px] text-gray-800 font-bold mb-3 uppercase leading-tight">KORWIL PENDIDIKAN KEC. SINE</p>
+              <table class="w-full text-xs text-gray-800 font-medium">
+                <tbody>
+                  <tr><td class="py-1 w-24 align-top">Nama</td><td class="py-1 w-3 align-top">:</td><td class="py-1 align-top uppercase font-bold">${nama}</td></tr>
+                  <tr><td class="py-1 align-top">Lembaga</td><td class="py-1 align-top">:</td><td class="py-1 align-top uppercase">${lembaga}</td></tr>
+                  <tr><td class="py-1 align-top">Kelas</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${kelas}</td></tr>
+                  <tr><td class="py-1 align-top">Kode Peserta</td><td class="py-1 align-top">:</td><td class="py-1 align-top font-mono">${kodePeserta}</td></tr>
+                  <tr><td class="py-1 align-top">Pelaksanaan</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${tanggalTampil}</td></tr>
+                </tbody>
+              </table>
+              <div class="mt-3 text-[10px] text-gray-400"><p>Token Login akan diberikan sesuai jadwal ujian</p></div>
+            </div>
+          </div>`;
+        };
+        
         const renderCardsToContainer = useCallback((containerEl, students, examDate) => {
           if (!containerEl) return;
           containerEl.innerHTML = '';
@@ -297,37 +314,6 @@
             containerEl.innerHTML = '<div class="text-center py-20 text-slate-400 font-bold">.....................</div>'; 
             return; 
           }
-          const renderCardHTML = (student, examDate) => {
-            const nama = student.nama || "TIDAK TERDAFTAR";
-            const lembaga = student.rombel || "-";
-            const kelas = student.kelas || "-";
-            const kodePeserta = student.nisn || "-";
-            const tanggalTampil = examDate || "Menunggu Jadwal";
-            const tanggalSplit = tanggalTampil.split(' - ');
-            const tgl1 = tanggalSplit[0] || tanggalTampil;
-            const tgl2 = tanggalSplit[1] || '';
-            return `<div class="kartu-print-item w-full max-w-2xl flex flex-row border border-gray-300 rounded-2xl overflow-hidden mb-5 shadow-sm bg-white" style="page-break-inside: avoid; break-inside: avoid; height: 235px;">
-              <div class="bg-teal-custom w-[30%] p-4 flex flex-col items-center justify-center text-center text-white" style="background-color: #218380;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Ngawi" crossorigin="anonymous" class="w-16 h-auto mb-3 drop-shadow-md">
-                <p class="text-[10px] font-medium leading-tight mt-1" style="color: white;">Tidak ada kebanggaan<br>dari kesuksesan<br>tanpa kejujuran</p>
-              </div>
-              <div class="w-[70%] p-5 relative">
-                <div class="absolute top-3 right-5 text-right text-[11px] text-gray-700 font-medium"><p>${tgl1}</p><p>${tgl2}</p></div>
-                <h2 class="text-xl text-teal-custom font-semibold tracking-wide mb-0" style="color: #218380;">Kartu Ujian</h2>
-                <p class="text-[11px] text-gray-800 font-bold mb-3 uppercase leading-tight">KORWIL PENDIDIKAN KEC. SINE</p>
-                <table class="w-full text-xs text-gray-800 font-medium">
-                  <tbody>
-                    <tr><td class="py-1 w-24 align-top">Nama</td><td class="py-1 w-3 align-top">:</td><td class="py-1 align-top uppercase font-bold">${nama}</td><tr>
-                    <tr><td class="py-1 align-top">Lembaga</td><td class="py-1 align-top">:</td><td class="py-1 align-top uppercase">${lembaga}</td></tr>
-                    <tr><td class="py-1 align-top">Kelas</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${kelas}</td></tr>
-                    <tr><td class="py-1 align-top">Kode Peserta</td><td class="py-1 align-top">:</td><td class="py-1 align-top font-mono">${kodePeserta}</td></tr>
-                    <tr><td class="py-1 align-top">Pelaksanaan</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${tanggalTampil}</td></tr>
-                  </tbody>
-                </table>
-                <div class="mt-3 text-[10px] text-gray-400"><p>Token Login akan diberikan sesuai jadwal ujian</p></div>
-              </div>
-            </div>`;
-          };
           students.forEach((student, idx) => {
             containerEl.insertAdjacentHTML('beforeend', renderCardHTML(student, examDate));
             if ((idx + 1) % 4 === 0 && idx !== students.length - 1) 
@@ -361,7 +347,7 @@
         return (
           <div className="space-y-6 animate-fadeIn mt-6 w-full">
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 no-print">
-              <div><h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Kartu Peserta Ujian Digital</h2><p className="text-xs text-slate-500 font-medium mt-1"> <span className="font-mono bg-slate-100 px-1">""</span> | Cetak kartu ujian berbasis lembaga & jadwal</p></div>
+              <div><h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Kartu Peserta Ujian Digital</h2><p className="text-xs text-slate-500 font-medium mt-1">Cetak kartu ujian berbasis lembaga & jadwal</p></div>
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <button onClick={refreshKartuData} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><Icon name="refresh-cw" size={14} /> Muat Ulang Data</button>
                 <div className="relative w-full sm:w-64">
@@ -395,6 +381,7 @@
         );
       };
 
+      // ==================== KOMPONEN ARSIP (SK) ====================
       const SkView = () => {
         const [activeDoc, setActiveDoc] = useState(0);
         const docs = [
@@ -447,7 +434,7 @@
         return (
           <>
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn mt-6">
-              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3"><div><h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Icon name="calendar" size={20} className="text-teal-custom" /> Jadwal & Nilai Ujian</h2><p className="text-xs text-slate-500 mt-1">Token, link nilai, dan unduhan berkas ujian</p></div><button onClick={() => { setLoadingJadwal(true); setTimeout(() => { setLoadingJadwal(false); }, 500); }} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50"><Icon name="refresh-cw" size={14} /> Muat Ulang</button></div>
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3"><div><h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Icon name="calendar" size={20} className="text-teal-custom" /> Jadwal & Nilai Ujian</h2><p className="text-xs text-slate-500 mt-1">Token, link nilai, dan unduhan berkas ujian</p></div><button onClick={() => { setLoadingJadwal(true); fetchGet('getJadwal').then(res => setJadwalItems(res.data || [])).catch(() => showToast('Gagal refresh jadwal', 'error')).finally(() => setLoadingJadwal(false)); }} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50"><Icon name="refresh-cw" size={14} /> Muat Ulang</button></div>
               <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider"><tr><th className="px-6 py-4 text-left">Jadwal</th><th className="px-6 py-4 text-left">Tanggal Pelaksanaan</th><th className="px-6 py-4 text-left">Token</th><th className="px-6 py-4 text-center">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100">{jadwalItems.map((item, idx) => (<tr key={idx} className="hover:bg-slate-50/80 transition"><td className="px-6 py-4 font-semibold text-slate-800">{item.jadwal || '-'}</td><td className="px-6 py-4 text-slate-600">{item.tanggal || '-'}</td><td className="px-6 py-4"><span className="token-badge">{item.token || '-'}</span></td><td className="px-6 py-4"><div className="flex items-center justify-center gap-3"><button onClick={() => handlePreviewNilai(item.link_nilai, item.jadwal)} className="flex items-center gap-1.5 text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="eye" size={14} /> Lihat Nilai</button><button onClick={() => handleUnduhLangsung(item.link_unduh)} className="flex items-center gap-1.5 text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="download" size={14} /> Unduh</button></div></td></tr>))}</tbody></table></div>
             </div>
             {previewModalOpen && (<div className="fixed inset-0 z-[400] flex items-center justify-center p-4 modal-backdrop" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}><div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden"><div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/90"><div className="flex items-center gap-2"><Icon name="file-search" size={20} className="text-indigo-500" /><h3 className="font-bold text-slate-800 text-base truncate">{previewTitle}</h3></div><button onClick={() => setPreviewModalOpen(false)} className="p-2 rounded-full hover:bg-slate-200"><Icon name="x" size={20} /></button></div><div className="flex-1 bg-slate-100 min-h-[500px] relative"><iframe src={previewUrl} title="Preview" className="absolute inset-0 w-full h-full border-0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"></iframe></div></div></div>)}
@@ -509,7 +496,7 @@
         );
       };
 
-      if (!isClient) {
+      if (!isClient || loadingInitial) {
         return <div className="flex items-center justify-center min-h-screen bg-slate-100"><div className="spinner w-8 h-8"></div><span className="ml-3 text-slate-600">Memuat aplikasi...</span></div>;
       }
 
