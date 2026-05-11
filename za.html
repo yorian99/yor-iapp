@@ -78,18 +78,12 @@
       return json.data;
     }
 
-    // Helper: POST yang diperbaiki - mengirim format yang standar (action + students)
-    // Agar sinkron dengan backend Google Apps Script yang umum: menerima objek dengan action dan students
+    // Helper: POST yang diperbaiki - mengirim array siswa langsung (sesuai dengan backend GS)
     async function gasPost(studentsArray) {
       if (!Array.isArray(studentsArray)) {
         throw new Error("Data harus berupa array siswa");
       }
-      // Format payload yang robust: mengandung action "addStudents" dan data siswa
-      const payload = {
-        action: "addStudents",
-        students: studentsArray,
-        timestamp: new Date().toISOString()
-      };
+      // Kirim array mentah seperti yang diharapkan oleh doPost di Apps Script
       const res = await fetch(GAS_URL, {
         method: "POST",
         mode: "cors",
@@ -97,7 +91,7 @@
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(studentsArray) // langsung array, bukan objek {action, students}
       });
       if (!res.ok) {
         let errorText = "";
@@ -173,7 +167,7 @@
       // Load data awal
       useEffect(() => {
         setIsClient(true);
-        // Load students dengan penanganan error lebih baik
+        // Load students
         gasGet("getStudents")
           .then(data => setDbStudents(data || []))
           .catch(err => { console.error(err); showToast(`Gagal ambil data siswa: ${err.message}`, 'error'); setDbStudents([]); });
@@ -223,7 +217,7 @@
         if (newEntries.length === 0) { showToast('Tidak ada data untuk disinkronkan', 'error'); return; }
         setIsSaving(true);
         try {
-          // Kirim data dengan format action: addStudents
+          // Kirim array siswa langsung (tanpa bungkus action)
           await gasPost(newEntries);
           // Refresh data dari server setelah sukses
           const freshData = await gasGet("getStudents");
