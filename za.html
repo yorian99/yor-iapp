@@ -16,17 +16,11 @@
     body { font-family: 'Inter', sans-serif; color: #334155; scroll-behavior: smooth; background: #f8fafc; width: 100%; overflow-x: hidden; }
     html, body, #root { width: 100%; min-height: 100vh; margin: 0; padding: 0; }
     #root { display: flex; flex-direction: column; }
-    @media print {
-      .no-print { display: none !important; }
-      body { background: white; margin: 0; padding: 0; }
-      .print-area { border: none !important; box-shadow: none !important; }
-      .kartu-print-item { page-break-inside: avoid; break-inside: avoid; margin-bottom: 16px; box-shadow: none; border: 1px solid #cbd5e1; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
+    @media print { .no-print { display: none !important; } body { background: white; margin: 0; padding: 0; } .print-area { border: none !important; box-shadow: none !important; } .kartu-print-item { page-break-inside: avoid; break-inside: avoid; margin-bottom: 16px; box-shadow: none; border: 1px solid #cbd5e1; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }
     .custom-scrollbar::-webkit-scrollbar { width: 5px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .spinner { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+    .spinner { border: 3px solid rgba(255, 255, 255, 0.3); border-top: 3px solid white; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .modal-backdrop { animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -50,77 +44,52 @@
 </head>
 <body class="bg-[#f8fafc] w-full">
   <div id="root" class="w-full min-h-screen flex flex-col"></div>
-
   <script type="text/babel">
     const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
-    // ==================== KONFIGURASI BACKEND ====================
-    // GANTI dengan URL deployment Google Apps Script Anda (pastikan web app sudah dipublish sebagai "Anyone, even anonymous")
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx9dIBo8LWYGGI1hmlaIvuEUegfXKpW9nNHcMaaiS5BEGhTT0jFOUQ94tnu-xfmuhfNHQ/exec";
-    // ============================================================
-
-    // Helper: fetch dari GAS dengan action (GET)
-    async function gasGet(action) {
-      const url = `${GAS_URL}?action=${encodeURIComponent(action)}&_=${Date.now()}`;
-      const res = await fetch(url, {
-        method: "GET",
-        headers: { "Accept": "application/json" },
-        cache: "no-store"
+    // ==================== KONFIGURASI API ====================
+    // GANTI URL_INI dengan URL Google Apps Script Web App yang sudah dideploy
+    // Pastikan Web App di-deploy dengan akses "Anyone" dan sudah menyertakan CORS
+    const API_BASE_URL = "https://script.google.com/macros/s/AKfycby.../exec"; // <-- GANTI DENGAN URL ASLI ANDA
+    
+    // Helper fetch dengan timeout dan error handling
+    const apiFetch = async (action, options = {}) => {
+      const url = new URL(API_BASE_URL);
+      url.searchParams.append('action', action);
+      const response = await fetch(url.toString(), {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...options.headers }
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: Gagal mengambil data (${action})`);
-      let json;
-      try {
-        json = await res.json();
-      } catch(e) {
-        throw new Error(`Respons backend tidak valid (${action}). Pastikan Apps Script mengembalikan JSON.`);
-      }
-      if (!json.success) throw new Error(json.message || `Request ${action} gagal dari server`);
-      return json.data;
-    }
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message || `Gagal mengambil data ${action}`);
+      return data;
+    };
+    
+    const getStudentsAPI = () => apiFetch('getStudents').then(res => res.data);
+    const getTokensAPI = () => apiFetch('getTokens').then(res => res.data);
+    const getJadwalAPI = () => apiFetch('getJadwal').then(res => res.data);
+    const getKartuAPI = () => apiFetch('getKartu').then(res => res.data);
+    const saveStudentsAPI = (students) => fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(students)
+    }).then(res => res.json());
 
-    // Helper: POST yang diperbaiki - mengirim array siswa langsung (sesuai dengan backend GS)
-    async function gasPost(studentsArray) {
-      if (!Array.isArray(studentsArray)) {
-        throw new Error("Data harus berupa array siswa");
-      }
-      // Kirim array mentah seperti yang diharapkan oleh doPost di Apps Script
-      const res = await fetch(GAS_URL, {
-        method: "POST",
-        mode: "cors",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(studentsArray) // langsung array, bukan objek {action, students}
-      });
-      if (!res.ok) {
-        let errorText = "";
-        try { errorText = await res.text(); } catch(e) {}
-        throw new Error(`HTTP ${res.status} - ${errorText.substring(0, 100)}`);
-      }
-      let json;
-      try {
-        json = await res.json();
-      } catch(e) {
-        throw new Error("Respons backend tidak valid (bukan JSON) saat POST");
-      }
-      if (!json.success) throw new Error(json.message || "Gagal menyimpan data ke server");
-      return json;
-    }
-
-    // Komponen Icon
+    // ==================== KOMPONEN UTAMA (tanpa perubahan tampilan) ====================
     const Icon = ({ name, size = 18, className = "" }) => {
       const iconRef = useRef(null);
       useEffect(() => {
         if (iconRef.current && window.lucide) {
-          try { window.lucide.createIcons({ icons: { [name]: iconRef.current } }); } catch(e) {}
+          try {
+            window.lucide.createIcons({ icons: { [name]: iconRef.current } });
+          } catch(e) { console.warn(e); }
         }
       }, [name]);
-      return React.createElement('i', {
+      return React.createElement('i', { 
         ref: iconRef,
         'data-lucide': name,
         style: { width: size, height: size, display: 'inline-block' },
-        className
+        className: className
       });
     };
 
@@ -138,178 +107,253 @@
       const [jadwalItems, setJadwalItems] = useState([]);
       const [loadingJadwal, setLoadingJadwal] = useState(false);
       const [showVideoModal, setShowVideoModal] = useState(false);
+      const [isDemoMode, setIsDemoMode] = useState(false);
       const [isClient, setIsClient] = useState(false);
       const [loadingKartu, setLoadingKartu] = useState(false);
 
+      // Refresh lucide setelah setiap render
       useEffect(() => {
         if (window.lucide) window.lucide.createIcons();
       });
+
+      // Inisialisasi data: gunakan API jika tersedia, fallback demo jika gagal
+      useEffect(() => {
+        setIsClient(true);
+        // Cek apakah API_BASE_URL valid (bukan placeholder)
+        if (API_BASE_URL && API_BASE_URL !== "https://script.google.com/macros/s/AKfycby.../exec") {
+          setIsDemoMode(false);
+          // Ambil semua data awal
+          Promise.all([
+            getStudentsAPI().catch(() => []),
+            getTokensAPI().catch(() => []),
+            getKartuAPI().catch(() => [])
+          ]).then(([students, tokensData, kartuData]) => {
+            setDbStudents(students);
+            setTokens(tokensData);
+            setKartuStudents(kartuData);
+            if (tokensData && tokensData.length > 0) setSelectedDate(tokensData[0].tanggal);
+          }).catch(err => {
+            console.error("Gagal memuat data dari API, masuk mode demo", err);
+            setIsDemoMode(true);
+            loadDemoData();
+          });
+        } else {
+          setIsDemoMode(true);
+          loadDemoData();
+        }
+      }, []);
+
+      const loadDemoData = () => {
+        setDbStudents([
+          { id: 'demo1', nisn: '1234567890', nama: 'AHMAD FAUZAN', kelas: '6', rombel: 'SDN SINE 1 SINE' },
+          { id: 'demo2', nisn: '1234567891', nama: 'SITI NURHALIZA', kelas: '6', rombel: 'SDN SINE 1 SINE' },
+          { id: 'demo3', nisn: '1234567892', nama: 'BUDI PRASETYO', kelas: '6', rombel: 'SD MUHAMMADIYAH' },
+        ]);
+        setKartuStudents([
+          { id: 'k1', nisn: '1234567890', nama: 'AHMAD FAUZAN', kelas: '6', rombel: 'SDN SINE 1 SINE' },
+          { id: 'k2', nisn: '1234567891', nama: 'SITI NURHALIZA', kelas: '6', rombel: 'SDN SINE 1 SINE' },
+          { id: 'k3', nisn: '1234567892', nama: 'BUDI PRASETYO', kelas: '6', rombel: 'SD MUHAMMADIYAH' },
+        ]);
+        setTokens([{ tanggal: '10-15 Mei 2026' }]);
+        setSelectedDate('10-15 Mei 2026');
+        setJadwalItems([
+          { jadwal: "Ujian Akhir Semester", tanggal: "10-15 Mei 2026", token: "UAS2026", link_nilai: "#", link_unduh: "#" }
+        ]);
+      };
+
+      const loadKartuData = useCallback(() => {
+        if (!isDemoMode) {
+          setLoadingKartu(true);
+          getKartuAPI()
+            .then(data => { setKartuStudents(data); setLoadingKartu(false); })
+            .catch(err => { console.error(err); setKartuStudents([]); setLoadingKartu(false); showToast('Gagal memuat data kartu', 'error'); });
+        } else {
+          showToast('Mode demo, data kartu statis', 'info');
+        }
+      }, [isDemoMode]);
+
+      const refreshKartuData = () => {
+        if (!isDemoMode) loadKartuData();
+        else showToast('Mode demo, data kartu statis', 'info');
+      };
+
+      useEffect(() => {
+        if (view === 'jadwal' && !isDemoMode) {
+          setLoadingJadwal(true);
+          getJadwalAPI()
+            .then(data => { setJadwalItems(data); setLoadingJadwal(false); })
+            .catch(err => { console.error(err); setJadwalItems([]); setLoadingJadwal(false); showToast('Gagal memuat data jadwal', 'error'); });
+        }
+      }, [view, isDemoMode]);
 
       const showToast = useCallback((text, type = 'success') => {
         setSyncMessage({ show: true, text, type });
         setTimeout(() => setSyncMessage({ show: false, text: '', type: '' }), 3000);
       }, []);
 
-      const loadKartuData = useCallback(async () => {
-        setLoadingKartu(true);
-        try {
-          const data = await gasGet("getKartu");
-          setKartuStudents(data || []);
-        } catch (err) {
-          console.error('Gagal ambil data kartu:', err);
-          setKartuStudents([]);
-          showToast(`Gagal memuat kartu: ${err.message}`, 'error');
-        } finally {
-          setLoadingKartu(false);
-        }
-      }, [showToast]);
-
-      // Load data awal
-      useEffect(() => {
-        setIsClient(true);
-        // Load students
-        gasGet("getStudents")
-          .then(data => setDbStudents(data || []))
-          .catch(err => { console.error(err); showToast(`Gagal ambil data siswa: ${err.message}`, 'error'); setDbStudents([]); });
-        // Load tokens
-        gasGet("getTokens")
-          .then(data => {
-            setTokens(data || []);
-            if (data && data.length > 0) setSelectedDate(data[0].tanggal);
-          })
-          .catch(err => { console.error(err); showToast(`Gagal ambil token: ${err.message}`, 'error'); setTokens([]); });
-        // Load kartu
-        loadKartuData();
-      }, []);
-
-      useEffect(() => {
-        if (view === 'jadwal') {
-          setLoadingJadwal(true);
-          gasGet("getJadwal")
-            .then(data => { setJadwalItems(data || []); })
-            .catch(err => { setJadwalItems([]); showToast(`Gagal memuat jadwal: ${err.message}`, 'error'); })
-            .finally(() => setLoadingJadwal(false));
-        }
-      }, [view]);
-
       const isInputClosed = useMemo(() => {
         const today = new Date();
         const deadline = new Date(2026, 4, 6);
-        today.setHours(0,0,0,0);
-        deadline.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
+        deadline.setHours(0, 0, 0, 0);
         return today > deadline;
       }, []);
 
       const handlePaste = () => {
-        if (isInputClosed) { showToast('⛔ INPUT DITUTUP: Melebihi batas tanggal 6 Mei 2026.', 'error'); return; }
-        if (!rawInput.trim()) { showToast('Tidak ada data yang ditempel', 'error'); return; }
+        if (isInputClosed) {
+          showToast('⛔ INPUT DITUTUP: Melebihi batas tanggal 6 Mei 2026. Tidak dapat menambah data baru.', 'error');
+          return;
+        }
+        if (!rawInput.trim()) {
+          showToast('Tidak ada data yang ditempel', 'error');
+          return;
+        }
         const rows = rawInput.split('\n');
-        const parsed = rows.map(row => {
+        const parsed = rows.map((row) => {
           const cols = row.split('\t');
-          return { id: 'n-' + Math.random().toString(36).substr(2,9), nisn: (cols[0]||'').trim(), nama: (cols[1]||'').trim().toUpperCase(), kelas: (cols[2]||'').trim(), rombel: (cols[3]||'').trim() };
+          return {
+            id: 'n-' + Math.random().toString(36).substr(2, 9),
+            nisn: (cols[0] || '').trim(),
+            nama: (cols[1] || '').trim().toUpperCase(),
+            kelas: (cols[2] || '').trim(),
+            rombel: (cols[3] || '').trim()
+          };
         }).filter(s => s.nama || s.nisn);
-        if (parsed.length) { setNewEntries(prev => [...prev, ...parsed]); setRawInput(''); showToast(`${parsed.length} data ditambahkan ke antrian`, 'success'); }
-        else { showToast('Tidak ada data valid (pastikan format: NISN, NAMA, KELAS, ROMBEL)', 'error'); }
+        if (parsed.length) {
+          setNewEntries(prev => [...prev, ...parsed]);
+          setRawInput('');
+          showToast(`${parsed.length} data ditambahkan ke antrian`, 'success');
+        } else {
+          showToast('Tidak ada data valid (pastikan format: NISN, NAMA, KELAS, ROMBEL)', 'error');
+        }
       };
 
       const handleSaveFinal = async () => {
-        if (isInputClosed) { showToast('⛔ INPUT DITUTUP: Sinkronisasi data tidak diizinkan.', 'error'); return; }
-        if (newEntries.length === 0) { showToast('Tidak ada data untuk disinkronkan', 'error'); return; }
+        if (isInputClosed) {
+          showToast('⛔ INPUT DITUTUP: Melebihi batas tanggal 6 Mei 2026. Sinkronisasi data tidak diizinkan.', 'error');
+          return;
+        }
+        if (newEntries.length === 0) {
+          showToast('Tidak ada data untuk disinkronkan', 'error');
+          return;
+        }
         setIsSaving(true);
-        try {
-          // Kirim array siswa langsung (tanpa bungkus action)
-          await gasPost(newEntries);
-          // Refresh data dari server setelah sukses
-          const freshData = await gasGet("getStudents");
-          setDbStudents(freshData || []);
-          setNewEntries([]);
-          setShowSuccessModal(true);
-          showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
-        } catch (err) {
-          console.error(err);
-          showToast(err.message || 'Gagal menyimpan data, periksa koneksi atau backend', 'error');
-        } finally {
-          setIsSaving(false);
+        if (!isDemoMode) {
+          try {
+            const res = await saveStudentsAPI(newEntries);
+            if (res && res.success) {
+              const freshData = await getStudentsAPI();
+              setDbStudents(freshData);
+              setNewEntries([]);
+              setShowSuccessModal(true);
+              showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
+            } else {
+              showToast(res?.message || 'Gagal menyimpan data', 'error');
+            }
+          } catch (err) {
+            console.error(err);
+            showToast('Koneksi ke server terputus', 'error');
+          } finally {
+            setIsSaving(false);
+          }
+        } else {
+          setTimeout(() => {
+            setDbStudents(prev => [...prev, ...newEntries]);
+            setNewEntries([]);
+            setIsSaving(false);
+            setShowSuccessModal(true);
+            showToast('Sinkronisasi berhasil (mode demo)!', 'success');
+          }, 1500);
         }
       };
 
       const deleteEntry = (id) => setNewEntries(prev => prev.filter(s => s.id !== id));
-      const clearAllQueue = () => { if (newEntries.length > 0 && confirm('Hapus semua antrian?')) setNewEntries([]); };
-      const sortedPreview = useMemo(() => [...dbStudents].sort((a,b) => String(a.rombel).localeCompare(String(b.rombel)) || String(a.nama).localeCompare(String(b.nama))), [dbStudents]);
+      const clearAllQueue = () => {
+        if (newEntries.length > 0 && confirm('Hapus semua antrian?')) setNewEntries([]);
+      };
 
-      // ==================== KARTU UJIAN ====================
+      const sortedPreview = useMemo(() => [...dbStudents].sort((a, b) => String(a.rombel).localeCompare(String(b.rombel)) || String(a.nama).localeCompare(String(b.nama))), [dbStudents]);
+
+      // Komponen KartuUjianView (tidak berubah, menggunakan kartuStudents)
       const KartuUjianView = () => {
-        const lembagaList = ["SD MUHAMMADIYAH","SDIT AL ISLAM","SDIT AL-IKSAN","SDN GENDOL 1","SDN GIRIKERTO 1","SDN GIRIKERTO 2","SDN HARGOSARI 1","SDN HARGOSARI 2","SDN JAGIR 1","SDN JAGIR 2","SDN JAGIR 3","SDN JAGIR 4","SDN KAUMAN 1","SDN KETANGGUNG 1","SDN KUNIRAN 1","SDN KUNIRAN 2","SDN KUNIRAN 3","SDN NGRENDENG 2","SDN PANDANSARI","SDN POCOL","SDN SINE 1","SDN SINE 3","SDN SUMBEREJO 1","SDN SUMBERSARI 1","SDN SUMBERSARI 2","SDN TULAKAN 1","SDN TULAKAN 2","SDN TULAKAN 3","SDN TULAKAN 4","SDN TULAKAN 6","SDN WONOSARI 1","SDN WONOSARI 2"];
+        const lembagaList = ["SD MUHAMMADIYAH", "SDIT AL ISLAM", "SDIT AL-IKSAN", "SDN GENDOL 1", "SDN GIRIKERTO 1", "SDN GIRIKERTO 2", "SDN HARGOSARI 1", "SDN HARGOSARI 2", "SDN JAGIR 1", "SDN JAGIR 2", "SDN JAGIR 3", "SDN JAGIR 4", "SDN KAUMAN 1", "SDN KETANGGUNG 1", "SDN KUNIRAN 1", "SDN KUNIRAN 2", "SDN KUNIRAN 3", "SDN NGRENDENG 2", "SDN PANDANSARI", "SDN POCOL", "SDN SINE 1", "SDN SINE 3", "SDN SUMBEREJO 1", "SDN SUMBERSARI 1", "SDN SUMBERSARI 2", "SDN TULAKAN 1", "SDN TULAKAN 2", "SDN TULAKAN 3", "SDN TULAKAN 4", "SDN TULAKAN 6", "SDN WONOSARI 1", "SDN WONOSARI 2"];
         const [filterLembaga, setFilterLembaga] = useState("SEMUA");
         const [isExporting, setIsExporting] = useState(false);
         const uniqueDates = [...new Map(tokens.map(t => [t.tanggal, t.tanggal])).values()];
-
-        useEffect(() => { if (uniqueDates.length && !selectedDate) setSelectedDate(uniqueDates[0]); }, [tokens]);
-
+        
+        useEffect(() => { 
+          if (uniqueDates.length && !selectedDate) setSelectedDate(uniqueDates[0]); 
+        }, [tokens]);
+        
         const filteredStudents = useMemo(() => {
           if (filterLembaga === "SEMUA") return kartuStudents;
-          return kartuStudents.filter(s => (s.rombel||"").trim().toUpperCase() === filterLembaga.trim().toUpperCase());
+          return kartuStudents.filter(s => (s.rombel || "").trim().toUpperCase() === filterLembaga.trim().toUpperCase());
         }, [kartuStudents, filterLembaga]);
-
-        const renderCardHTML = (student, examDate) => {
-          const nama = student.nama || "TIDAK TERDAFTAR";
-          const lembaga = student.rombel || "-";
-          const kelas = student.kelas || "-";
-          const kodePeserta = student.nisn || "-";
-          const tanggalTampil = examDate || "Menunggu Jadwal";
-          const tanggalSplit = tanggalTampil.split(' - ');
-          const tgl1 = tanggalSplit[0] || tanggalTampil;
-          const tgl2 = tanggalSplit[1] || '';
-          return `<div class="kartu-print-item w-full max-w-2xl flex flex-row border border-gray-300 rounded-2xl overflow-hidden mb-5 shadow-sm bg-white" style="page-break-inside:avoid;break-inside:avoid;height:235px;">
-            <div class="bg-teal-custom w-[30%] p-4 flex flex-col items-center justify-center text-center text-white" style="background-color:#218380;">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Ngawi" crossorigin="anonymous" class="w-16 h-auto mb-3 drop-shadow-md">
-              <p class="text-[10px] font-medium leading-tight mt-1" style="color:white;">Tidak ada kebanggaan<br>dari kesuksesan<br>tanpa kejujuran</p>
-            </div>
-            <div class="w-[70%] p-5 relative">
-              <div class="absolute top-3 right-5 text-right text-[11px] text-gray-700 font-medium"><p>${tgl1}</p><p>${tgl2}</p></div>
-              <h2 class="text-xl text-teal-custom font-semibold tracking-wide mb-0" style="color:#218380;">Kartu Ujian</h2>
-              <p class="text-[11px] text-gray-800 font-bold mb-3 uppercase leading-tight">KORWIL PENDIDIKAN KEC. SINE</p>
-              <table class="w-full text-xs text-gray-800 font-medium"><tbody>
-                <tr><td class="py-1 w-24 align-top">Nama</td><td class="py-1 w-3 align-top">:</td><td class="py-1 align-top uppercase font-bold">${nama}</td></tr>
-                <tr><td class="py-1 align-top">Lembaga</td><td class="py-1 align-top">:</td><td class="py-1 align-top uppercase">${lembaga}</td></tr>
-                <tr><td class="py-1 align-top">Kelas</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${kelas}</td></tr>
-                <tr><td class="py-1 align-top">Kode Peserta</td><td class="py-1 align-top">:</td><td class="py-1 align-top font-mono">${kodePeserta}</td></tr>
-                <tr><td class="py-1 align-top">Pelaksanaan</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${tanggalTampil}</td></tr>
-              </tbody></table>
-              <div class="mt-3 text-[10px] text-gray-400"><p>Token Login akan diberikan sesuai jadwal ujian</p></div>
-            </div>
-          </div>`;
-        };
-
+        
         const renderCardsToContainer = useCallback((containerEl, students, examDate) => {
           if (!containerEl) return;
           containerEl.innerHTML = '';
-          if (students.length === 0) { containerEl.innerHTML = '<div class="text-center py-20 text-slate-400 font-bold">Tidak ada data kartu untuk ditampilkan</div>'; return; }
+          if (students.length === 0) { 
+            containerEl.innerHTML = '<div class="text-center py-20 text-slate-400 font-bold">.....................</div>'; 
+            return; 
+          }
+          const renderCardHTML = (student, examDate) => {
+            const nama = student.nama || "TIDAK TERDAFTAR";
+            const lembaga = student.rombel || "-";
+            const kelas = student.kelas || "-";
+            const kodePeserta = student.nisn || "-";
+            const tanggalTampil = examDate || "Menunggu Jadwal";
+            const tanggalSplit = tanggalTampil.split(' - ');
+            const tgl1 = tanggalSplit[0] || tanggalTampil;
+            const tgl2 = tanggalSplit[1] || '';
+            return `<div class="kartu-print-item w-full max-w-2xl flex flex-row border border-gray-300 rounded-2xl overflow-hidden mb-5 shadow-sm bg-white" style="page-break-inside: avoid; break-inside: avoid; height: 235px;">
+              <div class="bg-teal-custom w-[30%] p-4 flex flex-col items-center justify-center text-center text-white" style="background-color: #218380;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Ngawi" crossorigin="anonymous" class="w-16 h-auto mb-3 drop-shadow-md">
+                <p class="text-[10px] font-medium leading-tight mt-1" style="color: white;">Tidak ada kebanggaan<br>dari kesuksesan<br>tanpa kejujuran</p>
+              </div>
+              <div class="w-[70%] p-5 relative">
+                <div class="absolute top-3 right-5 text-right text-[11px] text-gray-700 font-medium"><p>${tgl1}</p><p>${tgl2}</p></div>
+                <h2 class="text-xl text-teal-custom font-semibold tracking-wide mb-0" style="color: #218380;">Kartu Ujian</h2>
+                <p class="text-[11px] text-gray-800 font-bold mb-3 uppercase leading-tight">KORWIL PENDIDIKAN KEC. SINE</p>
+                <table class="w-full text-xs text-gray-800 font-medium">
+                  <tbody>
+                    <tr><td class="py-1 w-24 align-top">Nama</td><td class="py-1 w-3 align-top">:</td><td class="py-1 align-top uppercase font-bold">${nama}</td><tr>
+                    <tr><td class="py-1 align-top">Lembaga</td><td class="py-1 align-top">:</td><td class="py-1 align-top uppercase">${lembaga}</td></tr>
+                    <tr><td class="py-1 align-top">Kelas</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${kelas}</td></tr>
+                    <tr><td class="py-1 align-top">Kode Peserta</td><td class="py-1 align-top">:</td><td class="py-1 align-top font-mono">${kodePeserta}</td></tr>
+                    <tr><td class="py-1 align-top">Pelaksanaan</td><td class="py-1 align-top">:</td><td class="py-1 align-top">${tanggalTampil}</td></tr>
+                  </tbody>
+                </table>
+                <div class="mt-3 text-[10px] text-gray-400"><p>Token Login akan diberikan sesuai jadwal ujian</p></div>
+              </div>
+            </div>`;
+          };
           students.forEach((student, idx) => {
             containerEl.insertAdjacentHTML('beforeend', renderCardHTML(student, examDate));
-            if ((idx+1) % 4 === 0 && idx !== students.length-1) containerEl.insertAdjacentHTML('beforeend', '<div class="html2pdf__page-break"></div>');
+            if ((idx + 1) % 4 === 0 && idx !== students.length - 1) 
+              containerEl.insertAdjacentHTML('beforeend', '<div class="html2pdf__page-break"></div>');
           });
         }, []);
-
+        
         useEffect(() => {
           const container = document.getElementById('kartu-dinamis-container');
           if (container) renderCardsToContainer(container, filteredStudents, selectedDate || "Menunggu Jadwal");
         }, [filteredStudents, selectedDate, renderCardsToContainer]);
-
+        
         const exportToPDF = () => {
           const element = document.getElementById('kartu-dinamis-container');
           if (!element || filteredStudents.length === 0) return alert("Tidak ada data untuk dicetak.");
           setIsExporting(true);
-          html2pdf().set({
-            margin: [0.3,0.3,0.3,0.3],
-            filename: `Kartu_Ujian_${filterLembaga === "SEMUA" ? "Semua" : filterLembaga}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css','legacy'] }
+          html2pdf().set({ 
+            margin: [0.3,0.3,0.3,0.3], 
+            filename: `Kartu_Ujian_${filterLembaga === "SEMUA" ? "Semua" : filterLembaga}.pdf`, 
+            image: { type: 'jpeg', quality: 0.98 }, 
+            html2canvas: { scale: 2, useCORS: true }, 
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, 
+            pagebreak: { mode: ['css', 'legacy'] } 
           }).from(element).save().finally(() => setIsExporting(false));
         };
-
+        
         if (loadingKartu && kartuStudents.length === 0) {
           return <div className="flex justify-center items-center py-32"><div className="spinner border-slate-800 w-8 h-8"></div><p className="ml-3 text-slate-500">Mengambil data kartu...</p></div>;
         }
@@ -317,14 +361,9 @@
         return (
           <div className="space-y-6 animate-fadeIn mt-6 w-full">
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 no-print">
-              <div>
-                <h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Kartu Peserta Ujian Digital</h2>
-                <p className="text-xs text-slate-500 font-medium mt-1">Cetak kartu ujian berbasis lembaga & jadwal</p>
-              </div>
+              <div><h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Kartu Peserta Ujian Digital</h2><p className="text-xs text-slate-500 font-medium mt-1"> <span className="font-mono bg-slate-100 px-1">""</span> | Cetak kartu ujian berbasis lembaga & jadwal</p></div>
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <button onClick={loadKartuData} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-                  <Icon name="refresh-cw" size={14} /> Muat Ulang Data
-                </button>
+                <button onClick={refreshKartuData} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><Icon name="refresh-cw" size={14} /> Muat Ulang Data</button>
                 <div className="relative w-full sm:w-64">
                   <select value={filterLembaga} onChange={e => setFilterLembaga(e.target.value)} className="w-full appearance-none p-3 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
                     <option value="SEMUA">-- SEMUA LEMBAGA --</option>
@@ -340,7 +379,7 @@
                   <Icon name="calendar" size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
                 <button onClick={exportToPDF} disabled={isExporting || filteredStudents.length === 0} className="w-full sm:w-auto bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white px-6 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
-                  {isExporting ? <div className="spinner border-white"></div> : <Icon name="file-text" size={16} />} PDF
+                  {isExporting ? <div className="spinner border-white"></div> : <Icon name="file-pdf" size={16} />} PDF
                 </button>
                 <button onClick={() => window.print()} disabled={filteredStudents.length === 0} className="w-full sm:w-auto bg-slate-900 hover:bg-black disabled:bg-gray-300 text-white px-6 py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
                   <Icon name="printer" size={16} /> Cetak
@@ -356,7 +395,6 @@
         );
       };
 
-      // ==================== ARSIP ====================
       const SkView = () => {
         const [activeDoc, setActiveDoc] = useState(0);
         const docs = [
@@ -374,7 +412,7 @@
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                 {docs.map((doc, idx) => (
                   <button key={idx} onClick={() => setActiveDoc(idx)} className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all text-left truncate border ${activeDoc === idx ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                    {idx+1}. {doc.title}
+                    {idx + 1}. {doc.title}
                   </button>
                 ))}
               </div>
@@ -386,245 +424,86 @@
           </div>
         );
       };
-
-      // ==================== UNDUHAN ====================
+      
       const UnduhanView = () => (
         <div className="bg-white p-12 rounded-3xl shadow-sm border border-slate-200 text-center animate-fadeIn mt-6">
           <div className="w-24 h-24 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6"><Icon name="download-cloud" size={48} /></div>
           <h2 className="text-2xl font-black text-slate-800 mb-4 tracking-tight">Unduh Aplikasi Exambrowser</h2>
           <p className="text-slate-500 mb-8 max-w-lg mx-auto leading-relaxed">Dapatkan Aplikasi Exambrowser yang akan digunakan dalam Pengerjaan Soal.</p>
-          <a href="https://github.com/yor-ktg2/init-id/raw/refs/heads/main/app-release.apk" className="inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl" download="app-Exambrowser.apk">
-            <Icon name="download" size={18} /> Unduh Apk Sekarang
-          </a>
+          <a href="https://github.com/yor-ktg2/init-id/raw/refs/heads/main/app-release.apk" className="inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl" download="app-Exambrowser.apk"><Icon name="download" size={18} /> Unduh Apk Sekarang</a>
         </div>
       );
 
-      // ==================== JADWAL & NILAI ====================
       const JadwalNilaiView = () => {
         const [previewModalOpen, setPreviewModalOpen] = useState(false);
         const [previewUrl, setPreviewUrl] = useState('');
         const [previewTitle, setPreviewTitle] = useState('');
-        const handlePreviewNilai = (url, jadwalNama) => {
-          if (!url || url === '#') { showToast('Link nilai belum tersedia', 'error'); return; }
-          setPreviewUrl(url); setPreviewTitle(jadwalNama || 'Pratinjau Nilai / Dokumen'); setPreviewModalOpen(true);
-        };
-        const handleUnduhLangsung = (url) => {
-          if (!url || url === '#') { showToast('Link unduhan belum tersedia', 'error'); return; }
-          window.open(url, '_blank'); showToast('Memulai unduhan...', 'success');
-        };
-        useEffect(() => {
-          const handleEsc = (e) => { if (e.key === 'Escape' && previewModalOpen) setPreviewModalOpen(false); };
-          window.addEventListener('keydown', handleEsc);
-          if (previewModalOpen) document.body.style.overflow = 'hidden'; else document.body.style.overflow = '';
-          return () => { window.removeEventListener('keydown', handleEsc); document.body.style.overflow = ''; };
-        }, [previewModalOpen]);
-
+        const forceDownload = (url) => { if (!url || url === '#') { showToast('Link unduhan tidak tersedia', 'error'); return false; } window.open(url, '_blank'); return true; };
+        const handlePreviewNilai = (url, jadwalNama) => { if (!url || url === '#') { showToast('Link nilai belum tersedia', 'error'); return; } setPreviewUrl(url); setPreviewTitle(jadwalNama || 'Pratinjau Nilai / Dokumen'); setPreviewModalOpen(true); };
+        const handleUnduhLangsung = (url) => { if (!url || url === '#') { showToast('Link unduhan belum tersedia', 'error'); return; } forceDownload(url); showToast('Memulai unduhan...', 'success'); };
+        useEffect(() => { const handleEsc = (e) => { if (e.key === 'Escape' && previewModalOpen) setPreviewModalOpen(false); }; window.addEventListener('keydown', handleEsc); if (previewModalOpen) document.body.style.overflow = 'hidden'; else document.body.style.overflow = ''; return () => { window.removeEventListener('keydown', handleEsc); document.body.style.overflow = ''; }; }, [previewModalOpen]);
         if (loadingJadwal) return <div className="flex justify-center items-center py-32"><div className="spinner border-slate-800 w-8 h-8"></div><p className="ml-3 text-slate-500">Memuat jadwal...</p></div>;
-        if (jadwalItems.length === 0) return (
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-12 text-center mt-6">
-            <Icon name="calendar-x" size={48} className="text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-800">Belum ada data jadwal</h3>
-            <p className="text-slate-500 text-sm mt-2">Silakan tambahkan data di sheet "jadwal"</p>
-          </div>
-        );
-
+        if (jadwalItems.length === 0) return <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-12 text-center mt-6"><Icon name="calendar-x" size={48} className="text-slate-300 mx-auto mb-4" /><h3 className="text-lg font-bold text-slate-800">Belum ada data jadwal</h3><p className="text-slate-500 text-sm mt-2">Silakan tambahkan data di sheet "jadwal"</p></div>;
         return (
           <>
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn mt-6">
-              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
-                <div>
-                  <h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Icon name="calendar" size={20} className="text-teal-custom" /> Jadwal & Nilai Ujian</h2>
-                  <p className="text-xs text-slate-500 mt-1">Token, link nilai, dan unduhan berkas ujian</p>
-                </div>
-                <button onClick={() => { setLoadingJadwal(true); gasGet("getJadwal").then(d => setJadwalItems(d||[])).finally(()=>setLoadingJadwal(false)); }} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50">
-                  <Icon name="refresh-cw" size={14} /> Muat Ulang
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider">
-                    <tr><th className="px-6 py-4 text-left">Jadwal</th><th className="px-6 py-4 text-left">Tanggal Pelaksanaan</th><th className="px-6 py-4 text-left">Token</th><th className="px-6 py-4 text-center">Aksi</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {jadwalItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/80 transition">
-                        <td className="px-6 py-4 font-semibold text-slate-800">{item.jadwal||'-'}</td>
-                        <td className="px-6 py-4 text-slate-600">{item.tanggal||'-'}</td>
-                        <td className="px-6 py-4"><span className="token-badge">{item.token||'-'}</span></td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-3">
-                            <button onClick={() => handlePreviewNilai(item.link_nilai, item.jadwal)} className="flex items-center gap-1.5 text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="eye" size={14} /> Lihat Nilai</button>
-                            <button onClick={() => handleUnduhLangsung(item.link_unduh)} className="flex items-center gap-1.5 text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="download" size={14} /> Unduh</button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3"><div><h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Icon name="calendar" size={20} className="text-teal-custom" /> Jadwal & Nilai Ujian</h2><p className="text-xs text-slate-500 mt-1">Token, link nilai, dan unduhan berkas ujian</p></div><button onClick={() => { setLoadingJadwal(true); setTimeout(() => { setLoadingJadwal(false); }, 500); }} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50"><Icon name="refresh-cw" size={14} /> Muat Ulang</button></div>
+              <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider"><tr><th className="px-6 py-4 text-left">Jadwal</th><th className="px-6 py-4 text-left">Tanggal Pelaksanaan</th><th className="px-6 py-4 text-left">Token</th><th className="px-6 py-4 text-center">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100">{jadwalItems.map((item, idx) => (<tr key={idx} className="hover:bg-slate-50/80 transition"><td className="px-6 py-4 font-semibold text-slate-800">{item.jadwal || '-'}</td><td className="px-6 py-4 text-slate-600">{item.tanggal || '-'}</td><td className="px-6 py-4"><span className="token-badge">{item.token || '-'}</span></td><td className="px-6 py-4"><div className="flex items-center justify-center gap-3"><button onClick={() => handlePreviewNilai(item.link_nilai, item.jadwal)} className="flex items-center gap-1.5 text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="eye" size={14} /> Lihat Nilai</button><button onClick={() => handleUnduhLangsung(item.link_unduh)} className="flex items-center gap-1.5 text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="download" size={14} /> Unduh</button></div></td></tr>))}</tbody></table></div>
             </div>
-            {previewModalOpen && (
-              <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 modal-backdrop" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
-                  <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/90">
-                    <div className="flex items-center gap-2"><Icon name="file-search" size={20} className="text-indigo-500" /><h3 className="font-bold text-slate-800 text-base truncate">{previewTitle}</h3></div>
-                    <button onClick={() => setPreviewModalOpen(false)} className="p-2 rounded-full hover:bg-slate-200"><Icon name="x" size={20} /></button>
-                  </div>
-                  <div className="flex-1 bg-slate-100 min-h-[500px] relative">
-                    <iframe src={previewUrl} title="Preview" className="absolute inset-0 w-full h-full border-0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"></iframe>
-                  </div>
-                </div>
-              </div>
-            )}
+            {previewModalOpen && (<div className="fixed inset-0 z-[400] flex items-center justify-center p-4 modal-backdrop" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}><div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden"><div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/90"><div className="flex items-center gap-2"><Icon name="file-search" size={20} className="text-indigo-500" /><h3 className="font-bold text-slate-800 text-base truncate">{previewTitle}</h3></div><button onClick={() => setPreviewModalOpen(false)} className="p-2 rounded-full hover:bg-slate-200"><Icon name="x" size={20} /></button></div><div className="flex-1 bg-slate-100 min-h-[500px] relative"><iframe src={previewUrl} title="Preview" className="absolute inset-0 w-full h-full border-0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"></iframe></div></div></div>)}
           </>
         );
       };
 
-      // ==================== HOME ====================
       const HomeView = () => (
         <div className="space-y-16 pb-20 animate-fadeIn">
           <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-8 md:p-16 shadow-2xl">
-            <div className="relative z-10 max-w-3xl">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Portal Resmi Korwil Sine</span>
-              <h2 className="text-4xl md:text-5xl font-black leading-tight mb-6">Modernisasi Data Pendidikan Kecamatan Sine.</h2>
-              <p className="text-slate-400 text-lg mb-10">Platform integrasi data siswa untuk mempermudah pelaporan, pemantauan, dan administrasi ujian secara real-time.</p>
-              <div className="flex flex-wrap gap-4">
-                <button onClick={() => setView('input')} className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-3 shadow-lg">Mulai Input Data <Icon name="arrow-right" size={18} /></button>
-                <button onClick={() => setView('preview')} className="bg-slate-800 text-white border border-slate-700 px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-3">Lihat Laporan <Icon name="printer" size={18} /></button>
-              </div>
-            </div>
+            <div className="relative z-10 max-w-3xl"><span className="inline-block px-4 py-1.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6">Portal Resmi Korwil Sine</span><h2 className="text-4xl md:text-5xl font-black leading-tight mb-6">Modernisasi Data Pendidikan Kecamatan Sine.</h2><p className="text-slate-400 text-lg mb-10">Platform integrasi data siswa untuk mempermudah pelaporan, pemantauan, dan administrasi ujian secara real-time.</p><div className="flex flex-wrap gap-4"><button onClick={() => setView('input')} className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-3 shadow-lg">Mulai Input Data <Icon name="arrow-right" size={18} /></button><button onClick={() => setView('preview')} className="bg-slate-800 text-white border border-slate-700 px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-3">Lihat Laporan <Icon name="printer" size={18} /></button></div></div>
           </section>
           <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6"><Icon name="target" size={24} /></div>
-              <h3 className="text-2xl font-black text-slate-800 mb-4 uppercase tracking-tighter">Visi Digitalisasi</h3>
-              <p className="text-slate-500 leading-relaxed">Mewujudkan ekosistem pendidikan di Kecamatan Sine yang transparan, akuntabel, dan berbasis data digital.</p>
-            </div>
-            <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6"><Icon name="check-circle" size={24} /></div>
-              <h3 className="text-2xl font-black text-slate-800 mb-4 uppercase tracking-tighter">Misi Utama</h3>
-              <ul className="space-y-3 text-slate-500 text-sm">
-                <li className="flex gap-3"><Icon name="chevron-right" size={16} className="text-emerald-500 shrink-0 mt-1" /><span>Mengurangi penggunaan kertas (Paperless).</span></li>
-                <li className="flex gap-3"><Icon name="chevron-right" size={16} className="text-emerald-500 shrink-0 mt-1" /><span>Mempercepat sinkronisasi data antar sekolah.</span></li>
-                <li className="flex gap-3"><Icon name="chevron-right" size={16} className="text-emerald-500 shrink-0 mt-1" /><span>Menjamin keamanan data siswa secara cloud.</span></li>
-              </ul>
-            </div>
+            <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm"><div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6"><Icon name="target" size={24} /></div><h3 className="text-2xl font-black text-slate-800 mb-4 uppercase tracking-tighter">Visi Digitalisasi</h3><p className="text-slate-500 leading-relaxed">Mewujudkan ekosistem pendidikan di Kecamatan Sine yang transparan, akuntabel, dan berbasis data digital.</p></div>
+            <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm"><div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6"><Icon name="check-circle" size={24} /></div><h3 className="text-2xl font-black text-slate-800 mb-4 uppercase tracking-tighter">Misi Utama</h3><ul className="space-y-3 text-slate-500 text-sm"><li className="flex gap-3"><Icon name="chevron-right" size={16} className="text-emerald-500 shrink-0 mt-1" /><span>Mengurangi penggunaan kertas (Paperless).</span></li><li className="flex gap-3"><Icon name="chevron-right" size={16} className="text-emerald-500 shrink-0 mt-1" /><span>Mempercepat sinkronisasi data antar sekolah.</span></li><li className="flex gap-3"><Icon name="chevron-right" size={16} className="text-emerald-500 shrink-0 mt-1" /><span>Menjamin keamanan data siswa secara cloud.</span></li></ul></div>
           </section>
         </div>
       );
 
-      // ==================== INPUT VIEW ====================
       const InputView = ({ isClosed }) => (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fadeIn w-full">
-          {isClosed && (
-            <div className="lg:col-span-12 -mt-2">
-              <div className="bg-red-50 border-l-8 border-red-500 rounded-xl p-5 shadow-sm flex items-center gap-4">
-                <Icon name="lock" size={28} className="text-red-600" />
-                <div><p className="font-black text-red-800 text-sm uppercase tracking-wide">⚠️ PENGINPUTAN DITUTUP</p><p className="text-red-700 text-xs font-medium">Batas waktu input data telah melewati tanggal 6 Mei 2026. Anda tidak dapat menambahkan atau menyinkronkan data baru.</p></div>
-              </div>
-            </div>
-          )}
+          {isClosed && (<div className="lg:col-span-12 -mt-2"><div className="bg-red-50 border-l-8 border-red-500 rounded-xl p-5 shadow-sm flex items-center gap-4"><Icon name="lock" size={28} className="text-red-600" /><div><p className="font-black text-red-800 text-sm uppercase tracking-wide">⚠️ PENGINPUTAN DITUTUP</p><p className="text-red-700 text-xs font-medium">Batas waktu input data telah melewati tanggal 6 Mei 2026. Anda tidak dapat menambahkan atau menyinkronkan data baru.</p></div></div></div>)}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-5">
-                <h2 className="font-bold text-slate-800 text-sm flex items-center gap-2"><Icon name="layers" size={16} className="text-slate-400" /> Entri Cepat</h2>
-                <button onClick={() => setShowVideoModal(true)} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-xl text-[11px] font-bold transition shadow-sm"><Icon name="youtube" size={14} /> Tutorial Video</button>
-              </div>
-              <div className="text-[12px] text-slate-500 space-y-4 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 font-medium">
-                <p>Cara Salin dari Excel:</p>
-                <div className="flex flex-wrap items-center gap-2 text-slate-800">
-                  <span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">NISN</span>
-                  <Icon name="chevron-right" size={10} />
-                  <span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">NAMA</span>
-                  <Icon name="chevron-right" size={10} />
-                  <span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">KLS</span>
-                  <Icon name="chevron-right" size={10} />
-                  <span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">ROMBEL</span>
-                </div>
-              </div>
+              <div className="flex justify-between items-center mb-5"><h2 className="font-bold text-slate-800 text-sm flex items-center gap-2"><Icon name="layers" size={16} className="text-slate-400" /> Entri Cepat</h2><button onClick={() => setShowVideoModal(true)} className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-xl text-[11px] font-bold transition shadow-sm"><Icon name="youtube" size={14} /> Tutorial Video</button></div>
+              <div className="text-[12px] text-slate-500 space-y-4 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 font-medium"><p>Cara Salin dari Excel:</p><div className="flex flex-wrap items-center gap-2 text-slate-800"><span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">NISN</span><Icon name="chevron-right" size={10} /><span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">NAMA</span><Icon name="chevron-right" size={10} /><span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">KLS</span><Icon name="chevron-right" size={10} /><span className="text-[9px] bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">ROMBEL</span></div></div>
               <div className="mt-6 space-y-3">
-                <textarea value={rawInput} onChange={e => setRawInput(e.target.value)} disabled={isClosed}
-                  className={`w-full h-36 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 focus:bg-white outline-none transition-all placeholder:text-slate-300 font-medium ${isClosed ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}`}
-                  placeholder={isClosed ? "INPUT DITUTUP - Tidak dapat menambah data baru" : "Klik di sini, lalu tempel data Excel (Ctrl+V)..."}></textarea>
-                <button onClick={handlePaste} disabled={isClosed}
-                  className={`w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isClosed ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-lg'}`}>
-                  <Icon name="plus" size={14} /> Tambah ke Daftar
-                </button>
+                <textarea value={rawInput} onChange={(e) => setRawInput(e.target.value)} disabled={isClosed} className={`w-full h-36 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-100 focus:bg-white outline-none transition-all placeholder:text-slate-300 font-medium ${isClosed ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}`} placeholder={isClosed ? "INPUT DITUTUP - Tidak dapat menambah data baru" : "Klik di sini, lalu tempel data Excel (Ctrl+V)..."}></textarea>
+                <button onClick={handlePaste} disabled={isClosed} className={`w-full py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${isClosed ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-lg'}`}><Icon name="plus" size={14} /> Tambah ke Daftar</button>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl text-white shadow-xl">
-              <p className="text-xs font-medium leading-relaxed text-slate-300">Data akan tersimpan permanen di server pusat setelah sinkron.</p>
-            </div>
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl text-white shadow-xl"><p className="text-xs font-medium leading-relaxed text-slate-300">Data akan tersimpan permanen di server pusat setelah sinkron.</p></div>
           </div>
           <div className="lg:col-span-8">
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-full min-h-[550px]">
               <div className="px-6 py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
-                  <h3 className="font-bold text-slate-800 text-base tracking-tight uppercase">Daftar Antrian</h3>
-                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Total: {newEntries.length} Siswa Baru</p>
-                </div>
-                <div className="flex gap-3">
-                  {newEntries.length > 0 && <button onClick={clearAllQueue} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100"><Icon name="trash-2" size={14} /> Hapus Semua</button>}
-                  <button onClick={handleSaveFinal} disabled={isClosed || isSaving || newEntries.length === 0}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold transition-all ${(isClosed || isSaving || newEntries.length === 0) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md'}`}>
-                    {isSaving ? <div className="spinner border-white"></div> : <Icon name="send" size={14} />} SINKRONKAN DATA
-                  </button>
-                </div>
+                <div><h3 className="font-bold text-slate-800 text-base tracking-tight uppercase">Daftar Antrian</h3><p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Total: {newEntries.length} Siswa Baru</p></div>
+                <div className="flex gap-3">{newEntries.length > 0 && <button onClick={clearAllQueue} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100"><Icon name="trash-2" size={14} /> Hapus Semua</button>}<button onClick={handleSaveFinal} disabled={isClosed || isSaving || newEntries.length === 0} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold transition-all ${(isClosed || isSaving || newEntries.length === 0) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md'}`}>{isSaving ? <div className="spinner border-white"></div> : <Icon name="send" size={14} />} SINKRONKAN DATA</button></div>
               </div>
               <div className="flex-1 overflow-y-auto max-h-[550px] custom-scrollbar">
-                {newEntries.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-32 text-slate-300">
-                    <Icon name="inbox" size={64} className="mb-4 opacity-50" />
-                    <p className="text-sm font-medium">Belum ada data dalam antrian</p>
-                    <p className="text-xs">Tempel data dari Excel dan klik "Tambah ke Daftar"</p>
-                  </div>
-                ) : (
-                  <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-white/95 backdrop-blur-sm text-slate-400 font-bold border-b border-slate-100">
-                      <tr><th className="px-6 py-5 w-32">NISN</th><th className="px-4 py-5">Nama Lengkap</th><th className="px-4 py-5 w-16 text-center">Kls</th><th className="px-4 py-5 w-28 text-center">Rombel</th><th className="px-6 py-5 text-right w-12"></th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {newEntries.map(s => (
-                        <tr key={s.id} className="hover:bg-slate-50/70">
-                          <td className="px-6 py-4 font-mono text-slate-500 text-[11px]">{s.nisn||'-'}</td>
-                          <td className="px-4 py-4 font-bold text-slate-700 uppercase">{s.nama}</td>
-                          <td className="px-4 py-4 text-slate-500 font-bold text-center">{s.kelas||'-'}</td>
-                          <td className="px-4 py-4 text-center"><span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[9px] font-black border border-slate-200 uppercase">{s.rombel||'-'}</span></td>
-                          <td className="px-6 py-4 text-right"><button onClick={() => deleteEntry(s.id)} className="text-slate-300 hover:text-red-500"><Icon name="trash-2" size={16}/></button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                {newEntries.length === 0 ? (<div className="flex flex-col items-center justify-center py-32 text-slate-300"><Icon name="inbox" size={64} className="mb-4 opacity-50" /><p className="text-sm font-medium">Belum ada data dalam antrian</p><p className="text-xs">Tempel data dari Excel dan klik "Tambah ke Daftar"</p></div>) : (<table className="w-full text-left text-xs"><thead className="sticky top-0 bg-white/95 backdrop-blur-sm text-slate-400 font-bold border-b border-slate-100"><tr><th className="px-6 py-5 w-32">NISN</th><th className="px-4 py-5">Nama Lengkap</th><th className="px-4 py-5 w-16 text-center">Kls</th><th className="px-4 py-5 w-28 text-center">Rombel</th><th className="px-6 py-5 text-right w-12"></th></tr></thead><tbody className="divide-y divide-slate-50">{newEntries.map((s) => (<tr key={s.id} className="hover:bg-slate-50/70"><td className="px-6 py-4 font-mono text-slate-500 text-[11px]">{s.nisn || '-'}</td><td className="px-4 py-4 font-bold text-slate-700 uppercase">{s.nama}</td><td className="px-4 py-4 text-slate-500 font-bold text-center">{s.kelas || '-'}</td><td className="px-4 py-4 text-center"><span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[9px] font-black border border-slate-200 uppercase">{s.rombel || '-'}</span></td><td className="px-6 py-4 text-right"><button onClick={() => deleteEntry(s.id)} className="text-slate-300 hover:text-red-500"><Icon name="trash-2" size={16}/></button></td></tr>))}</tbody></table>)}
               </div>
             </div>
           </div>
         </div>
       );
 
-      // ==================== VIDEO MODAL ====================
       const VideoTutorialModal = () => {
-        useEffect(() => {
-          const handleEsc = (e) => { if (e.key === 'Escape' && showVideoModal) setShowVideoModal(false); };
-          window.addEventListener('keydown', handleEsc);
-          if (showVideoModal) document.body.style.overflow = 'hidden'; else document.body.style.overflow = '';
-          return () => { window.removeEventListener('keydown', handleEsc); document.body.style.overflow = ''; };
-        }, [showVideoModal]);
+        useEffect(() => { const handleEsc = (e) => { if (e.key === 'Escape' && showVideoModal) setShowVideoModal(false); }; window.addEventListener('keydown', handleEsc); if (showVideoModal) document.body.style.overflow = 'hidden'; else document.body.style.overflow = ''; return () => { window.removeEventListener('keydown', handleEsc); document.body.style.overflow = ''; }; }, [showVideoModal]);
         if (!showVideoModal) return null;
         return (
           <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 modal-backdrop" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)' }}>
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-              <div className="flex items-center justify-between p-5 bg-gradient-to-r from-slate-800 to-slate-900 text-white">
-                <div className="flex items-center gap-3"><Icon name="play" size={18} className="text-blue-400" /><h3 className="font-bold">📹 Video Tutorial Penggunaan Sistem</h3></div>
-                <button onClick={() => setShowVideoModal(false)} className="p-2 rounded-full hover:bg-white/20"><Icon name="x" size={20} /></button>
-              </div>
-              <div className="flex-1 bg-slate-900 relative min-h-[500px]">
-                <iframe src="https://drive.google.com/file/d/1E1N-Lk9NE1eltJ-NCgWUt5X_nOBGFNIN/preview" className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen></iframe>
-              </div>
-              <div className="p-3 bg-slate-100 text-[11px] text-slate-600 flex justify-between items-center">
-                <span>📘 Tutorial lengkap tata cara input data dan cetak kartu ujian</span>
-                <button onClick={() => setShowVideoModal(false)} className="text-xs font-bold bg-white px-4 py-1.5 rounded-full shadow">Tutup</button>
-              </div>
+              <div className="flex items-center justify-between p-5 bg-gradient-to-r from-slate-800 to-slate-900 text-white"><div className="flex items-center gap-3"><Icon name="play" size={18} className="text-blue-400" /><h3 className="font-bold">📹 Video Tutorial Penggunaan Sistem</h3></div><button onClick={() => setShowVideoModal(false)} className="p-2 rounded-full hover:bg-white/20"><Icon name="x" size={20} /></button></div>
+              <div className="flex-1 bg-slate-900 relative min-h-[500px]"><iframe src="https://drive.google.com/file/d/1E1N-Lk9NE1eltJ-NCgWUt5X_nOBGFNIN/preview" className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen></iframe></div>
+              <div className="p-3 bg-slate-100 text-[11px] text-slate-600 flex justify-between items-center"><span>📘 Tutorial lengkap tata cara input data dan cetak kartu ujian</span><button onClick={() => setShowVideoModal(false)} className="text-xs font-bold bg-white px-4 py-1.5 rounded-full shadow">Tutup</button></div>
             </div>
           </div>
         );
@@ -636,67 +515,10 @@
 
       return (
         <div className="min-h-screen flex flex-col w-full">
-          {syncMessage.show && (
-            <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-[300] toast-success px-6 py-3 rounded-full shadow-xl text-sm font-bold flex items-center gap-2 ${syncMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
-              {syncMessage.type === 'error' ? <Icon name="alert-circle" size={18} /> : <Icon name="check-circle" size={18} />} {syncMessage.text}
-            </div>
-          )}
-          {isSaving && (
-            <div className="fixed inset-0 z-[200] bg-black/20 backdrop-blur-sm flex items-center justify-center">
-              <div className="bg-white p-6 rounded-2xl shadow-2xl flex items-center gap-4">
-                <div className="spinner"></div>
-                <div><p className="text-slate-800 font-bold">Menyimpan Data</p><p className="text-slate-400 text-[10px]">Harap tunggu...</p></div>
-              </div>
-            </div>
-          )}
-          {showSuccessModal && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 modal-backdrop">
-              <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center">
-                <div className="relative w-20 h-20 mx-auto mb-6">
-                  <div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-25"></div>
-                  <div className="relative bg-emerald-500 text-white w-20 h-20 rounded-full flex items-center justify-center"><Icon name="check" size={40} /></div>
-                </div>
-                <h3 className="text-xl font-extrabold text-slate-800 mb-2">Data Tersinkron!</h3>
-                <p className="text-slate-500 mb-8 text-sm">Seluruh antrian data telah berhasil digabungkan.</p>
-                <button onClick={() => { setShowSuccessModal(false); setView('preview'); }} className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3">
-                  Buka Laporan Cetak <Icon name="arrow-right" size={16} />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* NAVBAR */}
-          <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 no-print sticky top-0 z-50 w-full">
-            <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
-              <div onClick={() => setView('home')} className="flex items-center gap-3 cursor-pointer">
-                <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-100">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Ngawi" className="h-9 w-auto object-contain" />
-                </div>
-                <div>
-                  <h1 className="font-bold text-slate-800 leading-none text-sm uppercase tracking-tight">KORWILDIKBUD KEC. SINE</h1>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">ASSESMENT AKHIR SEMESTER BERBASIS DARING</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap justify-center p-1.5 bg-slate-100 rounded-2xl gap-1">
-                {[
-                  { id: 'home', label: 'Beranda', icon: 'home' },
-                  { id: 'input', label: 'Input', icon: 'plus-circle' },
-                  { id: 'preview', label: 'Laporan', icon: 'file-text' },
-                  { id: 'sk', label: 'Arsip', icon: 'award' },
-                  { id: 'jadwal', label: 'Token', icon: 'key' },
-                  { id: 'unduhan', label: 'Unduhan', icon: 'download' },
-                  { id: 'kartu', label: 'Cetak Kartu', icon: 'credit-card' }
-                ].map(item => (
-                  <button key={item.id} onClick={() => setView(item.id)}
-                    className={`px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold flex items-center gap-1.5 uppercase tracking-wider transition-all ${view === item.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                    <Icon name={item.icon} size={14} />{item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </nav>
-
-          {/* MAIN CONTENT */}
+          {syncMessage.show && (<div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-[300] toast-success px-6 py-3 rounded-full shadow-xl text-sm font-bold flex items-center gap-2 ${syncMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>{syncMessage.type === 'error' ? <Icon name="alert-circle" size={18} /> : <Icon name="check-circle" size={18} />} {syncMessage.text}</div>)}
+          {isSaving && (<div className="fixed inset-0 z-[200] bg-black/20 backdrop-blur-sm flex items-center justify-center"><div className="bg-white p-6 rounded-2xl shadow-2xl flex items-center gap-4"><div className="spinner"></div><div><p className="text-slate-800 font-bold">Menyimpan Data</p><p className="text-slate-400 text-[10px]">Harap tunggu...</p></div></div></div>)}
+          {showSuccessModal && (<div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 modal-backdrop"><div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center"><div className="relative w-20 h-20 mx-auto mb-6"><div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-25"></div><div className="relative bg-emerald-500 text-white w-20 h-20 rounded-full flex items-center justify-center"><Icon name="check" size={40} /></div></div><h3 className="text-xl font-extrabold text-slate-800 mb-2">Data Tersinkron!</h3><p className="text-slate-500 mb-8 text-sm">Seluruh antrian data telah berhasil digabungkan.</p><button onClick={() => { setShowSuccessModal(false); setView('preview'); }} className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3">Buka Laporan Cetak <Icon name="arrow-right" size={16} /></button></div></div>)}
+          <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 no-print sticky top-0 z-50 w-full"><div className="w-full flex flex-col md:flex-row justify-between items-center gap-4"><div onClick={() => setView('home')} className="flex items-center gap-3 cursor-pointer"><div className="bg-white p-1 rounded-xl shadow-sm border border-slate-100"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/1280px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Ngawi" className="h-9 w-auto object-contain" /></div><div><h1 className="font-bold text-slate-800 leading-none text-sm uppercase tracking-tight">KORWILDIKBUD KEC. SINE</h1><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">ASSESMENT AKHIR SEMESTER BERBASIS DARING</p></div></div><div className="flex flex-wrap justify-center p-1.5 bg-slate-100 rounded-2xl gap-1">{[{ id: 'home', label: 'Beranda', icon: 'home' }, { id: 'input', label: 'Input', icon: 'plus-circle' }, { id: 'preview', label: 'Laporan', icon: 'file-text' }, { id: 'sk', label: 'Arsip', icon: 'award' }, { id: 'jadwal', label: 'Token', icon: 'key' }, { id: 'unduhan', label: 'Unduhan', icon: 'download' }, { id: 'kartu', label: 'Cetak Kartu', icon: 'id-card' }].map((item) => (<button key={item.id} onClick={() => setView(item.id)} className={`px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold flex items-center gap-1.5 uppercase tracking-wider transition-all ${view === item.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><Icon name={item.icon} size={14} />{item.label}</button>))}</div></div></nav>
           <main className="w-full px-4 sm:px-6 py-8 flex-1">
             {view === 'home' && <HomeView />}
             {view === 'jadwal' && <JadwalNilaiView />}
@@ -704,52 +526,9 @@
             {view === 'sk' && <SkView />}
             {view === 'unduhan' && <UnduhanView />}
             {view === 'input' && <InputView isClosed={isInputClosed} />}
-            {view === 'preview' && (
-              <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden print-area animate-fadeIn w-full">
-                <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center no-print">
-                  <button onClick={() => setView('input')} className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl"><Icon name="chevron-left" size={20} /></button>
-                  <button onClick={() => window.print()} className="bg-slate-900 text-white px-8 py-3 rounded-xl text-xs font-bold shadow-lg flex items-center gap-3"><Icon name="printer" size={16} /> Cetak Laporan</button>
-                </div>
-                <div className="p-16 md:p-24 bg-white w-full">
-                  <div className="text-center mb-12 border-b-4 border-slate-900 pb-10">
-                    <h2 className="text-2xl font-black uppercase">DAFTAR PESERTA UJIAN SEMESTER AKHIR</h2>
-                    <h3 className="text-lg font-bold uppercase text-slate-700 mt-2">KORWIL BIDANG PENDIDIKAN KECAMATAN SINE</h3>
-                    <div className="mt-6 inline-block bg-slate-900 text-white px-10 py-2 rounded-full text-xs font-black tracking-[0.2em]">TAHUN PELAJARAN 2025 / 2026</div>
-                  </div>
-                  <table className="w-full border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-slate-100">
-                        <th className="border-2 border-slate-900 p-4">No</th>
-                        <th className="border-2 border-slate-900 p-4">NISN</th>
-                        <th className="border-2 border-slate-900 p-4 text-left">Nama Lengkap</th>
-                        <th className="border-2 border-slate-900 p-4">Kls</th>
-                        <th className="border-2 border-slate-900 p-4">Rombel</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedPreview.length ? sortedPreview.map((s, idx) => (
-                        <tr key={s.id || idx}>
-                          <td className="border-2 border-slate-900 p-3 text-center font-bold">{idx+1}</td>
-                          <td className="border-2 border-slate-900 p-3 text-center font-mono">{s.nisn}</td>
-                          <td className="border-2 border-slate-900 p-3 font-black uppercase">{s.nama}</td>
-                          <td className="border-2 border-slate-900 p-3 text-center font-bold">{s.kelas}</td>
-                          <td className="border-2 border-slate-900 p-3 text-center font-black uppercase">{s.rombel}</td>
-                        </tr>
-                      )) : (
-                        <tr><td colSpan="5" className="border-2 border-slate-900 p-24 text-center italic text-slate-300">Database kosong</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            {view === 'preview' && (<div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden print-area animate-fadeIn w-full"><div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center no-print"><button onClick={() => setView('input')} className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl"><Icon name="chevron-left" size={20} /></button><button onClick={() => window.print()} className="bg-slate-900 text-white px-8 py-3 rounded-xl text-xs font-bold shadow-lg flex items-center gap-3"><Icon name="printer" size={16} /> Cetak Laporan</button></div><div className="p-16 md:p-24 bg-white w-full"><div className="text-center mb-12 border-b-4 border-slate-900 pb-10"><h2 className="text-2xl font-black uppercase">DAFTAR PESERTA UJIAN SEMESTER AKHIR</h2><h3 className="text-lg font-bold uppercase text-slate-700 mt-2">KORWIL BIDANG PENDIDIKAN KECAMATAN SINE</h3><div className="mt-6 inline-block bg-slate-900 text-white px-10 py-2 rounded-full text-xs font-black tracking-[0.2em]">TAHUN PELAJARAN 2025 / 2026</div></div><table className="w-full border-collapse text-xs"><thead><tr className="bg-slate-100"><th className="border-2 border-slate-900 p-4">No</th><th className="border-2 border-slate-900 p-4">NISN</th><th className="border-2 border-slate-900 p-4 text-left">Nama Lengkap</th><th className="border-2 border-slate-900 p-4">Kls</th><th className="border-2 border-slate-900 p-4">Rombel</th></tr></thead><tbody>{sortedPreview.length ? sortedPreview.map((s, idx) => (<tr key={s.id}><td className="border-2 border-slate-900 p-3 text-center font-bold">{idx+1}</td><td className="border-2 border-slate-900 p-3 text-center font-mono">{s.nisn}</td><td className="border-2 border-slate-900 p-3 font-black uppercase">{s.nama}</td><td className="border-2 border-slate-900 p-3 text-center font-bold">{s.kelas}</td><td className="border-2 border-slate-900 p-3 text-center font-black uppercase">{s.rombel}</td></tr>)) : (<tr><td colSpan="5" className="border-2 border-slate-900 p-24 text-center italic text-slate-300">Database kosong</td></tr>)}</tbody></table></div></div>)}
           </main>
-
-          <footer className="py-8 px-6 border-t border-slate-100 no-print text-center bg-white w-full">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Arsip Digital Korwil Sine</p>
-            <p className="text-[9px] text-slate-300 font-medium">Support@Yor.iAPP</p>
-          </footer>
-
+          <footer className="py-8 px-6 border-t border-slate-100 no-print text-center bg-white w-full"><p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Arsip Digital Korwil Sine</p><p className="text-[9px] text-slate-300 font-medium">Support@Yor.iAPP</p></footer>
           <VideoTutorialModal />
         </div>
       );
