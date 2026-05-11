@@ -47,36 +47,7 @@
   <script type="text/babel">
     const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
-    // ==================== KONFIGURASI BACKEND ====================
-    const BASE_URL = "https://script.google.com/macros/s/AKfycbx9dIBo8LWYGGI1hmlaIvuEUegfXKpW9nNHcMaaiS5BEGhTT0jFOUQ94tnu-xfmuhfNHQ/exec";
-
-    // Fungsi panggil GET API (action)
-    async function fetchGet(action) {
-      const url = `${BASE_URL}?action=${action}`;
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message || 'Gagal mengambil data');
-      return data;
-    }
-
-    // Fungsi panggil POST API (sinkronisasi)
-    async function fetchPost(payload) {
-      const res = await fetch(BASE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message || 'Gagal menyimpan data');
-      return data;
-    }
-
-    // ==================== KOMPONEN ICON ====================
+    // Komponen Icon dengan fallback dan refresh global
     const Icon = ({ name, size = 18, className = "" }) => {
       const iconRef = useRef(null);
       useEffect(() => {
@@ -94,11 +65,15 @@
       });
     };
 
-    // ==================== APP UTAMA ====================
     const App = () => {
+      // ==============================================================================
+      // URL Web App GAS Anda
+      // ==============================================================================
+      const GAS_URL = "https://script.google.com/macros/s/AKfycbx9dIBo8LWYGGI1hmlaIvuEUegfXKpW9nNHcMaaiS5BEGhTT0jFOUQ94tnu-xfmuhfNHQ/exec"; 
+
       const [view, setView] = useState('home');
-      const [dbStudents, setDbStudents] = useState([]);
-      const [kartuStudents, setKartuStudents] = useState([]);
+      const [dbStudents, setDbStudents] = useState([]);        
+      const [kartuStudents, setKartuStudents] = useState([]);  
       const [newEntries, setNewEntries] = useState([]);
       const [tokens, setTokens] = useState([]);
       const [selectedDate, setSelectedDate] = useState('');
@@ -109,60 +84,114 @@
       const [jadwalItems, setJadwalItems] = useState([]);
       const [loadingJadwal, setLoadingJadwal] = useState(false);
       const [showVideoModal, setShowVideoModal] = useState(false);
+      const [isDemoMode, setIsDemoMode] = useState(false);
       const [isClient, setIsClient] = useState(false);
       const [loadingKartu, setLoadingKartu] = useState(false);
-      const [loadingInitial, setLoadingInitial] = useState(true);
 
-      // Refresh lucide icons setiap render
       useEffect(() => {
-        if (window.lucide) window.lucide.createIcons();
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
       });
 
-      // Load data awal dari API
-      useEffect(() => {
-        setIsClient(true);
-        const loadInitialData = async () => {
-          try {
-            const [studentsRes, tokensRes, kartuRes] = await Promise.all([
-              fetchGet('getStudents'),
-              fetchGet('getTokens'),
-              fetchGet('getKartu')
-            ]);
-            setDbStudents(studentsRes.data || []);
-            setTokens(tokensRes.data || []);
-            setKartuStudents(kartuRes.data || []);
-            if (tokensRes.data && tokensRes.data.length > 0) {
-              setSelectedDate(tokensRes.data[0].tanggal);
-            }
-          } catch (err) {
-            console.error(err);
-            showToast('Gagal memuat data dari server', 'error');
-          } finally {
-            setLoadingInitial(false);
-          }
-        };
-        loadInitialData();
+      const showToast = useCallback((text, type = 'success') => {
+        setSyncMessage({ show: true, text, type });
+        setTimeout(() => setSyncMessage({ show: false, text: '', type: '' }), 4000);
       }, []);
 
-      // Load jadwal ketika view 'jadwal' aktif
+      // === HELPER FETCH: Untuk deteksi jika GAS lupa di-deploy ulang ===
+      const fetchGAS = async (action) => {
+        try {
+          const response = await fetch(`${GAS_URL}?action=${action}`, { redirect: 'follow' });
+          const text = await response.text();
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.error(`[ERROR JSON] Respon bukan JSON untuk action: ${action}. \nIsi respon:`, text.substring(0, 200));
+            throw new Error(`Pastikan Apps Script sudah di 'New Deployment'. Web App mengembalikan HTML, bukan Data JSON.`);
+          }
+        } catch (error) {
+          console.error(`[FETCH ERROR] Gagal request ${action}:`, error);
+          throw error;
+        }
+      };
+
       useEffect(() => {
-        if (view === 'jadwal') {
-          setLoadingJadwal(true);
-          fetchGet('getJadwal')
-            .then(res => setJadwalItems(res.data || []))
+        setIsClient(true);
+        
+        if (GAS_URL && !GAS_URL.includes("URL_WEB_APP_GAS_ANDA_DISINI")) {
+          setIsDemoMode(false);
+          
+          // Load Siswa
+          fetchGAS('getStudents')
+            .then(res => { if (res && res.success) setDbStudents(res.data || []); })
+            .catch(err => showToast(`Gagal load siswa: ${err.message}`, 'error'));
+
+          // Load Token
+          fetchGAS('getTokens')
+            .then(res => {
+              if (res && res.success) {
+                setTokens(res.data || []);
+                if (res.data && res.data.length > 0) setSelectedDate(res.data[0].tanggal);
+              }
+            })
+            .catch(err => console.error("Gagal load token:", err));
+
+          // Load Kartu
+          loadKartuData();
+        } else {
+          // Demo fallback
+          setIsDemoMode(true);
+          setDbStudents([
+            { id: 'demo1', nisn: '1234567890', nama: 'AHMAD FAUZAN', kelas: '6', rombel: 'SDN SINE 1 SINE' },
+          ]);
+          setKartuStudents([
+            { id: 'k1', nisn: '1234567890', nama: 'AHMAD FAUZAN', kelas: '6', rombel: 'SDN SINE 1 SINE' },
+          ]);
+          setTokens([{ tanggal: '10-15 Mei 2026' }]);
+          setSelectedDate('10-15 Mei 2026');
+          setJadwalItems([{ jadwal: "UAS", tanggal: "10-15 Mei 2026", token: "UAS2026", link_nilai: "#", link_unduh: "#" }]);
+        }
+      }, []);
+
+      const loadKartuData = () => {
+        if (GAS_URL && !GAS_URL.includes("URL_WEB_APP_GAS_ANDA_DISINI")) {
+          setLoadingKartu(true);
+          fetchGAS('getKartu')
+            .then(res => {
+              if (res && res.success) {
+                setKartuStudents(res.data || []);
+              } else {
+                setKartuStudents([]);
+              }
+            })
             .catch(err => {
-              console.error(err);
-              showToast('Gagal memuat jadwal', 'error');
+              setKartuStudents([]);
+              showToast(`Gagal memuat data kartu: ${err.message}`, 'error');
+            })
+            .finally(() => setLoadingKartu(false));
+        }
+      };
+
+      const refreshKartuData = () => {
+        if (!isDemoMode) loadKartuData();
+      };
+
+      useEffect(() => {
+        if (view === 'jadwal' && !isDemoMode && GAS_URL) {
+          setLoadingJadwal(true);
+          fetchGAS('getJadwal')
+            .then(res => {
+              if (res && res.success) setJadwalItems(res.data || []);
+              else setJadwalItems([]);
+            })
+            .catch(err => {
               setJadwalItems([]);
+              showToast(`Gagal memuat jadwal: ${err.message}`, 'error');
             })
             .finally(() => setLoadingJadwal(false));
         }
       }, [view]);
-
-      const showToast = useCallback((text, type = 'success') => {
-        setSyncMessage({ show: true, text, type });
-        setTimeout(() => setSyncMessage({ show: false, text: '', type: '' }), 3000);
-      }, []);
 
       const isInputClosed = useMemo(() => {
         const today = new Date();
@@ -171,34 +200,6 @@
         deadline.setHours(0, 0, 0, 0);
         return today > deadline;
       }, []);
-
-      // Fungsi refresh data siswa & kartu
-      const refreshStudents = async () => {
-        try {
-          const res = await fetchGet('getStudents');
-          setDbStudents(res.data || []);
-        } catch (err) {
-          showToast('Gagal refresh data siswa', 'error');
-        }
-      };
-
-      const loadKartuData = async () => {
-        setLoadingKartu(true);
-        try {
-          const res = await fetchGet('getKartu');
-          setKartuStudents(res.data || []);
-        } catch (err) {
-          console.error(err);
-          showToast('Gagal memuat data kartu', 'error');
-          setKartuStudents([]);
-        } finally {
-          setLoadingKartu(false);
-        }
-      };
-
-      const refreshKartuData = () => {
-        loadKartuData();
-      };
 
       const handlePaste = () => {
         if (isInputClosed) {
@@ -238,24 +239,55 @@
           showToast('Tidak ada data untuk disinkronkan', 'error');
           return;
         }
+        
         setIsSaving(true);
-        try {
-          await fetchPost(newEntries);
-          await refreshStudents();
-          setNewEntries([]);
-          setShowSuccessModal(true);
-          showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
-        } catch (err) {
-          showToast(err.message || 'Gagal menyimpan data', 'error');
-        } finally {
-          setIsSaving(false);
+        
+        if (!isDemoMode && GAS_URL) {
+          try {
+            const response = await fetch(GAS_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(newEntries)
+            });
+            
+            const text = await response.text();
+            let res;
+            try {
+              res = JSON.parse(text);
+            } catch(e) {
+              throw new Error("Gagal menyimpan. Script mungkin belum di-deploy ulang.");
+            }
+            
+            if (res && res.success) {
+              fetchGAS('getStudents').then(freshRes => {
+                if (freshRes && freshRes.success) setDbStudents(freshRes.data || []);
+              });
+              setNewEntries([]);
+              setIsSaving(false);
+              setShowSuccessModal(true);
+              showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
+            } else {
+              setIsSaving(false);
+              showToast(res?.message || 'Gagal menyimpan data', 'error');
+            }
+          } catch (err) {
+            console.error('Save error:', err);
+            setIsSaving(false);
+            showToast(err.message || 'Koneksi ke server terputus', 'error');
+          }
+        } else {
+          setTimeout(() => {
+            setDbStudents(prev => [...prev, ...newEntries]);
+            setNewEntries([]);
+            setIsSaving(false);
+            setShowSuccessModal(true);
+            showToast('Sinkronisasi berhasil (mode demo)!', 'success');
+          }, 1500);
         }
       };
 
       const deleteEntry = (id) => setNewEntries(prev => prev.filter(s => s.id !== id));
-      const clearAllQueue = () => {
-        if (newEntries.length > 0 && confirm('Hapus semua antrian?')) setNewEntries([]);
-      };
+      const clearAllQueue = () => { if (newEntries.length > 0 && confirm('Hapus semua antrian?')) setNewEntries([]); };
 
       const sortedPreview = useMemo(() => [...dbStudents].sort((a, b) => String(a.rombel).localeCompare(String(b.rombel)) || String(a.nama).localeCompare(String(b.nama))), [dbStudents]);
 
@@ -266,9 +298,7 @@
         const [isExporting, setIsExporting] = useState(false);
         const uniqueDates = [...new Map(tokens.map(t => [t.tanggal, t.tanggal])).values()];
         
-        useEffect(() => { 
-          if (uniqueDates.length && !selectedDate) setSelectedDate(uniqueDates[0]); 
-        }, [tokens]);
+        useEffect(() => { if (uniqueDates.length && !selectedDate) setSelectedDate(uniqueDates[0]); }, [tokens]);
         
         const filteredStudents = useMemo(() => {
           if (filterLembaga === "SEMUA") return kartuStudents;
@@ -347,7 +377,7 @@
         return (
           <div className="space-y-6 animate-fadeIn mt-6 w-full">
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 no-print">
-              <div><h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Kartu Peserta Ujian Digital</h2><p className="text-xs text-slate-500 font-medium mt-1">Cetak kartu ujian berbasis lembaga & jadwal</p></div>
+              <div><h2 className="font-black text-slate-800 text-lg uppercase tracking-tight">Kartu Peserta Ujian Digital</h2><p className="text-xs text-slate-500 font-medium mt-1"> <span className="font-mono bg-slate-100 px-1">""</span> | Cetak kartu ujian berbasis lembaga & jadwal</p></div>
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <button onClick={refreshKartuData} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2"><Icon name="refresh-cw" size={14} /> Muat Ulang Data</button>
                 <div className="relative w-full sm:w-64">
@@ -381,7 +411,6 @@
         );
       };
 
-      // ==================== KOMPONEN ARSIP (SK) ====================
       const SkView = () => {
         const [activeDoc, setActiveDoc] = useState(0);
         const docs = [
@@ -434,7 +463,7 @@
         return (
           <>
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn mt-6">
-              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3"><div><h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Icon name="calendar" size={20} className="text-teal-custom" /> Jadwal & Nilai Ujian</h2><p className="text-xs text-slate-500 mt-1">Token, link nilai, dan unduhan berkas ujian</p></div><button onClick={() => { setLoadingJadwal(true); fetchGet('getJadwal').then(res => setJadwalItems(res.data || [])).catch(() => showToast('Gagal refresh jadwal', 'error')).finally(() => setLoadingJadwal(false)); }} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50"><Icon name="refresh-cw" size={14} /> Muat Ulang</button></div>
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3"><div><h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Icon name="calendar" size={20} className="text-teal-custom" /> Jadwal & Nilai Ujian</h2><p className="text-xs text-slate-500 mt-1">Token, link nilai, dan unduhan berkas ujian</p></div><button onClick={() => { setLoadingJadwal(true); setTimeout(() => { setLoadingJadwal(false); }, 500); }} className="bg-white border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-slate-50"><Icon name="refresh-cw" size={14} /> Muat Ulang</button></div>
               <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider"><tr><th className="px-6 py-4 text-left">Jadwal</th><th className="px-6 py-4 text-left">Tanggal Pelaksanaan</th><th className="px-6 py-4 text-left">Token</th><th className="px-6 py-4 text-center">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100">{jadwalItems.map((item, idx) => (<tr key={idx} className="hover:bg-slate-50/80 transition"><td className="px-6 py-4 font-semibold text-slate-800">{item.jadwal || '-'}</td><td className="px-6 py-4 text-slate-600">{item.tanggal || '-'}</td><td className="px-6 py-4"><span className="token-badge">{item.token || '-'}</span></td><td className="px-6 py-4"><div className="flex items-center justify-center gap-3"><button onClick={() => handlePreviewNilai(item.link_nilai, item.jadwal)} className="flex items-center gap-1.5 text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="eye" size={14} /> Lihat Nilai</button><button onClick={() => handleUnduhLangsung(item.link_unduh)} className="flex items-center gap-1.5 text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-xl text-xs font-bold"><Icon name="download" size={14} /> Unduh</button></div></td></tr>))}</tbody></table></div>
             </div>
             {previewModalOpen && (<div className="fixed inset-0 z-[400] flex items-center justify-center p-4 modal-backdrop" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}><div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden"><div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/90"><div className="flex items-center gap-2"><Icon name="file-search" size={20} className="text-indigo-500" /><h3 className="font-bold text-slate-800 text-base truncate">{previewTitle}</h3></div><button onClick={() => setPreviewModalOpen(false)} className="p-2 rounded-full hover:bg-slate-200"><Icon name="x" size={20} /></button></div><div className="flex-1 bg-slate-100 min-h-[500px] relative"><iframe src={previewUrl} title="Preview" className="absolute inset-0 w-full h-full border-0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"></iframe></div></div></div>)}
@@ -496,7 +525,7 @@
         );
       };
 
-      if (!isClient || loadingInitial) {
+      if (!isClient) {
         return <div className="flex items-center justify-center min-h-screen bg-slate-100"><div className="spinner w-8 h-8"></div><span className="ml-3 text-slate-600">Memuat aplikasi...</span></div>;
       }
 
