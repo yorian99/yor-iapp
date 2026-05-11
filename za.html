@@ -55,26 +55,62 @@
     const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
     // ==================== KONFIGURASI BACKEND ====================
-    // GANTI dengan URL deployment Google Apps Script Anda
+    // GANTI dengan URL deployment Google Apps Script Anda (pastikan web app sudah dipublish sebagai "Anyone, even anonymous")
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx9dIBo8LWYGGI1hmlaIvuEUegfXKpW9nNHcMaaiS5BEGhTT0jFOUQ94tnu-xfmuhfNHQ/exec";
     // ============================================================
 
-    // Helper: fetch dari GAS dengan action
+    // Helper: fetch dari GAS dengan action (GET)
     async function gasGet(action) {
-      const res = await fetch(`${GAS_URL}?action=${action}`);
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message || "Request gagal");
+      const url = `${GAS_URL}?action=${encodeURIComponent(action)}&_=${Date.now()}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Gagal mengambil data (${action})`);
+      let json;
+      try {
+        json = await res.json();
+      } catch(e) {
+        throw new Error(`Respons backend tidak valid (${action}). Pastikan Apps Script mengembalikan JSON.`);
+      }
+      if (!json.success) throw new Error(json.message || `Request ${action} gagal dari server`);
       return json.data;
     }
 
-    async function gasPost(payload) {
+    // Helper: POST yang diperbaiki - mengirim format yang standar (action + students)
+    // Agar sinkron dengan backend Google Apps Script yang umum: menerima objek dengan action dan students
+    async function gasPost(studentsArray) {
+      if (!Array.isArray(studentsArray)) {
+        throw new Error("Data harus berupa array siswa");
+      }
+      // Format payload yang robust: mengandung action "addStudents" dan data siswa
+      const payload = {
+        action: "addStudents",
+        students: studentsArray,
+        timestamp: new Date().toISOString()
+      };
       const res = await fetch(GAS_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        mode: "cors",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(payload)
       });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message || "Post gagal");
+      if (!res.ok) {
+        let errorText = "";
+        try { errorText = await res.text(); } catch(e) {}
+        throw new Error(`HTTP ${res.status} - ${errorText.substring(0, 100)}`);
+      }
+      let json;
+      try {
+        json = await res.json();
+      } catch(e) {
+        throw new Error("Respons backend tidak valid (bukan JSON) saat POST");
+      }
+      if (!json.success) throw new Error(json.message || "Gagal menyimpan data ke server");
       return json;
     }
 
@@ -128,25 +164,26 @@
         } catch (err) {
           console.error('Gagal ambil data kartu:', err);
           setKartuStudents([]);
-          showToast('Gagal memuat data kartu dari sheet "Kartu"', 'error');
+          showToast(`Gagal memuat kartu: ${err.message}`, 'error');
         } finally {
           setLoadingKartu(false);
         }
       }, [showToast]);
 
+      // Load data awal
       useEffect(() => {
         setIsClient(true);
-        // Load students
+        // Load students dengan penanganan error lebih baik
         gasGet("getStudents")
           .then(data => setDbStudents(data || []))
-          .catch(() => {});
+          .catch(err => { console.error(err); showToast(`Gagal ambil data siswa: ${err.message}`, 'error'); setDbStudents([]); });
         // Load tokens
         gasGet("getTokens")
           .then(data => {
             setTokens(data || []);
             if (data && data.length > 0) setSelectedDate(data[0].tanggal);
           })
-          .catch(() => {});
+          .catch(err => { console.error(err); showToast(`Gagal ambil token: ${err.message}`, 'error'); setTokens([]); });
         // Load kartu
         loadKartuData();
       }, []);
@@ -156,7 +193,7 @@
           setLoadingJadwal(true);
           gasGet("getJadwal")
             .then(data => { setJadwalItems(data || []); })
-            .catch(() => { setJadwalItems([]); showToast('Gagal memuat data jadwal', 'error'); })
+            .catch(err => { setJadwalItems([]); showToast(`Gagal memuat jadwal: ${err.message}`, 'error'); })
             .finally(() => setLoadingJadwal(false));
         }
       }, [view]);
@@ -186,14 +223,17 @@
         if (newEntries.length === 0) { showToast('Tidak ada data untuk disinkronkan', 'error'); return; }
         setIsSaving(true);
         try {
+          // Kirim data dengan format action: addStudents
           await gasPost(newEntries);
+          // Refresh data dari server setelah sukses
           const freshData = await gasGet("getStudents");
           setDbStudents(freshData || []);
           setNewEntries([]);
           setShowSuccessModal(true);
           showToast('Sinkronisasi berhasil! Data tersimpan.', 'success');
         } catch (err) {
-          showToast(err.message || 'Gagal menyimpan data', 'error');
+          console.error(err);
+          showToast(err.message || 'Gagal menyimpan data, periksa koneksi atau backend', 'error');
         } finally {
           setIsSaving(false);
         }
