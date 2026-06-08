@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RupiahFlow - Kalkulator Kurs Mata Uang Real-time</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar untuk drop-down mata uang */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden relative selection:bg-emerald-500 selection:text-slate-950">
+
+    <!-- Efek Cahaya Latar Belakang (Glow Effects) -->
+    <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-500/10 blur-[120px] pointer-events-none"></div>
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800/80 backdrop-blur-md bg-slate-950/50 sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 p-2.5 rounded-xl shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="line-chart" class="w-6 h-6 text-slate-950"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">KuMemantau</span>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">----</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 gap-1.5 animate-pulse">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    API Terhubung
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative z-10">
+        
+        <!-- Kolom Kiri: Converter Utama -->
+        <div class="lg:col-span-7 space-y-6">
+            <!-- Card Utama Converter -->
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <h2 class="text-2xl font-bold tracking-tight mb-1 text-slate-100 flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 text-emerald-400"></i>
+                    Konverter Mata Uang
+                </h2>
+                <p class="text-slate-400 text-sm mb-6">Hitung konversi secara instan dengan data pasar terpercaya.</p>
+
+                <!-- Form Konverter -->
+                <div class="space-y-4 relative">
+                    
+                    <!-- Input Dari -->
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 focus-within:border-emerald-500/50 transition-all duration-300">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs text-slate-400 font-medium" id="label-from">Dari (Mata Uang Asal)</label>
+                            <span class="text-xs text-emerald-400 font-semibold" id="label-from-code">USD</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <select id="select-from" class="bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-emerald-500/50 cursor-pointer max-w-[140px]" onchange="handleCurrencyChange()">
+                                <!-- Akan diisi dinamis oleh JS -->
+                            </select>
+                            <input type="number" id="input-amount" value="1" min="0" step="any" class="bg-transparent text-right text-2xl font-extrabold text-slate-100 focus:outline-none w-full placeholder-slate-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" oninput="calculate()">
+                        </div>
+                    </div>
+
+                    <!-- Tombol Swap -->
+                    <div class="flex justify-center -my-2 relative z-10">
+                        <button onclick="swapCurrencies()" class="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 p-3.5 rounded-full shadow-lg shadow-emerald-500/30 hover:scale-110 active:scale-95 transition-all duration-300 group">
+                            <i data-lucide="arrow-up-down" class="w-5 h-5 transition-transform duration-500 group-hover:rotate-180"></i>
+                        </button>
+                    </div>
+
+                    <!-- Input Ke -->
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 focus-within:border-emerald-500/50 transition-all duration-300">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs text-slate-400 font-medium" id="label-to">Ke (Mata Uang Tujuan)</label>
+                            <span class="text-xs text-emerald-400 font-semibold" id="label-to-code">IDR</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <select id="select-to" class="bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-emerald-500/50 cursor-pointer max-w-[140px]" onchange="handleCurrencyChange()">
+                                <!-- Akan diisi dinamis oleh JS -->
+                            </select>
+                            <input type="text" id="output-amount" readonly class="bg-transparent text-right text-2xl font-extrabold text-emerald-400 focus:outline-none w-full cursor-not-allowed" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Tombol Quick Add Nominal -->
+                    <div class="flex gap-2 pt-2 justify-end" id="quick-add-container">
+                        <button onclick="addNominal(10)" class="bg-slate-800/60 hover:bg-slate-800 text-slate-300 text-xs py-1.5 px-3 rounded-lg border border-slate-700/50 transition-all">+10</button>
+                        <button onclick="addNominal(100)" class="bg-slate-800/60 hover:bg-slate-800 text-slate-300 text-xs py-1.5 px-3 rounded-lg border border-slate-700/50 transition-all">+100</button>
+                        <button onclick="addNominal(1000)" class="bg-slate-800/60 hover:bg-slate-800 text-slate-300 text-xs py-1.5 px-3 rounded-lg border border-slate-700/50 transition-all">+1,000</button>
+                        <button onclick="resetAmount()" class="bg-slate-950 text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 text-xs py-1.5 px-3 rounded-lg transition-all flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Reset
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Tampilan Ringkasan Detail -->
+                <div class="mt-8 pt-6 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-950/40 border border-slate-800/60 rounded-xl p-3 flex items-center gap-3">
+                        <div class="bg-emerald-500/10 p-2 rounded-lg text-emerald-400">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-wider">Nilai Tukar Saat Ini</p>
+                            <p id="info-rate" class="text-xs font-semibold text-slate-200">Memuat...</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950/40 border border-slate-800/60 rounded-xl p-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-500/10 p-2 rounded-lg text-blue-400">
+                                <i data-lucide="info" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Pembaruan Terakhir</p>
+                                <p id="info-date" class="text-xs font-semibold text-slate-200">Memuat...</p>
+                            </div>
+                        </div>
+                        <button onclick="copyResult()" class="text-slate-400 hover:text-emerald-400 transition-colors p-1.5 hover:bg-slate-800/50 rounded-lg" title="Salin Hasil Konversi">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Kolom Kanan: Informasi Pasar & Trend -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Card Visual Tren / Grafik -->
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold tracking-tight text-slate-100 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+                        Tren Grafik 7 Hari Terakhir
+                    </h3>
+                    <span class="text-[10px] font-semibold uppercase bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-0.5 px-2 rounded-full">Simulasi Aktif</span>
+                </div>
+                
+                <p class="text-xs text-slate-400 mb-4" id="chart-sub">Pergerakan grafik relatif fluktuasi pasar terhadap IDR.</p>
+                
+                <!-- Canvas Chart -->
+                <div class="bg-slate-950/80 rounded-2xl p-4 border border-slate-800/80 relative">
+                    <canvas id="rateChart" class="w-full h-44"></canvas>
+                </div>
+
+                <!-- Keterangan Grafik -->
+                <div class="flex justify-between items-center mt-3 text-[10px] text-slate-500 font-semibold px-1">
+                    <span>Senin</span>
+                    <span>Selasa</span>
+                    <span>Rabu</span>
+                    <span>Kamis</span>
+                    <span>Jumat</span>
+                    <span>Sabtu</span>
+                    <span>Hari Ini</span>
+                </div>
+            </div>
+
+            <!-- Card Quick Convert Table -->
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-lg font-bold tracking-tight text-slate-100 mb-4 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-emerald-400"></i>
+                    Tabel Referensi Cepat
+                </h3>
+                <div class="overflow-hidden rounded-xl border border-slate-800/80 bg-slate-950/30">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[9px] font-bold">
+                                <th class="p-3 font-semibold" id="th-from">Mata Uang</th>
+                                <th class="p-3 font-semibold text-right" id="th-to">Nilai (IDR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quick-table-body" class="divide-y divide-slate-850 text-slate-300">
+                            <!-- Diisi dinamis oleh JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950/80 py-6 mt-12 relative z-10 text-center">
+        <p class="text-xs text-slate-500">&copy; 2026 RupiahFlow. Menggunakan data rate open-source global terbaru.</p>
+    </footer>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-emerald-500 text-slate-950 font-bold px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-2.5">
+        <div class="bg-slate-950/10 p-1 rounded-lg">
+            <i data-lucide="check" class="w-4 h-4"></i>
+        </div>
+        <span id="toast-message" class="text-sm">Berhasil disalin!</span>
+    </div>
+
+    <!-- Script Utama Kalkulator & Grafik -->
+    <script>
+        // API Kurs yang andal (Tanpa Key & CORS Friendly)
+        const API_URL = "https://open.er-api.com/v6/latest/USD";
+        
+        // State management global
+        let currencyData = {};
+        let isSwapped = false; // false = Valas ke IDR, true = IDR ke Valas
+        let selectedForeign = "USD"; 
+        
+        // Pilihan mata uang populer yang akan dimasukkan ke dropdown
+        const popularCurrencies = [
+            { code: "USD", name: "US Dollar ($)" },
+            { code: "EUR", name: "Euro (€)" },
+            { code: "SGD", name: "Singapore Dollar (S$)" },
+            { code: "JPY", name: "Japanese Yen (¥)" },
+            { code: "GBP", name: "British Pound (£)" },
+            { code: "AUD", name: "Australian Dollar (A$)" },
+            { code: "MYR", name: "Malaysian Ringgit (RM)" },
+            { code: "SAR", name: "Saudi Riyal (SR)" },
+            { code: "CNY", name: "Chinese Yuan (¥)" },
+            { code: "KRW", name: "South Korean Won (₩)" }
+        ];
+
+        // Jalankan saat halaman pertama kali dimuat
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            await fetchExchangeRates();
+            initDropdowns();
+            renderQuickTable();
+            calculate();
+            drawTrendChart();
+        });
+
+        // Mengambil data exchange rate dari API
+        async function fetchExchangeRates() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("Gagal mengambil data dari API.");
+                const data = await response.json();
+                
+                currencyData = data.rates;
+                
+                // Format waktu update
+                const updateDate = new Date(data.time_last_update_utc);
+                document.getElementById('info-date').innerText = updateDate.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                console.error("Terjadi kesalahan:", error);
+                showToast("Gagal memuat kurs terbaru. Menggunakan backup.", "error");
+                // Mock fallback jika API bermasalah agar aplikasi tetap berfungsi
+                currencyData = {
+                    "USD": 1, "IDR": 16250, "EUR": 0.92, "SGD": 1.35, "JPY": 155.8, 
+                    "GBP": 0.79, "AUD": 1.51, "MYR": 4.71, "SAR": 3.75, "CNY": 7.24, "KRW": 1370
+                };
+                document.getElementById('info-date').innerText = "Mode Offline / Backup";
+            }
+        }
+
+        // Setup drop-down select option
+        function initDropdowns() {
+            const selectFrom = document.getElementById('select-from');
+            const selectTo = document.getElementById('select-to');
+
+            // Reset options
+            selectFrom.innerHTML = '';
+            selectTo.innerHTML = '';
+
+            if (!isSwapped) {
+                // Skenario Normal: Valas -> IDR
+                popularCurrencies.forEach(curr => {
+                    const opt = document.createElement('option');
+                    opt.value = curr.code;
+                    opt.innerText = `${curr.code} - ${curr.name}`;
+                    opt.selected = curr.code === selectedForeign;
+                    selectFrom.appendChild(opt);
+                });
+
+                const optIdr = document.createElement('option');
+                optIdr.value = "IDR";
+                optIdr.innerText = "IDR - Indonesian Rupiah (Rp)";
+                optIdr.selected = true;
+                selectTo.appendChild(optIdr);
+            } else {
+                // Skenario Swapped: IDR -> Valas
+                const optIdr = document.createElement('option');
+                optIdr.value = "IDR";
+                optIdr.innerText = "IDR - Indonesian Rupiah (Rp)";
+                optIdr.selected = true;
+                selectFrom.appendChild(optIdr);
+
+                popularCurrencies.forEach(curr => {
+                    const opt = document.createElement('option');
+                    opt.value = curr.code;
+                    opt.innerText = `${curr.code} - ${curr.name}`;
+                    opt.selected = curr.code === selectedForeign;
+                    selectTo.appendChild(opt);
+                });
+            }
+        }
+
+        // Handle perubahan drop-down mata uang
+        function handleCurrencyChange() {
+            if (!isSwapped) {
+                selectedForeign = document.getElementById('select-from').value;
+            } else {
+                selectedForeign = document.getElementById('select-to').value;
+            }
+            
+            document.getElementById('label-from-code').innerText = isSwapped ? "IDR" : selectedForeign;
+            document.getElementById('label-to-code').innerText = isSwapped ? selectedForeign : "IDR";
+            
+            calculate();
+            renderQuickTable();
+            drawTrendChart();
+        }
+
+        // Kalkulasi Konversi Real-Time
+        function calculate() {
+            const inputAmount = parseFloat(document.getElementById('input-amount').value);
+            const outputAmountInput = document.getElementById('output-amount');
+            
+            if (isNaN(inputAmount) || inputAmount <= 0) {
+                outputAmountInput.value = "";
+                document.getElementById('info-rate').innerText = "-";
+                return;
+            }
+
+            // Dapatkan rate per 1 USD
+            const rateIdr = currencyData["IDR"];
+            const rateForeign = currencyData[selectedForeign];
+
+            // 1 Foreign = Berapa IDR
+            const baseRate = rateIdr / rateForeign;
+
+            let result = 0;
+            if (!isSwapped) {
+                // Skenario Normal: Valas ke IDR
+                result = inputAmount * baseRate;
+                outputAmountInput.value = formatCurrency(result, "IDR");
+                document.getElementById('info-rate').innerText = `1 ${selectedForeign} = ${formatCurrency(baseRate, "IDR")}`;
+            } else {
+                // Skenario Swapped: IDR ke Valas
+                result = inputAmount / baseRate;
+                outputAmountInput.value = formatCurrency(result, selectedForeign);
+                document.getElementById('info-rate').innerText = `1 IDR = ${formatDecimal(1 / baseRate)} ${selectedForeign}`;
+            }
+        }
+
+        // Fungsi Toggles/Swap Mata Uang
+        function swapCurrencies() {
+            isSwapped = !isSwapped;
+            
+            // Berikan animasi berputar pada visual text
+            document.getElementById('label-from').innerText = isSwapped ? "Dari (Indonesian Rupiah)" : "Dari (Mata Uang Asal)";
+            document.getElementById('label-to').innerText = isSwapped ? "Ke (Mata Uang Tujuan)" : "Ke (Mata Uang Tujuan)";
+
+            // Update Label Kode
+            document.getElementById('label-from-code').innerText = isSwapped ? "IDR" : selectedForeign;
+            document.getElementById('label-to-code').innerText = isSwapped ? selectedForeign : "IDR";
+
+            // Atur input berdasarkan swap agar angkanya tetap masuk akal
+            const currentVal = parseFloat(document.getElementById('input-amount').value);
+            if (!isNaN(currentVal)) {
+                // Jika swap ke IDR, naikkan nilai input agar relevan
+                if (isSwapped) {
+                    const baseRate = currencyData["IDR"] / currencyData[selectedForeign];
+                    document.getElementById('input-amount').value = Math.round(currentVal * baseRate);
+                } else {
+                    const baseRate = currencyData["IDR"] / currencyData[selectedForeign];
+                    document.getElementById('input-amount').value = Math.max(1, Math.round(currentVal / baseRate));
+                }
+            }
+
+            initDropdowns();
+            calculate();
+            renderQuickTable();
+        }
+
+        // Menambah Nominal Secara Cepat (Quick Add)
+        function addNominal(value) {
+            const input = document.getElementById('input-amount');
+            const currentVal = parseFloat(input.value) || 0;
+            input.value = currentVal + value;
+            calculate();
+        }
+
+        // Reset nominal input
+        function resetAmount() {
+            document.getElementById('input-amount').value = 1;
+            calculate();
+        }
+
+        // Render tabel cepat di sisi kanan
+        function renderQuickTable() {
+            const tableBody = document.getElementById('quick-table-body');
+            const thFrom = document.getElementById('th-from');
+            const thTo = document.getElementById('th-to');
+            
+            tableBody.innerHTML = '';
+
+            const listNominal = [1, 10, 50, 100, 500, 1000];
+            const baseRate = currencyData["IDR"] / currencyData[selectedForeign];
+
+            if (!isSwapped) {
+                thFrom.innerText = `Jumlah ${selectedForeign}`;
+                thTo.innerText = `Nilai IDR`;
+                
+                listNominal.forEach(nom => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-900/40 transition-colors";
+                    row.innerHTML = `
+                        <td class="p-3 font-medium">${nom.toLocaleString()} ${selectedForeign}</td>
+                        <td class="p-3 text-right font-semibold text-emerald-400">${formatCurrency(nom * baseRate, "IDR")}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                thFrom.innerText = "Jumlah IDR";
+                thTo.innerText = `Nilai ${selectedForeign}`;
+
+                const idrNominals = [50000, 100000, 500000, 1000000, 5000000, 10000000];
+                idrNominals.forEach(nom => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-900/40 transition-colors";
+                    row.innerHTML = `
+                        <td class="p-3 font-medium">Rp ${nom.toLocaleString('id-ID')}</td>
+                        <td class="p-3 text-right font-semibold text-emerald-400">${formatCurrency(nom / baseRate, selectedForeign)}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // Menggambar Grafik Fluktuasi Simulasi
+        function drawTrendChart() {
+            const canvas = document.getElementById('rateChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Sesuaikan dimensi canvas internal untuk resolusi tinggi
+            canvas.width = canvas.parentElement.clientWidth * 2;
+            canvas.height = 176 * 2; // h-44 = 11rem = 176px
+
+            // Judul Sub Grafik
+            document.getElementById('chart-sub').innerText = `Visualisasi simulasi fluktuasi perbandingan nilai ${selectedForeign} terhadap Rupiah.`;
+
+            const baseRate = currencyData["IDR"] / currencyData[selectedForeign];
+            
+            // Buat data simulasi 7 hari berdasarkan nilai real saat ini
+            const dataPoints = [];
+            // Seed random terikat pada nama mata uang agar trennya konsisten saat diklik ulang
+            let seed = selectedForeign.charCodeAt(0) + selectedForeign.charCodeAt(1);
+            function randomWithSeed() {
+                const x = Math.sin(seed++) * 10000;
+                return x - Math.floor(x);
+            }
+
+            for(let i = 0; i < 7; i++) {
+                // fluktuasi sekitar -1.5% sampai +1.5% dari harga asli
+                const deviasi = (randomWithSeed() - 0.5) * 0.03; 
+                dataPoints.push(baseRate * (1 + deviasi));
+            }
+            // Jadikan hari terakhir tepat setara rate saat ini
+            dataPoints[6] = baseRate;
+
+            // Bersihkan Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+
+            const minVal = Math.min(...dataPoints) * 0.998;
+            const maxVal = Math.max(...dataPoints) * 1.002;
+            const valRange = maxVal - minVal;
+
+            // Gambar Garis Grid Horizontal
+            ctx.strokeStyle = "rgba(51, 65, 85, 0.25)";
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 4; i++) {
+                const y = padding + (height - padding * 2) * (i / 3);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            // Koordinat Titik-Titik
+            const points = dataPoints.map((val, idx) => {
+                const x = padding + (width - padding * 2) * (idx / 6);
+                const y = height - padding - ((val - minVal) / valRange) * (height - padding * 2);
+                return { x, y };
+            });
+
+            // Gambar Gradien Latar Belakang Area Grafik
+            const gradientFill = ctx.createLinearGradient(0, 0, 0, height);
+            gradientFill.addColorStop(0, "rgba(16, 185, 129, 0.25)");
+            gradientFill.addColorStop(1, "rgba(16, 185, 129, 0)");
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, height - padding);
+            points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+            ctx.lineTo(points[points.length - 1].x, height - padding);
+            ctx.closePath();
+            ctx.fillStyle = gradientFill;
+            ctx.fill();
+
+            // Gambar Garis Tren Utama (Stroke)
+            const gradientStroke = ctx.createLinearGradient(0, 0, width, 0);
+            gradientStroke.addColorStop(0, "#34d399");
+            gradientStroke.addColorStop(1, "#10b981");
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 0; i < points.length - 1; i++) {
+                const xc = (points[i].x + points[i + 1].x) / 2;
+                const yc = (points[i].y + points[i + 1].y) / 2;
+                ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+            ctx.strokeStyle = gradientStroke;
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+            ctx.stroke();
+
+            // Gambar Titik Penanda (Dots)
+            points.forEach((pt, idx) => {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, idx === 6 ? 8 : 4, 0, 2 * Math.PI);
+                ctx.fillStyle = idx === 6 ? "#059669" : "#10b981";
+                ctx.strokeStyle = "#0f172a";
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+
+                // Tulis angka nilai di titik atas & titik akhir
+                if (idx === 6 || idx === 0) {
+                    ctx.fillStyle = "#cbd5e1";
+                    ctx.font = "bold 20px sans-serif";
+                    ctx.textAlign = idx === 6 ? "right" : "left";
+                    ctx.fillText(formatCurrency(dataPoints[idx], "IDR", 0), pt.x + (idx === 6 ? -12 : 12), pt.y - 12);
+                }
+            });
+        }
+
+        // Helper: Format nilai uang
+        function formatCurrency(value, currencyCode, fixedDigits = 2) {
+            try {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: currencyCode,
+                    minimumFractionDigits: fixedDigits,
+                    maximumFractionDigits: fixedDigits
+                }).format(value);
+            } catch (e) {
+                return value.toFixed(fixedDigits);
+            }
+        }
+
+        function formatDecimal(value) {
+            if (value >= 1) return value.toFixed(2);
+            if (value >= 0.001) return value.toFixed(5);
+            return value.toFixed(8);
+        }
+
+        // Salin Hasil Perhitungan ke Clipboard
+        function copyResult() {
+            const inputAmount = document.getElementById('input-amount').value;
+            const outputAmount = document.getElementById('output-amount').value;
+            
+            if (!outputAmount) {
+                showToast("Tidak ada nilai untuk disalin!", "error");
+                return;
+            }
+
+            const fromLabel = isSwapped ? "IDR" : selectedForeign;
+            const toLabel = isSwapped ? selectedForeign : "IDR";
+            const textToCopy = `${inputAmount} ${fromLabel} setara dengan ${outputAmount}`;
+
+            // Standar Fallback menggunakan createTextRange / Clipboard API
+            const tempInput = document.createElement("input");
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            showToast("Hasil konversi berhasil disalin!");
+        }
+
+        // Custom Toast untuk UI Notifikasi
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            
+            toastMsg.innerText = message;
+            
+            if (type === "error") {
+                toast.classList.remove('bg-emerald-500', 'text-slate-950');
+                toast.classList.add('bg-rose-500', 'text-slate-950');
+            } else {
+                toast.classList.remove('bg-rose-500', 'text-slate-950');
+                toast.classList.add('bg-emerald-500', 'text-slate-950');
+            }
+
+            // Tampilkan Toast
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            // Sembunyikan kembali setelah 3 detik
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
