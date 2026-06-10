@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-site-verification" content="W1NOZ_vaXxijvBRJFo6r7RvJMYdoM5NOdPW5nSuirAk" />
+  
+  <title>Login Presensi Pegawai - Korwil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --status-green: #2ecc71;
+      --border-radius: 12px;
+      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7ff, #e6e9ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: var(--border-radius);
+      width: 100%;
+      max-width: 450px;
+      box-shadow: var(--box-shadow);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .server-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #f0fff4;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--status-green);
+      border: 1px solid #c6f6d5;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      height: 8px;
+      width: 8px;
+      background-color: var(--status-green);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      z-index: 2;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      display: block;
+      object-fit: contain;
+    }
+
+    h2 {
+      color: var(--dark);
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      color: var(--gray);
+      margin-bottom: 30px;
+      font-size: 1.5rem;
+    }
+
+    .info-bar {
+      background: #fff5f8;
+      border: 2px dashed var(--danger);
+      padding: 15px;
+      border-radius: var(--border-radius);
+      margin-top: 25px;
+      animation: blink-border 1.5s infinite;
+    }
+
+    .info-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--danger);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-link-container {
+      display: flex;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .info-url {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: var(--primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .copy-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: var(--transition);
+    }
+
+    .copy-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    @keyframes blink-border {
+      0% { border-color: var(--danger); box-shadow: 0 0 0px rgba(247, 37, 133, 0); }
+      50% { border-color: var(--primary); box-shadow: 0 0 10px rgba(67, 97, 238, 0.2); }
+      100% { border-color: var(--danger); box-shadow: 0 0 0px rgba(247, 37, 133, 0); }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+      font-size: 0.95rem;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 1rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 14px 14px 14px 45px;
+      border: 1px solid #e0e0e0;
+      border-radius: var(--border-radius);
+      font-size: 0.95rem;
+      transition: var(--transition);
+      background-color: #f9f9f9;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      background-color: white;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #cccccc;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .reload-btn {
+      background: #f8f9fa;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      margin-top: 12px;
+    }
+
+    .reload-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .spinner {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #message {
+      margin: 20px 0;
+      padding: 12px;
+      border-radius: var(--border-radius);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .error {
+      background-color: #fff0f0;
+      color: #dc3545;
+      border: 1px solid #ffcccc;
+    }
+
+    .success {
+      background-color: #f0fff4;
+      color: #28a745;
+      border: 1px solid #c3e6cb;
+    }
+
+    .time-alert {
+      background: #fff3cd;
+      border-left: 6px solid #ffc107;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      text-align: left;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .time-alert h4 {
+      color: #856404;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-detail {
+      font-size: 0.85rem;
+      color: #856404;
+      margin: 8px 0;
+      background: #fff8e7;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .time-warning-text {
+      font-weight: 500;
+      margin: 10px 0;
+      color: #b16100;
+    }
+
+    .footer {
+      margin-top: 30px;
+      color: var(--gray);
+      font-size: 0.8rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      animation: fadeIn 0.3s ease-out;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      cursor: pointer;
+    }
+
+    .close-button:hover {
+      color: var(--danger);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #forgotPasswordLink {
+      display: block;
+      margin-top: 15px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    #forgotPasswordLink:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+    
+    #toast {
+      visibility: hidden;
+      min-width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 10px;
+      position: fixed;
+      z-index: 2000;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.85rem;
+    }
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="server-badge">
+      <span class="dot"></span>
+      Id Server : YORI.APP S1
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo">
+    <h2>Presensi Pegawai</h2>
+    <p class="subtitle">"KORWIL"</p>
+
+    <div id="timeAlertContainer" style="display: none;" class="time-alert">
+      <h4><i class="fas fa-clock"></i> PERINGATAN WAKTU TIDAK SINKRON</h4>
+      <div id="timeDetails" class="time-detail">Memeriksa waktu server...</div>
+      <div class="time-warning-text">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Deteksi manipulasi / perubahan jam perangkat!</strong><br>
+        Waktu perangkat Anda berbeda lebih dari 1 menit dari waktu server GMT+7.<br>
+        Harap kembalikan jam perangkat ke waktu yang sebenarnya.
+      </div>
+      <button id="reloadTimeBtn" class="btn reload-btn" style="width: 100%;">
+        <i class="fas fa-sync-alt"></i> Reload & Cek Ulang Waktu
+      </button>
+      <p style="font-size:0.7rem; margin-top:8px; color:#b16100;">* Selisih ≤ 1 menit dianggap aman. Setelah jam dikembalikan, klik Reload.</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Username / NIP</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user"></i>
+          <input type="text" id="username" placeholder="Masukkan username atau NIP" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" placeholder="Masukkan password" required>
+        </div>
+      </div>
+      <button type="submit" id="loginBtn" class="btn btn-primary">
+        <div id="loadingSpinner" class="spinner"></div>
+        <span id="loginText">Login</span>
+      </button>
+      <div id="message"></div>
+      <a href="#" id="forgotPasswordLink">Lupa Password?</a>
+    </form>
+
+    <div class="info-bar">
+      <div class="info-title"><i class="fas fa-bullhorn"></i> E-MONITORING & PENGAJUAN PSW</div>
+      <p style="font-size: 0.75rem; color: #555;">Silahkan Salin / Ketik Link dibawah ini untuk melakukan monitoring dan pengajuan PSW:</p>
+      <div class="info-link-container">
+        <div class="info-url" id="newUrl">yoriapp.site/e-presensi</div>
+        <button class="copy-btn" id="copyUrlBtn" title="Salin Link">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 Sistem Presensi ASN Korwil</div>
+  </div>
+
+  <div id="forgotPasswordModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h3>Reset Kata Sandi</h3>
+      <div class="form-group">
+        <label for="resetUsername">Username / NIP</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user"></i>
+          <input type="text" id="resetUsername" placeholder="Masukkan username atau NIP" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="newPassword">Kata Sandi Baru</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="newPassword" placeholder="Masukkan kata sandi baru" required>
+        </div>
+      </div>
+      <button type="button" id="resetPasswordBtn" class="btn btn-primary">
+        <div id="resetLoadingSpinner" class="spinner"></div>
+        <span id="resetBtnText">Reset Sandi</span>
+      </button>
+      <div id="resetMessage" class="message"></div>
+    </div>
+  </div>
+
+  <div id="toast">Tautan berhasil disalin!</div>
+
+  <script>
+    // ---------- KODE ASLI (tidak diubah) ----------
+    const PROXY_URL = '/api/proxy';
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const messageEl = document.getElementById('message');
+    const loginBtn = document.getElementById('loginBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const loginText = document.getElementById('loginText');
+
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    const closeButton = document.querySelector('.close-button');
+    const resetUsernameInput = document.getElementById('resetUsername');
+    const newPasswordInput = document.getElementById('newPassword');
+    const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+    const resetLoadingSpinner = document.getElementById('resetLoadingSpinner');
+    const resetBtnText = document.getElementById('resetBtnText');
+    const resetMessageEl = document.getElementById('resetMessage');
+
+    document.getElementById('copyUrlBtn').addEventListener('click', function() {
+      const textToCopy = document.getElementById('newUrl').innerText;
+      const dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = textToCopy;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+      const toast = document.getElementById("toast");
+      toast.className = "show";
+      setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+    });
+
+    // ---------- FITUR DETEKSI WAKTU DENGAN TOLERANSI 1 MENIT (60 detik) ----------
+    const timeAlertContainer = document.getElementById('timeAlertContainer');
+    const timeDetailsEl = document.getElementById('timeDetails');
+    const reloadTimeBtn = document.getElementById('reloadTimeBtn');
+    
+    let isTimeErrorActive = false;
+    let timeCheckInterval = null;
+    const TIME_TOLERANCE_MS = 60000; // 1 menit = 60000 ms
+
+    function setLoginFormEnabled(enabled) {
+      usernameInput.disabled = !enabled;
+      passwordInput.disabled = !enabled;
+      loginBtn.disabled = !enabled;
+      if (!enabled) {
+        loginBtn.style.opacity = '0.6';
+        loginBtn.style.cursor = 'not-allowed';
+        forgotPasswordLink.style.pointerEvents = 'none';
+        forgotPasswordLink.style.opacity = '0.5';
+      } else {
+        loginBtn.style.opacity = '1';
+        loginBtn.style.cursor = 'pointer';
+        forgotPasswordLink.style.pointerEvents = 'auto';
+        forgotPasswordLink.style.opacity = '1';
+      }
+    }
+
+    function showTimeError(serverTimeObj, localTimeObj, differenceSec) {
+      isTimeErrorActive = true;
+      timeAlertContainer.style.display = 'block';
+      const serverFormatted = serverTimeObj.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', hour12: false });
+      const localFormatted = localTimeObj.toLocaleString('id-ID', { hour12: false });
+      timeDetailsEl.innerHTML = `<i class="fas fa-server"></i> <strong>Waktu Server (GMT+7):</strong> ${serverFormatted}<br>
+                                 <i class="fas fa-laptop"></i> <strong>Waktu Perangkat:</strong> ${localFormatted}<br>
+                                 <strong>Selisih:</strong> ${Math.abs(differenceSec).toFixed(1)} detik (lebih dari 1 menit)`;
+      setLoginFormEnabled(false);
+    }
+
+    function hideTimeError() {
+      if (!isTimeErrorActive) return;
+      isTimeErrorActive = false;
+      timeAlertContainer.style.display = 'none';
+      setLoginFormEnabled(true);
+    }
+
+    // Mendapatkan waktu server dengan multiple requests untuk akurasi
+    async function getAccurateServerTime() {
+      const startTime = Date.now();
+      const request1 = fetch('https://worldtimeapi.org/api/timezone/Asia/Jakarta', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const res1 = await request1;
+      const data1 = await res1.json();
+      const time1 = new Date(data1.datetime);
+      const endTime1 = Date.now();
+      const latency1 = (endTime1 - startTime) / 2;
+      
+      const startTime2 = Date.now();
+      const request2 = fetch('https://worldtimeapi.org/api/timezone/Asia/Jakarta', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const res2 = await request2;
+      const data2 = await res2.json();
+      const time2 = new Date(data2.datetime);
+      const endTime2 = Date.now();
+      const latency2 = (endTime2 - startTime2) / 2;
+      
+      const correctedTime1 = new Date(time1.getTime() - latency1);
+      const correctedTime2 = new Date(time2.getTime() - latency2);
+      
+      if (Math.abs(correctedTime1.getTime() - correctedTime2.getTime()) > 1000) {
+        return correctedTime1;
+      }
+      return new Date((correctedTime1.getTime() + correctedTime2.getTime()) / 2);
+    }
+
+    async function fetchServerTimeAlternative() {
+      const response = await fetch('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store' });
+      const text = await response.text();
+      const match = text.match(/ts=([0-9.]+)/);
+      if (match && match[1]) {
+        const timestamp = parseFloat(match[1]) * 1000;
+        return new Date(timestamp);
+      }
+      throw new Error('Gagal mendapatkan waktu dari alternatif');
+    }
+
+    async function checkTimeSync() {
+      try {
+        if (reloadTimeBtn && !reloadTimeBtn.disabled) {
+          reloadTimeBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Mengecek...';
+          reloadTimeBtn.disabled = true;
+        }
+        
+        let serverTime;
+        try {
+          serverTime = await getAccurateServerTime();
+        } catch (err) {
+          console.warn('Primary API gagal, coba alternatif', err);
+          serverTime = await fetchServerTimeAlternative();
+        }
+        
+        const localTime = new Date();
+        const diffMs = Math.abs(serverTime.getTime() - localTime.getTime());
+        const diffSec = diffMs / 1000;
+        
+        if (diffMs > TIME_TOLERANCE_MS) {
+          showTimeError(serverTime, localTime, diffSec);
+        } else {
+          if (isTimeErrorActive) {
+            hideTimeError();
+            const toastEl = document.getElementById("toast");
+            toastEl.textContent = "✓ Waktu sudah sinkron (selisih ≤ 1 menit). Silakan login.";
+            toastEl.className = "show";
+            setTimeout(() => { 
+              if(toastEl.textContent === "✓ Waktu sudah sinkron (selisih ≤ 1 menit). Silakan login.") 
+                toastEl.className = toastEl.className.replace("show", ""); 
+            }, 3000);
+          } else {
+            if (timeAlertContainer.style.display !== 'none') timeAlertContainer.style.display = 'none';
+            setLoginFormEnabled(true);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        isTimeErrorActive = true;
+        timeAlertContainer.style.display = 'block';
+        timeDetailsEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> Gagal memverifikasi waktu server.<br>
+                                   ${err.message}<br>Periksa koneksi internet dan klik Reload.`;
+        setLoginFormEnabled(false);
+      } finally {
+        if (reloadTimeBtn) {
+          reloadTimeBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Reload & Cek Ulang Waktu';
+          reloadTimeBtn.disabled = false;
+        }
+      }
+    }
+
+    reloadTimeBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await checkTimeSync();
+    });
+
+    function startPeriodicTimeCheck() {
+      if (timeCheckInterval) clearInterval(timeCheckInterval);
+      checkTimeSync();
+      timeCheckInterval = setInterval(() => {
+        checkTimeSync();
+      }, 60000); // cek setiap 1 menit
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (timeCheckInterval) clearInterval(timeCheckInterval);
+    });
+
+    // ---------- LOGIN & RESET PASSWORD (dengan proteksi jika error waktu) ----------
+    const originalSubmitHandler = async (e) => {
+      e.preventDefault();
+      if (isTimeErrorActive) {
+        messageEl.textContent = '⚠️ Gagal Login: Waktu perangkat berbeda lebih dari 1 menit dari server. Kembalikan jam dan klik Reload.';
+        messageEl.classList.add('error');
+        return;
+      }
+      
+      messageEl.textContent = '';
+      messageEl.className = '';
+      loginBtn.disabled = true;
+      loadingSpinner.style.display = 'block';
+      loginText.textContent = 'Memproses...';
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      try {
+        const response = await fetch(`${PROXY_URL}?action=login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        const data = await response.json();
+
+        if (data.success) {
+          messageEl.textContent = 'Login berhasil! Mengarahkan...';
+          messageEl.classList.add('success');
+          localStorage.setItem('sessionId', data.sessionId);
+          setTimeout(() => {
+            window.location.href = `/form.html?session=${data.sessionId}`;
+          }, 1000);
+        } else {
+          messageEl.textContent = data.message || 'Login gagal';
+          messageEl.classList.add('error');
+          passwordInput.focus();
+        }
+      } catch (err) {
+        messageEl.textContent = 'Terjadi kesalahan: ' + err.message;
+        messageEl.classList.add('error');
+      } finally {
+        loginBtn.disabled = false;
+        loadingSpinner.style.display = 'none';
+        loginText.textContent = 'Login';
+      }
+    };
+    
+    loginForm.removeEventListener('submit', loginForm._listener);
+    loginForm.addEventListener('submit', originalSubmitHandler);
+    loginForm._listener = originalSubmitHandler;
+    
+    const originalResetHandler = async () => {
+      if (isTimeErrorActive) {
+        resetMessageEl.textContent = '❌ Tidak dapat reset sandi karena waktu perangkat berbeda lebih dari 1 menit dari server.';
+        resetMessageEl.classList.add('error');
+        return;
+      }
+      resetMessageEl.textContent = '';
+      resetMessageEl.className = '';
+      const username = resetUsernameInput.value.trim();
+      const newPass = newPasswordInput.value;
+
+      if (!username || !newPass) {
+        resetMessageEl.textContent = 'Mohon lengkapi semua bidang.';
+        resetMessageEl.classList.add('error');
+        return;
+      }
+
+      resetPasswordBtn.disabled = true;
+      resetLoadingSpinner.style.display = 'block';
+      resetBtnText.textContent = 'Memproses...';
+
+      try {
+        const response = await fetch(`${PROXY_URL}?action=resetPassword`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, newPassword: newPass })
+        });
+        const data = await response.json();
+        if (data.success) {
+          resetMessageEl.textContent = data.message;
+          resetMessageEl.classList.add('success');
+          setTimeout(() => { forgotPasswordModal.style.display = 'none'; }, 2000);
+        } else {
+          resetMessageEl.textContent = data.message;
+          resetMessageEl.classList.add('error');
+        }
+      } catch (err) {
+        resetMessageEl.textContent = 'Terjadi kesalahan: ' + err.message;
+        resetMessageEl.classList.add('error');
+      } finally {
+        resetPasswordBtn.disabled = false;
+        resetLoadingSpinner.style.display = 'none';
+        resetBtnText.textContent = 'Reset Sandi';
+      }
+    };
+    
+    resetPasswordBtn.removeEventListener('click', resetPasswordBtn._listener);
+    resetPasswordBtn.addEventListener('click', originalResetHandler);
+    resetPasswordBtn._listener = originalResetHandler;
+    
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isTimeErrorActive) {
+        messageEl.textContent = '⏰ Tidak dapat mengakses fitur reset karena waktu tidak sinkron (selisih > 1 menit)!';
+        messageEl.classList.add('error');
+        setTimeout(() => messageEl.classList.remove('error'), 3000);
+        return;
+      }
+      forgotPasswordModal.style.display = 'flex';
+      resetUsernameInput.focus();
+    });
+    
+    closeButton.addEventListener('click', () => {
+      forgotPasswordModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (event) => {
+      if (event.target == forgotPasswordModal) {
+        forgotPasswordModal.style.display = 'none';
+      }
+    });
+
+    window.addEventListener('load', () => {
+      usernameInput.focus();
+      localStorage.removeItem('sessionId');
+      startPeriodicTimeCheck();
+    });
+  </script>
+</body>
+</html>

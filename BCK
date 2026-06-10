@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Presensi Pegawai - Korwil SINE</title>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ==================== FAKE GPS BLOCKER STYLES ==================== */
+    #fakeGPSBlocker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .fakegps-content {
+      max-width: 500px;
+      padding: 30px;
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .fakegps-icon {
+      font-size: 5rem;
+      color: #f44336;
+      margin-bottom: 20px;
+      animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+      20%, 40%, 60%, 80% { transform: translateX(10px); }
+    }
+
+    .fakegps-title {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: #d32f2f;
+      font-weight: 700;
+    }
+
+    .fakegps-message {
+      font-size: 1.1rem;
+      margin-bottom: 25px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .fakegps-warning {
+      background: #ffebee;
+      border-left: 4px solid #f44336;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .fakegps-warning i {
+      color: #f44336;
+      margin-right: 10px;
+    }
+
+    .fakegps-instructions {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .fakegps-instructions i {
+      color: #4caf50;
+      margin-right: 10px;
+    }
+
+    .fakegps-footer {
+      margin-top: 25px;
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    /* ==================== DESKTOP BLOCKER STYLES ==================== */
+    #desktopBlocker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #4361ee, #3a56d4);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .blocker-content {
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .blocker-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      color: #ffcc00;
+    }
+
+    .blocker-title {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .blocker-message {
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .device-icons {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    .device-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .device-icon i {
+      font-size: 3.5rem;
+      color: white;
+    }
+
+    .device-icon span {
+      font-size: 1rem;
+    }
+
+    .blocker-footer {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* ==================== SPLASH SCREEN STYLES ==================== */
+    #splashScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #4361ee, #3a56d4);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9998;
+      opacity: 1;
+      transition: opacity 0.8s ease-out;
+      overflow: hidden;
+    }
+    
+    #splashScreen.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .splash-content {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .splash-logo-container {
+      width: 180px;
+      height: 180px;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: zoomIn 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      transform-origin: center;
+    }
+    
+    .splash-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+    }
+    
+    @keyframes zoomIn {
+      0% { transform: scale(0.1); opacity: 0; }
+      70% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .splash-text-container {
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    
+    .splash-text {
+      color: white;
+      font-size: 2.4rem;
+      font-weight: 700;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      letter-spacing: 1px;
+      opacity: 0;
+      animation: fadeInUp 1s ease-out 1.2s forwards;
+      transform: translateY(20px);
+    }
+    
+    .splash-subtext {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.2rem;
+      margin-top: 15px;
+      opacity: 0;
+      animation: fadeIn 1s ease-out 1.5s forwards;
+    }
+    
+    .progress-container {
+      width: 240px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      margin-top: 40px;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 1.8s forwards;
+      position: relative;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ffffff, #e0f7fa);
+      border-radius: 4px;
+      animation: progress 3s ease-in-out forwards;
+    }
+    
+    .progress-pulse {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 20px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 4px;
+      animation: pulse 1.5s infinite;
+      opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes progress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: translateX(0) scaleX(1);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateX(240px) scaleX(2);
+        opacity: 0;
+      }
+    }
+    
+    body.splash-active {
+      overflow: hidden;
+    }
+
+    /* ==================== IMPROVED RADIUS WARNING POPUP STYLES ==================== */
+    #radiusWarningPopup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .radius-warning-container {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transform: scale(0.9);
+      opacity: 0;
+      animation: popupAppear 0.3s ease-out forwards;
+    }
+
+    @keyframes popupAppear {
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .radius-warning-header {
+      background: #FFF3E0;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #FFE0B2;
+    }
+
+    .radius-warning-icon {
+      font-size: 3rem;
+      color: #FF9800;
+      margin-bottom: 10px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .radius-warning-title {
+      color: #E65100;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .radius-warning-body {
+      padding: 20px;
+    }
+
+    .radius-warning-text {
+      color: #555;
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .radius-details {
+      background: #F5F5F5;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .radius-detail-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .radius-detail-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4361ee;
+      margin-right: 10px;
+    }
+
+    .radius-progress-container {
+      margin: 15px 0;
+    }
+
+    .radius-progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .radius-progress-bar {
+      height: 8px;
+      background: #E0E0E0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .radius-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FF9800, #FF5722);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .radius-warning-footer {
+      display: flex;
+      border-top: 1px solid #EEE;
+    }
+
+    .radius-warning-btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      background: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .radius-warning-btn.cancel {
+      color: #F44336;
+    }
+
+    .radius-warning-btn.continue {
+      color: #4361ee;
+      border-left: 1px solid #EEE;
+    }
+
+    .radius-warning-btn:hover {
+      background: #F5F5F5;
+    }
+
+    /* ==================== EXISTING STYLES ==================== */
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border-radius: 12px;
+      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7ff, #e6e9ff);
+      padding: 20px;
+      position: relative;
+      min-height: 100vh;
+      opacity: 0;
+      animation: fadeInContent 1s ease-out forwards;
+    }
+    
+    @keyframes fadeInContent {
+      to { opacity: 1; }
+    }
+    
+    body.desktop-blocked {
+      overflow: hidden;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 2px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 10px;
+      display: block;
+      object-fit: contain;
+    }
+
+    h1 {
+      color: var(--dark);
+      font-weight: 600;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
+      font-size: 0.95rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: var(--border-radius);
+      font-size: 0.95rem;
+      transition: var(--transition);
+      background-color: #f9f9f9;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      background-color: white;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #cccccc;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #message {
+      margin: 20px 0;
+      padding: 12px;
+      border-radius: var(--border-radius);
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+
+    .error {
+      background-color: #fff0f0;
+      color: #dc3545;
+      border: 1px solid #ffcccc;
+      display: block;
+    }
+
+    .success {
+      background-color: #f0fff4;
+      color: #28a745;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logout-btn:hover {
+      background: #e01e6d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
+    }
+
+    /* Modern Attendance Type Notification */
+    .attendance-notification {
+      background: #f8f9ff;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-top: 15px;
+      border: 1px solid #e0e6ff;
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.08);
+      transition: var(--transition);
+    }
+    
+    .attendance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .attendance-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .attendance-title i {
+      font-size: 1.2rem;
+    }
+    
+    .current-time {
+      background: var(--primary);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .time-slots {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .time-slot {
+      flex: 1;
+      min-width: 140px;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      text-align: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .time-slot::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+    }
+    
+    .time-slot.datang::after {
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+    }
+    
+    .time-slot.pulang::after {
+      background: linear-gradient(90deg, #2196f3, #03a9f4);
+    }
+    
+    .time-slot.active {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      border-color: transparent;
+    }
+    
+    .time-slot.active.datang {
+      background: linear-gradient(to bottom, rgba(76, 175, 80, 0.05), white);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .time-slot.active.pulang {
+      background: linear-gradient(to bottom, rgba(33, 150, 243, 0.05), white);
+      border: 1px solid rgba(33, 150, 243, 0.3);
+    }
+    
+    .slot-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .slot-header.datang {
+      color: #4caf50;
+    }
+    
+    .slot-header.pulang {
+      color: #2196f3;
+    }
+    
+    .slot-time {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .slot-status {
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+    
+    .status-active {
+      background: rgba(76, 175, 80, 0.15);
+      color: #2e7d32;
+    }
+    
+    .status-inactive {
+      background: rgba(158, 158, 158, 0.15);
+      color: #616161;
+    }
+    
+    .slot-description {
+      font-size: 0.85rem;
+      color: var(--gray);
+      margin-top: 8px;
+    }
+
+    /* Modal Konfirmasi Logout */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      text-align: center;
+      max-width: 90%;
+      width: 400px;
+      animation: modal-appear 0.3s ease-out;
+    }
+
+    @keyframes modal-appear {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-content i {
+      font-size: 3rem;
+      color: #f44336;
+      margin-bottom: 15px;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 10px;
+      color: var(--dark);
+    }
+
+    .modal-content p {
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .modal-btn.cancel {
+      background: #e9ecef;
+      color: var(--dark);
+    }
+
+    .modal-btn.cancel:hover {
+      background: #dee2e6;
+    }
+
+    .modal-btn.logout {
+      background: var(--danger);
+      color: white;
+    }
+
+    .modal-btn.logout:hover {
+      background: #e01e6d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
+    }
+
+    /* Notifikasi Logout */
+    .logout-notification {
+      position: fixed;
+      top: 20px;
+      right: -300px;
+      background: #28a745;
+      color: white;
+      padding: 15px 25px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 2000;
+      transition: right 0.5s ease;
+    }
+
+    .logout-notification.show {
+      right: 20px;
+    }
+
+    /* Popup Waktu Presensi */
+    .time-notification {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .time-notification.show {
+      display: flex;
+    }
+
+    .time-notification i {
+      font-size: 4rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .time-notification h2 {
+      margin-bottom: 15px;
+      color: var(--dark);
+    }
+
+    .time-notification p {
+      max-width: 400px;
+      margin-bottom: 30px;
+      color: var(--gray);
+    }
+
+    /* GPS Blocker */
+    .gps-blocker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .gps-blocker i {
+      font-size: 4rem;
+      color: var(--danger);
+      margin-bottom: 20px;
+    }
+
+    /* Popup Sukses Presensi */
+    #successPopup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+    
+    .success-content {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 90%;
+      width: 400px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    .success-icon {
+      font-size: 5rem;
+      color: #28a745;
+      margin-bottom: 20px;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .success-title {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: #28a745;
+    }
+    
+    .success-message {
+      font-size: 1.1rem;
+      margin-bottom: 25px;
+      color: #333;
+    }
+    
+    .countdown {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #4361ee;
+      margin-top: 20px;
+    }
+    
+    .progress-container {
+      width: 100%;
+      height: 10px;
+      background: #e9ecef;
+      border-radius: 5px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+    
+    .countdown-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(to right, #28a745, #4361ee);
+      border-radius: 5px;
+      animation: countdown 5s linear forwards;
+    }
+    
+    @keyframes countdown {
+      0% { width: 100%; }
+      100% { width: 0%; }
+    }
+
+    /* GPS Tracking Indicator */
+    .gps-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f0f8ff;
+      border-radius: var(--border-radius);
+      border: 1px solid #d1e7ff;
+    }
+
+    .gps-indicator .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #ccc;
+      animation: pulseDot 1.5s infinite;
+    }
+
+    .gps-indicator .dot.active {
+      background-color: #28a745;
+    }
+
+    @keyframes pulseDot {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(0.8); }
+    }
+
+    /* Image Preview Styles */
+    .image-preview-container {
+      margin-top: 15px;
+      display: none;
+    }
+    .mirror-mode {
+       transform: scaleX(-1);
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: var(--border-radius);
+      border: 1px solid #e0e0e0;
+    }
+
+    /* ==================== LOCATION INFO STYLES ==================== */
+    .location-info {
+      background: #f8f9ff;
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #e0e6ff;
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.08);
+    }
+
+    .location-info h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .location-info h3 i {
+      font-size: 1.2rem;
+    }
+    
+    .location-coords {
+      font-family: monospace;
+      background: #f0f4ff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-top: 5px;
+      font-size: 0.9rem;
+    }
+    
+    .distance-info {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #ddd;
+    }
+    
+    #distanceDisplay {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    
+    #distanceValue {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    #radiusValue {
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .time-slots {
+        flex-direction: column;
+      }
+      
+      .time-slot {
+        min-width: 100%;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+
+      .modal-btn {
+        width: 100%;
+      }
+      
+      .splash-text {
+        font-size: 1.8rem;
+      }
+      
+      .splash-logo-container {
+        width: 140px;
+        height: 140px;
+      }
+      
+      .splash-text {
+        font-size: 1.8rem;
+      }
+      
+      .splash-subtext {
+        font-size: 1rem;
+      }
+
+      .success-content {
+        padding: 20px;
+        width: 90%;
+      }
+
+      .success-icon {
+        font-size: 4rem;
+      }
+
+      .success-title {
+        font-size: 1.5rem;
+      }
+      
+      .fakegps-content {
+        padding: 20px;
+      }
+      
+      .fakegps-title {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fake GPS Blocker -->
+  <div id="fakeGPSBlocker">
+    <div class="fakegps-content">
+      <i class="fas fa-ban fakegps-icon"></i>
+      <h2 class="fakegps-title">PEMALSUAN LOKASI TERDETEKSI!</h2>
+      <p class="fakegps-message">Sistem mendeteksi penggunaan aplikasi pemalsu lokasi (Fake GPS) yang dilarang dalam presensi.</p>
+      
+      <div class="fakegps-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+          <strong>Peringatan:</strong> Penggunaan aplikasi seperti Fake GPS, GPS Emulator, atau alat pemalsu lokasi lainnya merupakan pelanggaran berat terhadap aturan presensi.
+        </div>
+      </div>
+      
+      <div class="fakegps-instructions">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Untuk melanjutkan presensi:</strong>
+          <ol style="margin-top: 10px; padding-left: 20px;">
+            <li>Matikan semua aplikasi pemalsu lokasi</li>
+            <li>Nonaktifkan opsi "Mock Location" di pengaturan developer</li>
+            <li>Muat ulang halaman presensi</li>
+            <li>Pastikan Anda berada di lokasi kerja yang sebenarnya</li>
+          </ol>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 15px;">
+        <i class="fas fa-sync-alt"></i> Muat Ulang Halaman
+      </button>
+      
+      <p class="fakegps-footer">
+        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil SINE.
+      </p>
+    </div>
+  </div>
+  
+  <!-- Desktop Blocker -->
+  <div id="desktopBlocker">
+    <div class="blocker-content">
+      <i class="fas fa-lock blocker-icon"></i>
+      <h2 class="blocker-title">Akses Dibatasi</h2>
+      <p class="blocker-message">
+        Aplikasi Presensi Pegawai Korwil SINE hanya dapat diakses melalui perangkat mobile (Smartphone).
+        Silakan gunakan smartphone Android atau iPhone Anda untuk melakukan presensi.
+      </p>
+      
+      <div class="device-icons">
+        <div class="device-icon">
+          <i class="fab fa-android"></i>
+          <span>Android</span>
+        </div>
+        <div class="device-icon">
+          <i class="fab fa-apple"></i>
+          <span>iPhone</span>
+        </div>
+      </div>
+      
+      <p class="blocker-footer">
+        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil SINE. 
+    </div>
+  </div>
+  
+  <!-- Splash Screen -->
+  <div id="splashScreen">
+    <div class="splash-content">
+      <div class="splash-logo-container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" 
+             alt="Logo E-Presensi" class="splash-logo">
+      </div>
+      
+      <div class="splash-text-container">
+        <h1 class="splash-text">E-Presensi Korwil SINE</h1>
+        <p class="splash-subtext">Sistem Presensi Pegawai</p>
+        <p class="splash-subtext">Tahun 2026</p>
+        <p class="splash-subtext">Memuat Presensi</p>
+      </div>
+      
+      <div class="progress-container">
+        <div class="progress-bar"></div>
+        <div class="progress-pulse"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Notifikasi Logout -->
+  <div id="logoutNotification" class="logout-notification">
+    <i class="fas fa-check-circle"></i>
+    <span>Anda berhasil logout</span>
+  </div>
+  
+  <!-- Modal Konfirmasi Logout -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-sign-out-alt"></i>
+      <h2>Konfirmasi Logout</h2>
+      <p>Apakah Anda yakin ingin keluar dari sistem?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel">Batal</button>
+        <button class="modal-btn logout">Logout</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- GPS Blocker -->
+  <div id="gpsBlocker" class="gps-blocker">
+    <i class="fas fa-location-slash"></i>
+    <h2>Presensi Diblokir</h2>
+    <p>Anda tidak memberikan izin untuk mengakses GPS. Presensi tidak dapat dilakukan tanpa lokasi. Silakan izinkan akses lokasi di pengaturan browser Anda, lalu muat ulang halaman ini.</p>
+    <button class="btn btn-primary" onclick="location.reload()">
+      <i class="fas fa-sync-alt"></i> Muat Ulang Halaman
+    </button>
+  </div>
+  
+  <!-- Notifikasi Jam Presensi -->
+  <div id="timeNotification" class="time-notification">
+    <i class="fas fa-clock"></i>
+    <h2>Belum Waktunya Presensi</h2>
+    <p id="timeNotificationText"></p>
+    <button class="btn btn-primary" onclick="closeTimeNotification()">
+      <i class="fas fa-times"></i> Tutup
+    </button>
+  </div>
+  
+  <!-- Popup Sukses Presensi -->
+  <div id="successPopup">
+    <div class="success-content">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h2 class="success-title">Presensi Berhasil!</h2>
+      <p class="success-message">Absensi Anda sudah berhasil terekam. Anda akan logout otomatis dalam:</p>
+      <div class="countdown" id="countdownText">5 detik</div>
+      <div class="progress-container">
+        <div class="countdown-bar" id="countdownBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Radius Warning Popup -->
+  <div id="radiusWarningPopup">
+    <div class="radius-warning-container">
+      <div class="radius-warning-header">
+        <i class="fas fa-exclamation-triangle radius-warning-icon"></i>
+        <h3 class="radius-warning-title">Lokasi Tidak Sesuai</h3>
+      </div>
+      <div class="radius-warning-body">
+        <p class="radius-warning-text" id="radiusWarningText">Anda berada di luar radius yang ditentukan.</p>
+        
+        <div class="radius-details">
+          <div class="radius-detail-item">
+            <div class="radius-detail-icon">
+              <i class="fas fa-building"></i>
+            </div>
+            <span id="warningLembaga">-</span>
+          </div>
+          <div class="radius-detail-item">
+            <div class="radius-detail-icon">
+              <i class="fas fa-ruler-combined"></i>
+            </div>
+            <span id="warningDistance">-</span>
+          </div>
+          <div class="radius-detail-item">
+            <div class="radius-detail-icon">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <span id="warningRadius">-</span>
+          </div>
+        </div>
+        
+        <div class="radius-progress-container">
+          <div class="radius-progress-label">
+            <span>Jarak Anda</span>
+            <span id="progressPercentage">0%</span>
+          </div>
+          <div class="radius-progress-bar">
+            <div class="radius-progress-fill" id="radiusProgressFill"></div>
+          </div>
+        </div>
+      </div>
+      <div class="radius-warning-footer">
+        <button class="radius-warning-btn cancel" onclick="cancelPresensi()">
+          <i class="fas fa-times"></i> Batalkan
+        </button>
+        <button class="radius-warning-btn continue" onclick="continuePresensi()">
+          <i class="fas fa-check"></i> Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <button class="logout-btn" id="logoutButton">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+
+      <div class="card-header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo">
+        <h1>Presensi Pegawai</h1>
+        <p class="subtitle">Korwil Kecamatan SINE - Tahun 2026</p>
+      </div>
+
+      <form id="presensiForm">
+        <!-- Input hidden untuk menyimpan sessionId dan jenis presensi -->
+        <input type="hidden" id="sessionId" name="sessionId">
+        <input type="hidden" id="presensiType" name="presensi">
+        
+        <!-- TAMBAHKAN TIGA INPUT HIDDEN DI SINI -->
+        <input type="hidden" name="clientTime" id="clientTime">
+        <input type="hidden" name="timeDrift" id="timeDrift">
+        <input type="hidden" name="lastPresensiTime" id="lastPresensiTime">
+        
+        <!-- Modern Attendance Type Notification -->
+        <div class="attendance-notification">
+          <div class="attendance-header">
+            <div class="attendance-title">
+              <i class="fas fa-clock"></i>
+              <span>Waktu Presensi</span>
+            </div>
+            <div class="current-time">
+              <i class="fas fa-sync-alt fa-spin"></i>
+              <span id="currentTime">00:00:00 WIB</span>
+            </div>
+          </div>
+          
+          <div class="time-slots">
+            <div class="time-slot datang" data-type="Datang">
+              <div class="slot-header datang">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Presensi Masuk</span>
+              </div>
+              <div class="slot-time">06:00 - 07:00</div>
+              <div class="slot-status status-inactive">Tidak Aktif</div>
+              <div class="slot-description">Presensi masuk Pegawai</div>
+            </div>
+            
+            <div class="time-slot pulang" data-type="Pulang">
+              <div class="slot-header pulang">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Presensi Pulang</span>
+              </div>
+              <div class="slot-time" id="pulangSlotTime">-</div>
+              <div class="slot-status status-inactive">Tidak Aktif</div>
+              <div class="slot-description">Presensi pulang Pegawai</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="namaLembaga">Nama Lembaga</label>
+          <input type="text" id="namaLembaga" name="namaLembaga" required readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="namaPegawai">Nama Pegawai</label>
+          <input type="text" id="namaPegawai" name="namaPegawai" required readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="file">Bukti Dukung</label>
+          <div class="alert alert-light p-2 mb-2" style="font-size: 0.9rem; border: 1px solid #eee;">
+            <div class="mb-1">1. Foto harus Jelas Menampilkan Pegawai Yang Melakukan Presensi.</div>
+            <div> 2. Hindari Foto background alam (pohon, dinding, pemandangan)</div>
+          </div>
+          
+          <!-- Kamera preview langsung muncul -->
+          <div id="cameraPreview" style="margin: 15px 0; display: none;">
+            <video id="video" autoplay playsinline style="width: 100%; border-radius: 12px; background: #000;"></video>
+            <div style="display: flex; justify-content: center; margin-top: 10px; gap: 10px;">
+              <button id="captureBtn" class="btn btn-primary" style="width: auto;">
+                <i class="fas fa-camera"></i> Ambil Foto
+              </button>
+            </div>
+          </div>
+          
+          <canvas id="canvas" style="display: none;"></canvas>
+          <input type="hidden" id="photoData" name="photoData">
+          
+          <!-- Image Preview Container -->
+          <div id="imagePreviewContainer" class="image-preview-container">
+            <img id="imagePreview" class="image-preview">
+            <button id="retakeBtn" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
+              <i class="fas fa-camera"></i> Ambil Ulang
+            </button>
+          </div>
+        </div>
+
+        <!-- Info Lokasi Lembaga (dipindahkan di bawah Bukti Dukung) -->
+        <div class="location-info">
+          <div class="location-detail">
+            <h3><i class="fas fa-map-marker-alt"></i> Lokasi Lembaga</h3>
+            <div class="location-coords">
+              <span id="lembagaLatitude"></span>, <span id="lembagaLongitude"></span>
+              <span id="lembagaRadius"></span>
+            </div>
+          </div>
+          <div class="distance-info">
+            <div id="distanceDisplay">
+              <i class="fas fa-ruler-combined"></i> Jarak: <span id="distanceValue">-</span> m
+              (Radius: <span id="radiusValue">-</span> m)
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Lokasi Saat Ini (Deteksi Otomatis)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="latitude" name="latitude" placeholder="Latitude" readonly style="flex: 1;">
+            <input type="text" id="longitude" name="longitude" placeholder="Longitude" readonly style="flex: 1;">
+          </div>
+          
+          <!-- GPS Indicator -->
+          <div class="gps-indicator">
+            <div class="dot" id="gpsDot"></div>
+            <span id="gpsStatus">Mendeteksi lokasi...</span>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary">
+          <div id="loadingSpinner" class="spinner"></div>
+          <span id="submitText">Kirim Presensi</span>
+        </button>
+
+        <div id="message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Proxy URL (relatif)
+    const PROXY_URL = '/api/proxy';
+
+    // ==================== KAMERA DEPAN OTOMATIS ====================
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const photoData = document.getElementById('photoData');
+    const captureBtn = document.getElementById('captureBtn');
+    const cameraPreview = document.getElementById('cameraPreview');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const retakeBtn = document.getElementById('retakeBtn');
+    
+    let stream = null;
+    
+    function dataURLtoBlob(dataUrl) {
+      const arr = dataUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    }
+    
+    async function startCamera() {
+      try {
+        const constraints = {
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        cameraPreview.style.display = 'block';
+        captureBtn.style.display = 'block';
+        video.classList.add('mirror-mode');
+      } catch (err) {
+        console.error("Error mengakses kamera:", err);
+        alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.');
+      }
+    }
+    
+    captureBtn.addEventListener('click', function() {
+      captureBtn.style.display = 'none';
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.translate(canvas.width, 0);
+      context.scale(-1, 1);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      imagePreview.src = dataUrl;
+      photoData.value = dataUrl;
+      imagePreviewContainer.style.display = 'block';
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      cameraPreview.style.display = 'none';
+      const blob = dataURLtoBlob(dataUrl);
+      window.capturedFile = new File([blob], "presensi.jpg", {type: 'image/jpeg'});
+    });
+
+    retakeBtn.addEventListener('click', function() {
+      imagePreviewContainer.style.display = 'none';
+      cameraPreview.style.display = 'block';
+      startCamera();
+    });
+
+    // ==================== ENHANCED FAKE GPS DETECTION ====================
+    function detectFakeGPS(position) {
+      if (typeof position.mocked !== 'undefined' && position.mocked) return true;
+      if (position.coords.accuracy < 1 || position.coords.accuracy > 10000) return true;
+      const currentTime = Date.now();
+      const lastPosition = window.lastPosition || { timestamp: 0, coords: { latitude: 0, longitude: 0 } };
+      const distance = calculateDistance(
+        lastPosition.coords.latitude, 
+        lastPosition.coords.longitude,
+        position.coords.latitude,
+        position.coords.longitude
+      );
+      const timeDiff = (currentTime - lastPosition.timestamp) / 1000;
+      window.lastPosition = { timestamp: currentTime, coords: position.coords };
+      if (timeDiff > 0 && timeDiff < 5 && distance > 500) return true;
+      if (isOutsideWorkArea(position.coords.latitude, position.coords.longitude)) return true;
+      if (position.coords.altitude !== null) {
+        const altitude = position.coords.altitude;
+        if (altitude < -100 || altitude > 1000) return true;
+      }
+      if (position.coords.speed !== null) {
+        const speed = position.coords.speed * 3.6;
+        if (speed > 200) return true;
+      }
+      return false;
+    }
+    
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+    
+    function isOutsideWorkArea(lat, lon) {
+      const validLat = -7.4;
+      const validLon = 111.4;
+      const range = 0.5;
+      return Math.abs(lat - validLat) > range || Math.abs(lon - validLon) > range;
+    }
+    
+    function showFakeGPSBlocker() {
+      document.getElementById('fakeGPSBlocker').style.display = 'flex';
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('latitude').value = '';
+      document.getElementById('longitude').value = '';
+      document.getElementById('gpsStatus').innerHTML = 
+        '<i class="fas fa-ban" style="color: #f44336;"></i> Lokasi palsu terdeteksi!';
+      document.getElementById('gpsDot').classList.remove('active');
+    }
+    
+    // ==================== DESKTOP BLOCKER ====================
+    function checkDevice() {
+      const userAgent = navigator.userAgent;
+      const desktopOS = ['Windows', 'Mac OS', 'Linux'];
+      const mobileOS = ['Android', 'iPhone', 'iPad', 'iPod'];
+      const isDesktop = desktopOS.some(os => userAgent.includes(os));
+      const isMobile = mobileOS.some(os => userAgent.includes(os));
+      if (isDesktop && !isMobile) {
+        document.getElementById('desktopBlocker').style.display = 'flex';
+        document.body.classList.add('desktop-blocked');
+        return false;
+      }
+      return true;
+    }
+    
+    // ==================== SPLASH SCREEN ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      const isAllowedDevice = checkDevice();
+      if (!isAllowedDevice) return;
+      document.body.classList.add('splash-active');
+      setTimeout(function() {
+        const splashScreen = document.getElementById('splashScreen');
+        splashScreen.classList.add('hide');
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          document.body.classList.remove('splash-active');
+          initializeApp();
+        }, 800);
+      }, 3000);
+    });
+    
+    let watchID = null;
+    
+    // ==================== PRESENSI TIME CONFIGURATION (SESUAI PERMINTAAN) ====================
+    // Datang: 06.00 - 07.00 (setiap hari)
+    // Pulang: Senin-Kamis 15.00 - 16.30, Jumat 14.30 - 16.30
+    function isFriday() {
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const wibTime = new Date(utcTime + (3600000 * 7));
+      return wibTime.getDay() === 5; // 5 = Jumat
+    }
+    
+    function getPresensiParams() {
+      const datangStart = 6.0;   // 06:00
+      const datangEnd = 7.0;     // 07:00
+      let pulangStart = 15.0;     // 15:00 default
+      const pulangEnd = 16.5;     // 16:30
+      if (isFriday()) {
+        pulangStart = 14.5;       // 14:30 untuk Jumat
+      }
+      return { datangStart, datangEnd, pulangStart, pulangEnd };
+    }
+    
+    function updateSlotTimesDisplay() {
+      const params = getPresensiParams();
+      const pulangSlot = document.querySelector('.time-slot.pulang .slot-time');
+      if (pulangSlot) {
+        if (isFriday()) {
+          pulangSlot.textContent = '14:30 - 16:30';
+        } else {
+          pulangSlot.textContent = '15:00 - 16:30';
+        }
+      }
+      const datangSlot = document.querySelector('.time-slot.datang .slot-time');
+      if (datangSlot) {
+        datangSlot.textContent = '06:00 - 07:00';
+      }
+    }
+    
+    function updateAttendanceStatus() {
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const wibTime = new Date(utcTime + (3600000 * 7));
+      const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
+      const params = getPresensiParams();
+      
+      const isDatangTime = hours >= params.datangStart && hours < params.datangEnd;
+      const isPulangTime = hours >= params.pulangStart && hours < params.pulangEnd;
+      
+      const datangSlot = document.querySelector('.time-slot.datang');
+      const datangStatus = datangSlot.querySelector('.slot-status');
+      if (isDatangTime) {
+        datangSlot.classList.add('active');
+        datangStatus.textContent = 'Aktif Sekarang';
+        datangStatus.className = 'slot-status status-active';
+        document.getElementById('presensiType').value = 'Datang';
+      } else {
+        datangSlot.classList.remove('active');
+        datangStatus.textContent = hours < params.datangStart ? 'Belum Aktif' : 'Tidak Aktif';
+        datangStatus.className = 'slot-status status-inactive';
+      }
+      
+      const pulangSlot = document.querySelector('.time-slot.pulang');
+      const pulangStatus = pulangSlot.querySelector('.slot-status');
+      if (isPulangTime) {
+        pulangSlot.classList.add('active');
+        pulangStatus.textContent = 'Aktif Sekarang';
+        pulangStatus.className = 'slot-status status-active';
+        document.getElementById('presensiType').value = 'Pulang';
+      } else {
+        pulangSlot.classList.remove('active');
+        pulangStatus.textContent = hours < params.pulangStart ? 'Belum Aktif' : 'Tidak Aktif';
+        pulangStatus.className = 'slot-status status-inactive';
+      }
+    }
+    
+    function isValidPresensiTime() {
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const wibTime = new Date(utcTime + (3600000 * 7));
+      const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
+      const params = getPresensiParams();
+      const isDatangTime = hours >= params.datangStart && hours < params.datangEnd;
+      const isPulangTime = hours >= params.pulangStart && hours < params.pulangEnd;
+      return isDatangTime || isPulangTime;
+    }
+    
+    function checkPresensiTime() {
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const wibTime = new Date(utcTime + (3600000 * 7));
+      const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
+      const formattedHours = wibTime.getHours().toString().padStart(2, '0');
+      const formattedMinutes = wibTime.getMinutes().toString().padStart(2, '0');
+      const currentTime = `${formattedHours}:${formattedMinutes} WIB`;
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const timeNotification = document.getElementById('timeNotification');
+      const timeNotificationText = document.getElementById('timeNotificationText');
+      
+      const params = getPresensiParams();
+      const isDatangTime = hours >= params.datangStart && hours < params.datangEnd;
+      const isPulangTime = hours >= params.pulangStart && hours < params.pulangEnd;
+      
+      if (isDatangTime || isPulangTime) {
+        timeNotification.classList.remove('show');
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+        if (hours < params.datangStart) {
+          timeNotificationText.innerHTML = `Saat ini pukul ${currentTime}. Presensi Datang: 06.00 - 07.00 WIB.`;
+        } else if (hours >= params.datangEnd && hours < params.pulangStart) {
+          let pulangInfo = isFriday() ? '14.30 - 16.30 WIB' : '15.00 - 16.30 WIB';
+          timeNotificationText.innerHTML = `Saat ini pukul ${currentTime}. Presensi Pulang ${pulangInfo}.`;
+        } else if (hours >= params.pulangEnd) {
+          timeNotificationText.innerHTML = `Saat ini pukul ${currentTime}. Presensi untuk hari ini sudah berakhir.`;
+        }
+        timeNotification.classList.add('show');
+      }
+    }
+    
+    async function initializeApp() {
+      document.getElementById('logoutButton').addEventListener('click', showLogoutModal);
+      document.querySelector('.modal-btn.cancel').addEventListener('click', closeModal);
+      document.querySelector('.modal-btn.logout').addEventListener('click', confirmLogout);
+      
+      const lastPresensi = localStorage.getItem('lastPresensi');
+      if (lastPresensi) {
+        document.getElementById('lastPresensiTime').value = lastPresensi;
+      }
+      let timeDrift = 0;
+      if (lastPresensi) {
+        const now = new Date();
+        const lastTime = new Date(lastPresensi);
+        timeDrift = (now - lastTime) / (1000 * 60);
+      }
+      document.getElementById('timeDrift').value = timeDrift;
+      document.getElementById('presensiForm').addEventListener('submit', function() {
+        document.getElementById('clientTime').value = new Date().toISOString();
+        localStorage.setItem('lastPresensi', new Date().toISOString());
+      });
+
+      const urlParams = new URLSearchParams(window.location.search);
+      let sessionId = urlParams.get('session') || localStorage.getItem('sessionId');
+      
+      if (!sessionId) {
+        alert('Sesi tidak valid. Silakan login kembali.');
+        logout();
+        return;
+      }
+      
+      document.getElementById('sessionId').value = sessionId;
+      localStorage.setItem('sessionId', sessionId);
+      
+      try {
+        const response = await fetch(`${PROXY_URL}?action=getSession`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+        const userData = await response.json();
+
+        if (!userData) {
+          alert('Sesi tidak valid. Silakan login kembali.');
+          logout();
+        } else {
+          localStorage.setItem('sessionData', JSON.stringify(userData));
+          document.getElementById('namaLembaga').value = userData.namaLembaga;
+          document.getElementById('namaPegawai').value = userData.namaPegawai;
+          displayLembagaLocation(
+            userData.lembagaLatitude, 
+            userData.lembagaLongitude, 
+            userData.lembagaRadius
+          );
+          updateCurrentTime();
+          setInterval(updateCurrentTime, 1000);
+          updateSlotTimesDisplay();
+          updateAttendanceStatus();
+          setInterval(() => {
+            updateAttendanceStatus();
+            updateSlotTimesDisplay();
+          }, 60000);
+          startLocationTracking();
+          setInterval(checkPresensiTime, 60000);
+          checkPresensiTime();
+        }
+      } catch (err) {
+        console.error('Initialize error:', err);
+        alert('Terjadi kesalahan: ' + err.message);
+        logout();
+      }
+    }
+    
+    function displayLembagaLocation(lembagaLatitude, lembagaLongitude, lembagaRadius) {
+      document.getElementById('lembagaLatitude').textContent = lembagaLatitude;
+      document.getElementById('lembagaLongitude').textContent = lembagaLongitude;
+      document.getElementById('lembagaRadius').textContent = `(Radius: ${lembagaRadius} m)`;
+      document.getElementById('radiusValue').textContent = lembagaRadius;
+    }
+    
+    function updateDistanceDisplay(userLat, userLon, lembagaLat, lembagaLon, radius) {
+      if (userLat && userLon && lembagaLat && lembagaLon) {
+        const distance = calculateDistance(userLat, userLon, lembagaLat, lembagaLon);
+        document.getElementById('distanceValue').textContent = distance.toFixed(2);
+        if (distance > radius) {
+          document.getElementById('distanceValue').style.color = '#f44336';
+        } else {
+          document.getElementById('distanceValue').style.color = '#4caf50';
+        }
+        return distance;
+      }
+      return 0;
+    }
+    
+    function startLocationTracking() {
+      const gpsStatus = document.getElementById('gpsStatus');
+      const gpsDot = document.getElementById('gpsDot');
+      
+      gpsStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi lokasi...';
+      gpsDot.classList.remove('active');
+      
+      if (watchID) {
+        navigator.geolocation.clearWatch(watchID);
+      }
+      
+      if (navigator.geolocation) {
+        watchID = navigator.geolocation.watchPosition(
+          position => {
+            if (detectFakeGPS(position)) {
+              showFakeGPSBlocker();
+              return;
+            }
+            
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            
+            document.getElementById('latitude').value = userLat;
+            document.getElementById('longitude').value = userLon;
+            
+            const sessionData = JSON.parse(localStorage.getItem('sessionData'));
+            if (sessionData) {
+              const lembagaLat = parseFloat(sessionData.lembagaLatitude);
+              const lembagaLon = parseFloat(sessionData.lembagaLongitude);
+              const radius = parseFloat(sessionData.lembagaRadius);
+              updateDistanceDisplay(userLat, userLon, lembagaLat, lembagaLon, radius);
+            }
+            
+            gpsStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Lokasi berhasil didapatkan';
+            gpsDot.classList.add('active');
+            document.getElementById('gpsBlocker').style.display = 'none';
+          },
+          error => {
+            if (error.code === error.PERMISSION_DENIED) {
+              document.getElementById('gpsBlocker').style.display = 'flex';
+              gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Akses GPS ditolak';
+              gpsDot.classList.remove('active');
+            } else {
+              gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Error: ' + error.message;
+              gpsDot.classList.remove('active');
+            }
+          },
+          { 
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          }
+        );
+      } else {
+        gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Geolocation tidak didukung oleh browser ini.';
+      }
+    }
+    
+    function updateCurrentTime() {
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const wibTime = new Date(utcTime + (3600000 * 7));
+      const hours = wibTime.getHours().toString().padStart(2, '0');
+      const minutes = wibTime.getMinutes().toString().padStart(2, '0');
+      const seconds = wibTime.getSeconds().toString().padStart(2, '0');
+      document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds} WIB`;
+    }
+
+    function showLogoutModal() {
+      document.getElementById('logoutModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+      document.getElementById('logoutModal').style.display = 'none';
+    }
+    
+    function confirmLogout() {
+      closeModal();
+      logout();
+    }
+
+    async function logout() {
+      const sessionId = localStorage.getItem('sessionId');
+      const logoutBtn = document.getElementById('logoutButton');
+      const originalLogoutText = logoutBtn.innerHTML;
+      logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+      logoutBtn.disabled = true;
+      
+      if (watchID) {
+        navigator.geolocation.clearWatch(watchID);
+      }
+      
+      if (sessionId) {
+        try {
+          await fetch(`${PROXY_URL}?action=logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+        } catch (err) {
+          console.error('Logout error:', err);
+        }
+      }
+      
+      const notification = document.getElementById('logoutNotification');
+      notification.classList.add('show');
+      
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('sessionData');
+      
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+    
+    function closeTimeNotification() {
+      document.getElementById('timeNotification').classList.remove('show');
+    }
+    
+    function compressImage(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const MAX_WIDTH = 800;
+          const scale = MAX_WIDTH / img.width;
+          const height = img.height * scale;
+          canvas.width = MAX_WIDTH;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, MAX_WIDTH, height);
+          canvas.toBlob(function(blob) {
+            callback(blob);
+          }, 'image/jpeg', 0.7);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function showRadiusConfirmation(distance, radius, namaLembaga) {
+      const progressPercent = Math.min(100, (distance / radius) * 100);
+      document.getElementById('radiusWarningText').textContent = 
+        `Anda berada ${distance.toFixed(2)}m dari ${namaLembaga} (radius: ${radius}m). Tetap lanjutkan?`;
+      document.getElementById('warningLembaga').textContent = namaLembaga;
+      document.getElementById('warningDistance').textContent = `Jarak: ${distance.toFixed(2)} meter`;
+      document.getElementById('warningRadius').textContent = `Radius yang diizinkan: ${radius} meter`;
+      document.getElementById('progressPercentage').textContent = `${Math.round(progressPercent)}%`;
+      setTimeout(() => {
+        document.getElementById('radiusProgressFill').style.width = `${progressPercent}%`;
+      }, 100);
+      document.getElementById('radiusWarningPopup').style.display = 'flex';
+    }
+
+    function continuePresensi() {
+      document.getElementById('radiusWarningPopup').style.display = 'none';
+      submitPresensiForm();
+    }
+
+    function cancelPresensi() {
+      document.getElementById('radiusWarningPopup').style.display = 'none';
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = false;
+      document.getElementById('loadingSpinner').style.display = 'none';
+      document.getElementById('submitText').textContent = 'Kirim Presensi';
+    }
+
+    function showSuccessPopup() {
+      const successPopup = document.getElementById('successPopup');
+      successPopup.style.display = 'flex';
+      let seconds = 5;
+      const countdownText = document.getElementById('countdownText');
+      const countdownBar = document.getElementById('countdownBar');
+      countdownBar.style.animation = 'none';
+      void countdownBar.offsetWidth;
+      countdownBar.style.animation = 'countdown 5s linear forwards';
+      const countdownInterval = setInterval(() => {
+        seconds--;
+        countdownText.textContent = `${seconds} detik`;
+        if (seconds <= 0) {
+          clearInterval(countdownInterval);
+          logout();
+        }
+      }, 1000);
+    }
+    
+    function redirectToLogin() {
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('sessionData');
+      window.location.href = '/';
+    }
+    
+    async function submitPresensiForm() {
+      const submitBtn = document.getElementById('submitBtn');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const submitText = document.getElementById('submitText');
+      const messageEl = document.getElementById('message');
+
+      messageEl.textContent = '';
+      messageEl.className = '';
+      messageEl.style.display = 'none';
+
+      const latitude = document.getElementById('latitude').value;
+      const longitude = document.getElementById('longitude').value;
+      if (!latitude || !longitude) {
+        alert('Mohon dapatkan lokasi terlebih dahulu.');
+        return;
+      }
+
+      const fileToUpload = window.capturedFile;
+      if (!fileToUpload) {
+        alert('Mohon ambil foto terlebih dahulu.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      loadingSpinner.style.display = 'block';
+      submitText.textContent = 'Mengirim...';
+
+      compressImage(fileToUpload, async function(compressedBlob) {
+        const compressedFile = new File([compressedBlob], 'presensi.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+          const fileData = event.target.result.split(',')[1];
+          const formData = {
+            sessionId: document.getElementById('sessionId').value,
+            presensi: document.getElementById('presensiType').value,
+            namaLembaga: document.getElementById('namaLembaga').value,
+            namaPegawai: document.getElementById('namaPegawai').value,
+            latitude: latitude,
+            longitude: longitude,
+            file: {
+              name: 'presensi.jpg',
+              type: 'image/jpeg',
+              data: fileData
+            },
+            clientTime: document.getElementById('clientTime').value,
+            timeDrift: document.getElementById('timeDrift').value,
+            lastPresensiTime: document.getElementById('lastPresensiTime').value
+          };
+
+          try {
+            const response = await fetch(`${PROXY_URL}?action=presensi`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+            const result = await response.json();
+
+            if (result.success) {
+              showSuccessPopup();
+            } else {
+              messageEl.textContent = result.message;
+              messageEl.classList.add('error');
+              messageEl.style.display = 'block';
+              submitBtn.disabled = false;
+              loadingSpinner.style.display = 'none';
+              submitText.textContent = 'Kirim Presensi';
+            }
+          } catch (error) {
+            console.error('Submit error:', error);
+            messageEl.textContent = 'Error: ' + error.message;
+            messageEl.classList.add('error');
+            messageEl.style.display = 'block';
+            submitBtn.disabled = false;
+            loadingSpinner.style.display = 'none';
+            submitText.textContent = 'Kirim Presensi';
+          }
+        };
+        reader.readAsDataURL(compressedFile);
+      });
+    }
+
+    document.getElementById('presensiForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!isValidPresensiTime()) {
+        alert('Tidak dapat melakukan presensi di luar jam yang ditentukan.');
+        return;
+      }
+      
+      const latitude = parseFloat(document.getElementById('latitude').value);
+      const longitude = parseFloat(document.getElementById('longitude').value);
+      const sessionData = JSON.parse(localStorage.getItem('sessionData'));
+      
+      if (!sessionData) {
+        alert('Sesi tidak valid. Silakan login kembali.');
+        return;
+      }
+      
+      const lembagaLat = parseFloat(sessionData.lembagaLatitude);
+      const lembagaLon = parseFloat(sessionData.lembagaLongitude);
+      const radius = parseFloat(sessionData.lembagaRadius);
+      
+      const distance = calculateDistance(latitude, longitude, lembagaLat, lembagaLon);
+      
+      if (distance > radius) {
+        showRadiusConfirmation(distance, radius, sessionData.namaLembaga);
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        return;
+      }
+      
+      submitPresensiForm();
+    });
+
+    setTimeout(() => {
+      startCamera();
+    }, 3500);
+  </script>
+</body>
+</html>
