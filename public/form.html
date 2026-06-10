@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Form Presensi Pegawai - Korwil</title>
+  <title>Form Presensi Pegawai - Korwil SINE</title>
   <base target="_top">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -470,7 +470,7 @@
       background: #F5F5F5;
     }
 
-    /* ==================== PROGRESS PENGIRIMAN PRESENSI ==================== */
+    /* ==================== PROGRESS PENGIRIMAN PRESENSI (BARU) ==================== */
     #progressDeliveryModal {
       position: fixed;
       top: 0;
@@ -562,157 +562,6 @@
       font-size: 0.85rem;
       color: #5b6e8c;
       margin-top: 12px;
-    }
-
-    /* ==================== ERROR POPUP ==================== */
-    #errorPopup {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 2200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(5px);
-    }
-
-    .error-popup-container {
-      background: white;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 400px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      transform: scale(0.9);
-      opacity: 0;
-      animation: popupAppear 0.3s ease-out forwards;
-    }
-
-    .error-popup-header {
-      background: #ffebee;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #ffcdd2;
-    }
-
-    .error-popup-icon {
-      font-size: 3rem;
-      color: #f44336;
-      margin-bottom: 10px;
-    }
-
-    .error-popup-title {
-      color: #c62828;
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .error-popup-body {
-      padding: 20px;
-    }
-
-    .error-popup-text {
-      color: #555;
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 1rem;
-      line-height: 1.5;
-    }
-
-    .error-popup-footer {
-      display: flex;
-      border-top: 1px solid #EEE;
-    }
-
-    .error-popup-btn {
-      flex: 1;
-      padding: 15px;
-      border: none;
-      background: none;
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .error-popup-btn.close {
-      color: #757575;
-    }
-
-    .error-popup-btn.logout {
-      color: #f44336;
-      border-left: 1px solid #EEE;
-    }
-
-    .error-popup-btn:hover {
-      background: #F5F5F5;
-    }
-
-    /* ==================== STYLE UNTUK KAMERA CERDAS ==================== */
-    .camera-container {
-      position: relative;
-      margin: 15px 0;
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      background: #000;
-    }
-    #cameraPreview {
-      position: relative;
-      display: none;
-    }
-    #video {
-      width: 100%;
-      border-radius: var(--border-radius);
-      background: #000;
-      display: block;
-      transform: scaleX(-1);
-    }
-    #overlayCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 15;
-    }
-    .face-detection-status {
-      position: absolute;
-      bottom: 10px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 8px;
-      font-size: 0.85rem;
-      z-index: 20;
-      border-radius: 30px;
-      margin: 0 auto;
-      width: 85%;
-      margin-left: auto;
-      margin-right: auto;
-      backdrop-filter: blur(4px);
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .detection-success {
-      background: rgba(40,167,69,0.9);
-    }
-    .detection-warning {
-      background: rgba(255,193,7,0.9);
-      color: #000;
-    }
-    .detection-error {
-      background: rgba(220,53,69,0.9);
     }
 
     /* ==================== EXISTING STYLES ==================== */
@@ -867,6 +716,44 @@
       cursor: not-allowed;
     }
 
+    .spinner {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #message {
+      margin: 20px 0;
+      padding: 12px;
+      border-radius: var(--border-radius);
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+
+    .error {
+      background-color: #fff0f0;
+      color: #dc3545;
+      border: 1px solid #ffcccc;
+      display: block;
+    }
+
+    .success {
+      background-color: #f0fff4;
+      color: #28a745;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+
     .logout-btn {
       position: absolute;
       top: 20px;
@@ -891,6 +778,7 @@
       box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
     }
 
+    /* Modern Attendance Type Notification */
     .attendance-notification {
       background: #f8f9ff;
       border-radius: var(--border-radius);
@@ -1028,6 +916,7 @@
       margin-top: 8px;
     }
 
+    /* Modal Konfirmasi Logout */
     .modal {
       display: none;
       position: fixed;
@@ -1108,6 +997,7 @@
       box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
     }
 
+    /* Notifikasi Logout */
     .logout-notification {
       position: fixed;
       top: 20px;
@@ -1128,6 +1018,7 @@
       right: 20px;
     }
 
+    /* Popup Waktu Presensi */
     .time-notification {
       position: fixed;
       top: 0;
@@ -1166,6 +1057,7 @@
       color: var(--gray);
     }
 
+    /* GPS Blocker */
     .gps-blocker {
       position: fixed;
       top: 0;
@@ -1189,6 +1081,7 @@
       margin-bottom: 20px;
     }
 
+    /* Popup Sukses Presensi */
     #successPopup {
       position: fixed;
       top: 0;
@@ -1274,6 +1167,7 @@
       100% { width: 0%; }
     }
 
+    /* GPS Tracking Indicator */
     .gps-indicator {
       display: flex;
       align-items: center;
@@ -1303,9 +1197,13 @@
       100% { transform: scale(0.8); }
     }
 
+    /* Image Preview Styles */
     .image-preview-container {
       margin-top: 15px;
       display: none;
+    }
+    .mirror-mode {
+       transform: scaleX(-1);
     }
     .image-preview {
       max-width: 100%;
@@ -1314,6 +1212,7 @@
       border: 1px solid #e0e0e0;
     }
 
+    /* ==================== LOCATION INFO STYLES ==================== */
     .location-info {
       background: #f8f9ff;
       border-radius: var(--border-radius);
@@ -1367,6 +1266,82 @@
       color: var(--secondary);
     }
 
+    /* ==================== STYLE UNTUK BORDER AREA SELFIE ==================== */
+    .camera-container {
+      position: relative;
+      margin: 15px 0;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      background: #000;
+    }
+    #cameraPreview {
+      position: relative;
+      display: none;
+    }
+    #video {
+      width: 100%;
+      border-radius: var(--border-radius);
+      background: #000;
+      display: block;
+    }
+    .face-border {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .face-border svg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      height: auto;
+      max-width: 280px;
+    }
+    .face-border svg rect {
+      fill: none;
+      stroke: #00ffcc;
+      stroke-width: 4;
+      stroke-dasharray: 10 5;
+      animation: borderPulse 1.5s infinite;
+      rx: 20;
+      ry: 20;
+    }
+    @keyframes borderPulse {
+      0% { stroke: #00ffcc; stroke-width: 4; }
+      50% { stroke: #ffcc00; stroke-width: 6; }
+      100% { stroke: #00ffcc; stroke-width: 4; }
+    }
+    .face-detection-status {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 6px;
+      font-size: 0.8rem;
+      z-index: 20;
+      border-radius: 20px;
+      margin: 0 auto;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+      backdrop-filter: blur(4px);
+    }
+    .detection-success {
+      background: rgba(40,167,69,0.8);
+    }
+    .detection-warning {
+      background: rgba(255,193,7,0.8);
+      color: #000;
+    }
+
     @media (max-width: 480px) {
       .card {
         padding: 20px;
@@ -1401,6 +1376,14 @@
         height: 140px;
       }
       
+      .splash-text {
+        font-size: 1.8rem;
+      }
+      
+      .splash-subtext {
+        font-size: 1rem;
+      }
+
       .success-content {
         padding: 20px;
         width: 90%;
@@ -1422,36 +1405,231 @@
         font-size: 1.5rem;
       }
       
-      .face-detection-status {
-        font-size: 0.7rem;
-        width: 90%;
+      .face-border svg {
+        width: 85%;
       }
     }
   </style>
 </head>
 <body>
   <!-- Fake GPS Blocker -->
-  <div id="fakeGPSBlocker"><div class="fakegps-content"><i class="fas fa-ban fakegps-icon"></i><h2 class="fakegps-title">PEMALSUAN LOKASI TERDETEKSI!</h2><p class="fakegps-message">Sistem mendeteksi penggunaan aplikasi pemalsu lokasi (Fake GPS) yang dilarang dalam presensi.</p><div class="fakegps-warning"><i class="fas fa-exclamation-triangle"></i><div><strong>Peringatan:</strong> Penggunaan aplikasi seperti Fake GPS, GPS Emulator, atau alat pemalsu lokasi lainnya merupakan pelanggaran berat.</div></div><div class="fakegps-instructions"><i class="fas fa-info-circle"></i><div><strong>Untuk melanjutkan presensi:</strong><ol style="margin-top:10px;padding-left:20px;"><li>Matikan semua aplikasi pemalsu lokasi</li><li>Nonaktifkan opsi "Mock Location" di pengaturan developer</li><li>Muat ulang halaman presensi</li><li>Pastikan Anda berada di lokasi kerja yang sebenarnya</li></ol></div></div><button class="btn btn-primary" onclick="location.reload()" style="margin-top:15px;"><i class="fas fa-sync-alt"></i> Muat Ulang Halaman</button><p class="fakegps-footer">Ⓨ 2026 Sistem Presensi Pegawai .</p></div></div>
+  <div id="fakeGPSBlocker">
+    <div class="fakegps-content">
+      <i class="fas fa-ban fakegps-icon"></i>
+      <h2 class="fakegps-title">PEMALSUAN LOKASI TERDETEKSI!</h2>
+      <p class="fakegps-message">Sistem mendeteksi penggunaan aplikasi pemalsu lokasi (Fake GPS) yang dilarang dalam presensi.</p>
+      
+      <div class="fakegps-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+          <strong>Peringatan:</strong> Penggunaan aplikasi seperti Fake GPS, GPS Emulator, atau alat pemalsu lokasi lainnya merupakan pelanggaran berat terhadap aturan presensi.
+        </div>
+      </div>
+      
+      <div class="fakegps-instructions">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Untuk melanjutkan presensi:</strong>
+          <ol style="margin-top: 10px; padding-left: 20px;">
+            <li>Matikan semua aplikasi pemalsu lokasi</li>
+            <li>Nonaktifkan opsi "Mock Location" di pengaturan developer</li>
+            <li>Muat ulang halaman presensi</li>
+            <li>Pastikan Anda berada di lokasi kerja yang sebenarnya</li>
+          </ol>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 15px;">
+        <i class="fas fa-sync-alt"></i> Muat Ulang Halaman
+      </button>
+      
+      <p class="fakegps-footer">
+        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil SINE.
+      </p>
+    </div>
+  </div>
   
   <!-- Desktop Blocker -->
-  <div id="desktopBlocker"><div class="blocker-content"><i class="fas fa-lock blocker-icon"></i><h2 class="blocker-title">Akses Dibatasi</h2><p class="blocker-message">Aplikasi Presensi Pegawai Korwil hanya dapat diakses melalui perangkat mobile (Smartphone). Silakan gunakan smartphone Android atau iPhone Anda untuk melakukan presensi.</p><div class="device-icons"><div class="device-icon"><i class="fab fa-android"></i><span>Android</span></div><div class="device-icon"><i class="fab fa-apple"></i><span>iPhone</span></div></div><p class="blocker-footer">Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil .</p></div></div>
+  <div id="desktopBlocker">
+    <div class="blocker-content">
+      <i class="fas fa-lock blocker-icon"></i>
+      <h2 class="blocker-title">Akses Dibatasi</h2>
+      <p class="blocker-message">
+        Aplikasi Presensi Pegawai Korwil SINE hanya dapat diakses melalui perangkat mobile (Smartphone).
+        Silakan gunakan smartphone Android atau iPhone Anda untuk melakukan presensi.
+      </p>
+      
+      <div class="device-icons">
+        <div class="device-icon">
+          <i class="fab fa-android"></i>
+          <span>Android</span>
+        </div>
+        <div class="device-icon">
+          <i class="fab fa-apple"></i>
+          <span>iPhone</span>
+        </div>
+      </div>
+      
+      <p class="blocker-footer">
+        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil SINE. 
+    </div>
+  </div>
   
   <!-- Splash Screen -->
-  <div id="splashScreen"><div class="splash-content"><div class="splash-logo-container"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo E-Presensi" class="splash-logo"></div><div class="splash-text-container"><h1 class="splash-text">E-Presensi Korwil</h1><p class="splash-subtext">Sistem Presensi Pegawai</p><p class="splash-subtext">Tahun 2026</p><p class="splash-subtext">Memuat Presensi</p></div><div class="progress-container"><div class="progress-bar"></div><div class="progress-pulse"></div></div></div></div>
+  <div id="splashScreen">
+    <div class="splash-content">
+      <div class="splash-logo-container">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" 
+             alt="Logo E-Presensi" class="splash-logo">
+      </div>
+      
+      <div class="splash-text-container">
+        <h1 class="splash-text">E-Presensi Korwil SINE</h1>
+        <p class="splash-subtext">Sistem Presensi Pegawai</p>
+        <p class="splash-subtext">Tahun 2026</p>
+        <p class="splash-subtext">Memuat Presensi</p>
+      </div>
+      
+      <div class="progress-container">
+        <div class="progress-bar"></div>
+        <div class="progress-pulse"></div>
+      </div>
+    </div>
+  </div>
   
-  <div id="logoutNotification" class="logout-notification"><i class="fas fa-check-circle"></i><span>Anda berhasil logout</span></div>
-  <div id="logoutModal" class="modal"><div class="modal-content"><i class="fas fa-sign-out-alt"></i><h2>Konfirmasi Logout</h2><p>Apakah Anda yakin ingin keluar dari sistem?</p><div class="modal-buttons"><button class="modal-btn cancel">Batal</button><button class="modal-btn logout">Logout</button></div></div></div>
-  <div id="gpsBlocker" class="gps-blocker"><i class="fas fa-location-slash"></i><h2>Presensi Diblokir</h2><p>Anda tidak memberikan izin untuk mengakses GPS. Presensi tidak dapat dilakukan tanpa lokasi. Silakan izinkan akses lokasi di pengaturan browser Anda, lalu muat ulang halaman ini.</p><button class="btn btn-primary" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Muat Ulang Halaman</button></div>
-  <div id="timeNotification" class="time-notification"><i class="fas fa-clock"></i><h2>Belum Waktunya Presensi</h2><p id="timeNotificationText"></p><button class="btn btn-primary" onclick="closeTimeNotification()"><i class="fas fa-times"></i> Tutup</button></div>
-  <div id="successPopup"><div class="success-content"><i class="fas fa-check-circle success-icon"></i><h2 class="success-title">Presensi Berhasil!</h2><p class="success-message">Absensi Anda sudah berhasil terekam. Anda akan logout otomatis dalam:</p><div class="countdown" id="countdownText">5 detik</div><div class="progress-container"><div class="countdown-bar" id="countdownBar"></div></div></div></div>
-  <div id="radiusWarningPopup"><div class="radius-warning-container"><div class="radius-warning-header"><i class="fas fa-exclamation-triangle radius-warning-icon"></i><h3 class="radius-warning-title">Lokasi Tidak Sesuai</h3></div><div class="radius-warning-body"><p class="radius-warning-text" id="radiusWarningText">Anda berada di luar radius yang ditentukan.</p><div class="radius-details"><div class="radius-detail-item"><div class="radius-detail-icon"><i class="fas fa-building"></i></div><span id="warningLembaga">-</span></div><div class="radius-detail-item"><div class="radius-detail-icon"><i class="fas fa-ruler-combined"></i></div><span id="warningDistance">-</span></div><div class="radius-detail-item"><div class="radius-detail-icon"><i class="fas fa-bullseye"></i></div><span id="warningRadius">-</span></div></div><div class="radius-progress-container"><div class="radius-progress-label"><span>Jarak Anda</span><span id="progressPercentage">0%</span></div><div class="radius-progress-bar"><div class="radius-progress-fill" id="radiusProgressFill"></div></div></div></div><div class="radius-warning-footer"><button class="radius-warning-btn cancel" onclick="cancelPresensi()"><i class="fas fa-times"></i> Batalkan</button><button class="radius-warning-btn continue" onclick="continuePresensi()"><i class="fas fa-check"></i> Lanjutkan</button></div></div></div>
-  <div id="progressDeliveryModal"><div class="progress-delivery-container"><div class="progress-icon"><i class="fas fa-cloud-upload-alt"></i></div><h3>Mengirim Presensi</h3><div class="progress-step"><i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> Mengirim data...</div><div class="progress-bar-wrapper"><div class="progress-bar-animated" id="deliveryProgressFill"></div></div><div class="progress-status-text" id="deliveryStatusText">Memproses foto & verifikasi</div></div></div>
-  <div id="errorPopup"><div class="error-popup-container"><div class="error-popup-header"><i class="fas fa-times-circle error-popup-icon"></i><h3 class="error-popup-title">Presensi Gagal</h3></div><div class="error-popup-body"><p class="error-popup-text" id="errorPopupMessage">Terjadi kesalahan saat melakukan presensi.</p></div><div class="error-popup-footer" id="errorPopupFooter"><button class="error-popup-btn close" id="closeErrorBtn">Tutup</button><button class="error-popup-btn logout" id="logoutFromErrorBtn" style="display: none;">Logout</button></div></div></div>
+  <!-- Notifikasi Logout -->
+  <div id="logoutNotification" class="logout-notification">
+    <i class="fas fa-check-circle"></i>
+    <span>Anda berhasil logout</span>
+  </div>
+  
+  <!-- Modal Konfirmasi Logout -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-sign-out-alt"></i>
+      <h2>Konfirmasi Logout</h2>
+      <p>Apakah Anda yakin ingin keluar dari sistem?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel">Batal</button>
+        <button class="modal-btn logout">Logout</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- GPS Blocker -->
+  <div id="gpsBlocker" class="gps-blocker">
+    <i class="fas fa-location-slash"></i>
+    <h2>Presensi Diblokir</h2>
+    <p>Anda tidak memberikan izin untuk mengakses GPS. Presensi tidak dapat dilakukan tanpa lokasi. Silakan izinkan akses lokasi di pengaturan browser Anda, lalu muat ulang halaman ini.</p>
+    <button class="btn btn-primary" onclick="location.reload()">
+      <i class="fas fa-sync-alt"></i> Muat Ulang Halaman
+    </button>
+  </div>
+  
+  <!-- Notifikasi Jam Presensi -->
+  <div id="timeNotification" class="time-notification">
+    <i class="fas fa-clock"></i>
+    <h2>Belum Waktunya Presensi</h2>
+    <p id="timeNotificationText"></p>
+    <button class="btn btn-primary" onclick="closeTimeNotification()">
+      <i class="fas fa-times"></i> Tutup
+    </button>
+  </div>
+  
+  <!-- Popup Sukses Presensi -->
+  <div id="successPopup">
+    <div class="success-content">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h2 class="success-title">Presensi Berhasil!</h2>
+      <p class="success-message">Absensi Anda sudah berhasil terekam. Anda akan logout otomatis dalam:</p>
+      <div class="countdown" id="countdownText">5 detik</div>
+      <div class="progress-container">
+        <div class="countdown-bar" id="countdownBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Radius Warning Popup -->
+  <div id="radiusWarningPopup">
+    <div class="radius-warning-container">
+      <div class="radius-warning-header">
+        <i class="fas fa-exclamation-triangle radius-warning-icon"></i>
+        <h3 class="radius-warning-title">Lokasi Tidak Sesuai</h3>
+      </div>
+      <div class="radius-warning-body">
+        <p class="radius-warning-text" id="radiusWarningText">Anda berada di luar radius yang ditentukan.</p>
+        
+        <div class="radius-details">
+          <div class="radius-detail-item">
+            <div class="radius-detail-icon">
+              <i class="fas fa-building"></i>
+            </div>
+            <span id="warningLembaga">-</span>
+          </div>
+          <div class="radius-detail-item">
+            <div class="radius-detail-icon">
+              <i class="fas fa-ruler-combined"></i>
+            </div>
+            <span id="warningDistance">-</span>
+          </div>
+          <div class="radius-detail-item">
+            <div class="radius-detail-icon">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <span id="warningRadius">-</span>
+          </div>
+        </div>
+        
+        <div class="radius-progress-container">
+          <div class="radius-progress-label">
+            <span>Jarak Anda</span>
+            <span id="progressPercentage">0%</span>
+          </div>
+          <div class="radius-progress-bar">
+            <div class="radius-progress-fill" id="radiusProgressFill"></div>
+          </div>
+        </div>
+      </div>
+      <div class="radius-warning-footer">
+        <button class="radius-warning-btn cancel" onclick="cancelPresensi()">
+          <i class="fas fa-times"></i> Batalkan
+        </button>
+        <button class="radius-warning-btn continue" onclick="continuePresensi()">
+          <i class="fas fa-check"></i> Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== PROGRES PENGIRIMAN PRESENSI (MENU BARU) ============== -->
+  <div id="progressDeliveryModal">
+    <div class="progress-delivery-container">
+      <div class="progress-icon">
+        <i class="fas fa-cloud-upload-alt"></i>
+      </div>
+      <h3>Mengirim Presensi</h3>
+      <div class="progress-step">
+        <i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Mengirim data...
+      </div>
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar-animated" id="deliveryProgressFill"></div>
+      </div>
+      <div class="progress-status-text" id="deliveryStatusText">Memproses foto & verifikasi</div>
+    </div>
+  </div>
 
   <div class="container">
     <div class="card">
-      <button class="logout-btn" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</button>
-      <div class="card-header"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo"><h1>Presensi Pegawai</h1><p class="subtitle">Korwil Kecamatan - Tahun 2026</p></div>
+      <button class="logout-btn" id="logoutButton">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+
+      <div class="card-header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo">
+        <h1>Presensi Pegawai</h1>
+        <p class="subtitle">Korwil Kecamatan SINE - Tahun 2026</p>
+      </div>
+
       <form id="presensiForm">
         <input type="hidden" id="sessionId" name="sessionId">
         <input type="hidden" id="presensiType" name="presensi">
@@ -1459,32 +1637,111 @@
         <input type="hidden" name="timeDrift" id="timeDrift">
         <input type="hidden" name="lastPresensiTime" id="lastPresensiTime">
         
-        <div class="attendance-notification"><div class="attendance-header"><div class="attendance-title"><i class="fas fa-clock"></i><span>Waktu Presensi</span></div><div class="current-time"><i class="fas fa-sync-alt fa-spin"></i><span id="currentTime">00:00:00 WIB</span></div></div><div class="time-slots"><div class="time-slot datang" data-type="Datang"><div class="slot-header datang"><i class="fas fa-sign-in-alt"></i><span>Presensi Masuk</span></div><div class="slot-time">06:00 - 07:00</div><div class="slot-status status-inactive">Tidak Aktif</div><div class="slot-description">Presensi masuk Pegawai</div></div><div class="time-slot pulang" data-type="Pulang"><div class="slot-header pulang"><i class="fas fa-sign-out-alt"></i><span>Presensi Pulang</span></div><div class="slot-time" id="pulangSlotTime">-</div><div class="slot-status status-inactive">Tidak Aktif</div><div class="slot-description">Presensi pulang Pegawai</div></div></div></div>
-
-        <div class="form-group"><label for="namaLembaga">Nama Lembaga</label><input type="text" id="namaLembaga" name="namaLembaga" required readonly></div>
-        <div class="form-group"><label for="namaPegawai">Nama Pegawai</label><input type="text" id="namaPegawai" name="namaPegawai" required readonly></div>
-        
-        <div class="form-group">
-          <label for="file">Bukti Dukung</label>
-          <div class="alert alert-light p-2 mb-2" style="font-size:0.9rem; border:1px solid #eee;"><div class="mb-1">1. Foto harus Jelas Menampilkan Pegawai Yang Melakukan Presensi.</div><div>2. Hindari Foto background alam (pohon, dinding, pemandangan)</div></div>
-          
-          <div id="cameraPreview" style="margin:15px 0; display:none;">
-            <div class="camera-container">
-              <video id="video" autoplay playsinline style="width:100%; border-radius:12px; background:#000;"></video>
-              <canvas id="overlayCanvas"></canvas>
-              <div class="face-detection-status" id="faceStatus">🔄 Memuat model AI wajah...</div>
+        <div class="attendance-notification">
+          <div class="attendance-header">
+            <div class="attendance-title">
+              <i class="fas fa-clock"></i>
+              <span>Waktu Presensi</span>
+            </div>
+            <div class="current-time">
+              <i class="fas fa-sync-alt fa-spin"></i>
+              <span id="currentTime">00:00:00 WIB</span>
             </div>
           </div>
           
-          <canvas id="canvas" style="display:none;"></canvas>
-          <input type="hidden" id="photoData" name="photoData">
-          <div id="imagePreviewContainer" class="image-preview-container"><img id="imagePreview" class="image-preview"><button id="retakeBtn" class="btn btn-secondary" style="margin-top:10px; width:100%;"><i class="fas fa-camera"></i> Ambil Ulang</button></div>
+          <div class="time-slots">
+            <div class="time-slot datang" data-type="Datang">
+              <div class="slot-header datang">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Presensi Masuk</span>
+              </div>
+              <div class="slot-time">06:00 - 07:00</div>
+              <div class="slot-status status-inactive">Tidak Aktif</div>
+              <div class="slot-description">Presensi masuk Pegawai</div>
+            </div>
+            
+            <div class="time-slot pulang" data-type="Pulang">
+              <div class="slot-header pulang">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Presensi Pulang</span>
+              </div>
+              <div class="slot-time" id="pulangSlotTime">-</div>
+              <div class="slot-status status-inactive">Tidak Aktif</div>
+              <div class="slot-description">Presensi pulang Pegawai</div>
+            </div>
+          </div>
         </div>
 
-        <div class="location-info"><div class="location-detail"><h3><i class="fas fa-map-marker-alt"></i> Lokasi Lembaga</h3><div class="location-coords"><span id="lembagaLatitude"></span>, <span id="lembagaLongitude"></span> <span id="lembagaRadius"></span></div></div><div class="distance-info"><div id="distanceDisplay"><i class="fas fa-ruler-combined"></i> Jarak: <span id="distanceValue">-</span> m (Radius: <span id="radiusValue">-</span> m)</div></div></div>
+        <div class="form-group">
+          <label for="namaLembaga">Nama Lembaga</label>
+          <input type="text" id="namaLembaga" name="namaLembaga" required readonly>
+        </div>
 
-        <div class="form-group"><label>Lokasi Saat Ini (Deteksi Otomatis)</label><div style="display:flex; gap:10px;"><input type="text" id="latitude" name="latitude" placeholder="Latitude" readonly style="flex:1;"><input type="text" id="longitude" name="longitude" placeholder="Longitude" readonly style="flex:1;"></div><div class="gps-indicator"><div class="dot" id="gpsDot"></div><span id="gpsStatus">Mendeteksi lokasi...</span></div></div>
-        <div id="message" style="display:none;"></div>
+        <div class="form-group">
+          <label for="namaPegawai">Nama Pegawai</label>
+          <input type="text" id="namaPegawai" name="namaPegawai" required readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="file">Bukti Dukung</label>
+          <div class="alert alert-light p-2 mb-2" style="font-size: 0.9rem; border: 1px solid #eee;">
+            <div class="mb-1">1. Foto harus Jelas Menampilkan Pegawai Yang Melakukan Presensi.</div>
+            <div> 2. Hindari Foto background alam (pohon, dinding, pemandangan)</div>
+          </div>
+          
+          <div id="cameraPreview" style="margin: 15px 0; display: none;">
+            <div class="camera-container">
+              <video id="video" autoplay playsinline style="width: 100%; border-radius: 12px; background: #000;"></video>
+              <canvas id="faceOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+              <div class="face-border">
+                <svg viewBox="0 0 200 200">
+                  <rect x="10" y="10" width="180" height="180" fill="none" stroke="#00ffcc" stroke-width="4" stroke-dasharray="10 5" rx="20" ry="20" />
+                </svg>
+              </div>
+              <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
+            </div>
+          </div>
+          
+          <canvas id="canvas" style="display: none;"></canvas>
+          <input type="hidden" id="photoData" name="photoData">
+          
+          <div id="imagePreviewContainer" class="image-preview-container">
+            <img id="imagePreview" class="image-preview">
+            <button id="retakeBtn" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
+              <i class="fas fa-camera"></i> Ambil Ulang
+            </button>
+          </div>
+        </div>
+
+        <div class="location-info">
+          <div class="location-detail">
+            <h3><i class="fas fa-map-marker-alt"></i> Lokasi Lembaga</h3>
+            <div class="location-coords">
+              <span id="lembagaLatitude"></span>, <span id="lembagaLongitude"></span>
+              <span id="lembagaRadius"></span>
+            </div>
+          </div>
+          <div class="distance-info">
+            <div id="distanceDisplay">
+              <i class="fas fa-ruler-combined"></i> Jarak: <span id="distanceValue">-</span> m
+              (Radius: <span id="radiusValue">-</span> m)
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Lokasi Saat Ini (Deteksi Otomatis)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="latitude" name="latitude" placeholder="Latitude" readonly style="flex: 1;">
+            <input type="text" id="longitude" name="longitude" placeholder="Longitude" readonly style="flex: 1;">
+          </div>
+          <div class="gps-indicator">
+            <div class="dot" id="gpsDot"></div>
+            <span id="gpsStatus">Mendeteksi lokasi...</span>
+          </div>
+        </div>
+
+        <div id="message"></div>
       </form>
     </div>
   </div>
@@ -1492,6 +1749,8 @@
   <script>
     const PROXY_URL = '/api/proxy';
     let bypassRadiusCheck = false;
+    
+    // Elemen kamera
     const video = document.getElementById('video');
     const photoData = document.getElementById('photoData');
     const cameraPreview = document.getElementById('cameraPreview');
@@ -1499,201 +1758,144 @@
     const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     const retakeBtn = document.getElementById('retakeBtn');
     const faceStatusDiv = document.getElementById('faceStatus');
-    const overlayCanvas = document.getElementById('overlayCanvas');
+    const faceOverlay = document.getElementById('faceOverlay');
     
     let stream = null;
-    let detectionRunning = false;
+    let detectionInterval = null;
+    let faceDetected = false;
     let autoSubmitTriggered = false;
     let modelsLoaded = false;
     let watchID = null;
-    let presensiBlockedCount = 0;
-    
-    // Konfigurasi frame target (bingkai wajah)
-    const FRAME_WIDTH_PCT = 0.55;
-    const FRAME_HEIGHT_PCT = 0.65;
-    let targetFrame = { x: 0, y: 0, width: 0, height: 0 };
-    
-    // Progress modal functions
+
+    // ========== PROGRESS MENU CONTROL ==========
     const progressModal = document.getElementById('progressDeliveryModal');
     const deliveryProgressFill = document.getElementById('deliveryProgressFill');
     const deliveryStatusText = document.getElementById('deliveryStatusText');
-    function showProgressMenu(stepText, percent) { deliveryProgressFill.style.width = percent+'%'; deliveryStatusText.innerText = stepText; progressModal.style.display = 'flex'; }
-    function updateProgressMenu(stepText, percent) { deliveryProgressFill.style.width = percent+'%'; deliveryStatusText.innerText = stepText; }
-    function hideProgressMenu() { progressModal.style.display = 'none'; deliveryProgressFill.style.width = '0%'; }
-    
-    // Error popup
-    const errorPopup = document.getElementById('errorPopup');
-    const errorPopupMessage = document.getElementById('errorPopupMessage');
-    const closeErrorBtn = document.getElementById('closeErrorBtn');
-    const logoutFromErrorBtn = document.getElementById('logoutFromErrorBtn');
-    function showErrorPopup(message, showLogoutBtn) { errorPopupMessage.innerText = message; logoutFromErrorBtn.style.display = showLogoutBtn ? 'flex' : 'none'; errorPopup.style.display = 'flex'; }
-    function hideErrorPopup() { errorPopup.style.display = 'none'; }
-    closeErrorBtn.addEventListener('click', hideErrorPopup);
-    logoutFromErrorBtn.addEventListener('click', () => { hideErrorPopup(); logout(); });
-    
-    function dataURLtoBlob(dataUrl) { const arr = dataUrl.split(','); const mime = arr[0].match(/:(.*?);/)[1]; const bstr = atob(arr[1]); let n = bstr.length; const u8arr = new Uint8Array(n); while (n--) u8arr[n] = bstr.charCodeAt(n); return new Blob([u8arr], { type: mime }); }
-    function calculateDistance(lat1, lon1, lat2, lon2) { const R = 6371e3; const φ1 = lat1 * Math.PI/180; const φ2 = lat2 * Math.PI/180; const Δφ = (lat2-lat1) * Math.PI/180; const Δλ = (lon2-lon1) * Math.PI/180; const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2); return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); }
-    function detectFakeGPS(position) { if (typeof position.mocked !== 'undefined' && position.mocked) return true; if (position.coords.accuracy < 1 || position.coords.accuracy > 10000) return true; return false; }
-    function showFakeGPSBlocker() { document.getElementById('fakeGPSBlocker').style.display = 'flex'; }
-    function checkDevice() { const ua = navigator.userAgent; const isDesktop = ['Windows','Mac OS','Linux'].some(os=>ua.includes(os)); const isMobile = ['Android','iPhone','iPad','iPod'].some(os=>ua.includes(os)); if(isDesktop && !isMobile) { document.getElementById('desktopBlocker').style.display='flex'; document.body.classList.add('desktop-blocked'); return false; } return true; }
-    
-    // Load models from official CDN
+
+    function showProgressMenu(stepText = "Memproses foto & verifikasi", progressPercent = 30) {
+      if (deliveryProgressFill) {
+        deliveryProgressFill.style.width = progressPercent + '%';
+      }
+      if (deliveryStatusText) deliveryStatusText.innerText = stepText;
+      if (progressModal) progressModal.style.display = 'flex';
+    }
+
+    function updateProgressMenu(stepText, percent) {
+      if (deliveryProgressFill) deliveryProgressFill.style.width = percent + '%';
+      if (deliveryStatusText) deliveryStatusText.innerText = stepText;
+    }
+
+    function hideProgressMenu() {
+      if (progressModal) progressModal.style.display = 'none';
+      if (deliveryProgressFill) deliveryProgressFill.style.width = '0%';
+    }
+
+    // ==================== FACE DETECTION ====================
     async function loadFaceModels() {
       try {
-        faceStatusDiv.innerHTML = "🔄 Memuat model AI wajah... (butuh internet)";
-        // Gunakan path resmi dari repository face-api.js
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        faceStatusDiv.innerHTML = "🔄 Memuat model deteksi wajah...";
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
         modelsLoaded = true;
-        faceStatusDiv.innerHTML = "✅ Model siap. Posisikan wajah dalam bingkai & dekatkan kamera";
+        faceStatusDiv.innerHTML = "✅ Silahkan posisikan wajah di dalam border";
         faceStatusDiv.classList.remove('detection-warning');
         faceStatusDiv.classList.add('detection-success');
         return true;
       } catch (err) {
-        console.error("Gagal muat model:", err);
-        faceStatusDiv.innerHTML = "⚠️ Gagal muat AI (CORS/network). Ambil foto manual.";
+        console.error("Gagal memuat model face-api:", err);
+        faceStatusDiv.innerHTML = "⚠️ Gagal memuat deteksi wajah, silakan ambil foto manual";
         faceStatusDiv.classList.add('detection-warning');
         return false;
       }
     }
     
+    function dataURLtoBlob(dataUrl) {
+      const arr = dataUrl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) u8arr[n] = bstr.charCodeAt(n);
+      return new Blob([u8arr], { type: mime });
+    }
+    
     async function startCamera() {
       try {
-        const constraints = { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false };
+        const constraints = {
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        };
         stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         cameraPreview.style.display = 'block';
+        video.classList.add('mirror-mode');
         await new Promise(resolve => video.onloadedmetadata = resolve);
         await loadFaceModels();
-        startFaceDetectionLoop();
-      } catch (err) { alert('Tidak dapat mengakses kamera.'); faceStatusDiv.innerHTML = "❌ Kamera error"; }
-    }
-    
-    // Drawing helpers
-    function drawMask(ctx, w, h, frame) {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-      ctx.beginPath();
-      ctx.rect(0, 0, w, h);
-      ctx.roundRect(frame.x, frame.y, frame.width, frame.height, 30);
-      ctx.fill('evenodd');
-    }
-    function drawFrameBox(ctx, frame, color) {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.roundRect(frame.x, frame.y, frame.width, frame.height, 30);
-      ctx.stroke();
-      const l = 30;
-      ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.moveTo(frame.x, frame.y + l); ctx.lineTo(frame.x, frame.y); ctx.lineTo(frame.x + l, frame.y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(frame.x + frame.width - l, frame.y); ctx.lineTo(frame.x + frame.width, frame.y); ctx.lineTo(frame.x + frame.width, frame.y + l); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(frame.x, frame.y + frame.height - l); ctx.lineTo(frame.x, frame.y + frame.height); ctx.lineTo(frame.x + l, frame.y + frame.height); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(frame.x + frame.width - l, frame.y + frame.height); ctx.lineTo(frame.x + frame.width, frame.y + frame.height); ctx.lineTo(frame.x + frame.width, frame.y + frame.height - l); ctx.stroke();
-    }
-    function drawLandmarks(ctx, landmarks, color) {
-      ctx.fillStyle = color;
-      const points = landmarks.positions;
-      points.forEach(pt => { ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.5, 0, 2 * Math.PI); ctx.fill(); });
-    }
-    if (!CanvasRenderingContext2D.prototype.roundRect) {
-      CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-        if (w < 2 * r) r = w / 2;
-        if (h < 2 * r) r = h / 2;
-        this.moveTo(x+r, y); this.lineTo(x+w-r, y); this.quadraticCurveTo(x+w, y, x+w, y+r);
-        this.lineTo(x+w, y+h-r); this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-        this.lineTo(x+r, y+h); this.quadraticCurveTo(x, y+h, x, y+h-r);
-        this.lineTo(x, y+r); this.quadraticCurveTo(x, y, x+r, y); return this;
-      };
-    }
-    
-    async function startFaceDetectionLoop() {
-      if (detectionRunning) return;
-      detectionRunning = true;
-      const ctx = overlayCanvas.getContext('2d');
-      
-      function updateFrameSize() {
-        if (video.videoWidth && video.videoHeight) {
-          overlayCanvas.width = video.videoWidth;
-          overlayCanvas.height = video.videoHeight;
-          const fW = overlayCanvas.width * FRAME_WIDTH_PCT;
-          const fH = overlayCanvas.height * FRAME_HEIGHT_PCT;
-          targetFrame = {
-            x: (overlayCanvas.width - fW) / 2,
-            y: (overlayCanvas.height - fH) / 2,
-            width: fW,
-            height: fH
-          };
-        }
+        startFaceDetection();
+      } catch (err) {
+        console.error("Error mengakses kamera:", err);
+        alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.');
+        faceStatusDiv.innerHTML = "❌ Kamera tidak dapat diakses";
       }
-      
-      async function detect() {
-        if (!modelsLoaded || video.paused || video.ended || !video.videoWidth) {
-          requestAnimationFrame(detect);
-          return;
-        }
-        updateFrameSize();
-        let isValid = false;
-        let detectionResult = null;
+    }
+    
+    function startFaceDetection() {
+      if (detectionInterval) clearInterval(detectionInterval);
+      detectionInterval = setInterval(async () => {
+        if (!modelsLoaded || !video.videoWidth || video.paused || video.ended) return;
         try {
-          const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.6 });
-          detectionResult = await faceapi.detectSingleFace(video, options).withFaceLandmarks();
-        } catch(e) { console.warn(e); }
-        
-        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-        drawMask(ctx, overlayCanvas.width, overlayCanvas.height, targetFrame);
-        
-        let statusText = "Arahkan wajah ke kamera";
-        let borderColor = "#ef4444";
-        let landmarkColor = "#ef4444";
-        
-        if (detectionResult) {
-          const resized = faceapi.resizeResults(detectionResult, { width: overlayCanvas.width, height: overlayCanvas.height });
-          const box = resized.detection.box;
-          const landmarks = resized.landmarks;
-          const tolerance = 35;
-          const insideX = box.x >= targetFrame.x - tolerance && (box.x + box.width) <= targetFrame.x + targetFrame.width + tolerance;
-          const insideY = box.y >= targetFrame.y - tolerance && (box.y + box.height) <= targetFrame.y + targetFrame.height + tolerance;
-          const isInside = insideX && insideY;
-          const minWidth = targetFrame.width * 0.45;
-          const maxWidth = targetFrame.width * 1.1;
-          const sizeOk = box.width >= minWidth && box.width <= maxWidth;
+          const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+          const overlayCtx = faceOverlay.getContext('2d');
+          overlayCtx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+          faceOverlay.width = video.videoWidth;
+          faceOverlay.height = video.videoHeight;
           
-          if (isInside && sizeOk) {
-            isValid = true;
-            statusText = "✅ Wajah presisi! Mengirim presensi...";
-            borderColor = "#22c55e";
-            landmarkColor = "#22c55e";
-          } else if (!sizeOk) {
-            statusText = box.width < minWidth ? "⚠️ Wajah terlalu jauh, dekatkan ke kamera" : "⚠️ Wajah terlalu dekat, mundur sedikit";
-            borderColor = "#eab308";
-            landmarkColor = "#eab308";
-          } else if (!isInside) {
-            statusText = "⚠️ Posisikan wajah ke dalam bingkai";
-            borderColor = "#eab308";
-            landmarkColor = "#eab308";
+          const hasFace = detections.length > 0;
+          if (hasFace) {
+            const videoRect = { width: video.videoWidth, height: video.videoHeight };
+            const borderMarginX = videoRect.width * 0.15;
+            const borderMarginY = videoRect.height * 0.15;
+            const borderBox = {
+              x: borderMarginX, y: borderMarginY,
+              width: videoRect.width - (borderMarginX * 2),
+              height: videoRect.height - (borderMarginY * 2)
+            };
+            let faceInside = false;
+            for (const detection of detections) {
+              const box = detection.box;
+              const intersectX = Math.max(box.x, borderBox.x);
+              const intersectY = Math.max(box.y, borderBox.y);
+              const intersectW = Math.min(box.x + box.width, borderBox.x + borderBox.width) - intersectX;
+              const intersectH = Math.min(box.y + box.height, borderBox.y + borderBox.height) - intersectY;
+              if (intersectW > 0 && intersectH > 0) {
+                const intersectArea = intersectW * intersectH;
+                const faceArea = box.width * box.height;
+                if (intersectArea / faceArea > 0.7) { faceInside = true; break; }
+              }
+            }
+            if (faceInside) {
+              if (!faceDetected) {
+                faceDetected = true;
+                faceStatusDiv.innerHTML = "✅ Wajah terdeteksi dalam area! Mengirim presensi...";
+                faceStatusDiv.classList.add('detection-success');
+                if (!autoSubmitTriggered) {
+                  autoSubmitTriggered = true;
+                  if (detectionInterval) clearInterval(detectionInterval);
+                  captureAndSubmit();
+                }
+              } else {
+                faceStatusDiv.innerHTML = "✅ Wajah dalam area - siap kirim";
+              }
+            } else {
+              faceDetected = false;
+              faceStatusDiv.innerHTML = "⚠️ Posisikan wajah di dalam border!";
+              faceStatusDiv.classList.add('detection-warning');
+            }
+          } else {
+            faceDetected = false;
+            faceStatusDiv.innerHTML = "❌ Tidak ada wajah terdeteksi";
+            faceStatusDiv.classList.add('detection-warning');
           }
-          drawLandmarks(ctx, landmarks, landmarkColor);
-          drawFrameBox(ctx, targetFrame, borderColor);
-        } else {
-          drawFrameBox(ctx, targetFrame, "#ef4444");
-          statusText = "❌ Tidak ada wajah terdeteksi";
-        }
-        
-        faceStatusDiv.innerHTML = statusText;
-        faceStatusDiv.classList.remove('detection-success', 'detection-warning', 'detection-error');
-        if (isValid) faceStatusDiv.classList.add('detection-success');
-        else if (detectionResult) faceStatusDiv.classList.add('detection-warning');
-        else faceStatusDiv.classList.add('detection-error');
-        
-        if (isValid && !autoSubmitTriggered) {
-          autoSubmitTriggered = true;
-          captureAndSubmit();
-          return;
-        }
-        requestAnimationFrame(detect);
-      }
-      detect();
+        } catch (err) { console.error("Face detection error:", err); }
+      }, 500);
     }
     
     async function captureAndSubmit() {
@@ -1704,7 +1906,7 @@
       ctx.translate(captureCanvas.width, 0);
       ctx.scale(-1, 1);
       ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-      const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
+      const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.8);
       photoData.value = dataUrl;
       imagePreview.src = dataUrl;
       imagePreviewContainer.style.display = 'block';
@@ -1720,34 +1922,457 @@
       cameraPreview.style.display = 'block';
       startCamera();
       autoSubmitTriggered = false;
+      faceDetected = false;
     });
     
-    // ========== FUNGSI PRESENSI LAINNYA (sama persis dengan yang asli) ==========
-    function updateCurrentTime() { const now=new Date(); const wib=new Date(now.getTime()+(now.getTimezoneOffset()*60000)+(3600000*7)); const hours=wib.getHours().toString().padStart(2,'0'); const minutes=wib.getMinutes().toString().padStart(2,'0'); const seconds=wib.getSeconds().toString().padStart(2,'0'); document.getElementById('currentTime').textContent=`${hours}:${minutes}:${seconds} WIB`; }
-    function isFriday() { const now=new Date(); const wib=new Date(now.getTime()+(now.getTimezoneOffset()*60000)+(3600000*7)); return wib.getDay()===5; }
-    function getPresensiParams() { const datangStart=6.0, datangEnd=7.5; let pulangStart=15.0; const pulangEnd=17.5; if(isFriday()) pulangStart=14.5; return { datangStart, datangEnd, pulangStart, pulangEnd }; }
-    function updateSlotTimesDisplay() { const pulangSlot=document.querySelector('.time-slot.pulang .slot-time'); if(pulangSlot) pulangSlot.textContent=isFriday()?'14:30 - 16:30':'15:00 - 16:30'; const datangSlot=document.querySelector('.time-slot.datang .slot-time'); if(datangSlot) datangSlot.textContent='06:00 - 07:00'; }
-    function updateAttendanceStatus() { const now=new Date(); const wib=new Date(now.getTime()+(now.getTimezoneOffset()*60000)+(3600000*7)); const hours=wib.getHours()+wib.getMinutes()/60; const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams(); const isDatangTime=hours>=datangStart && hours<datangEnd; const isPulangTime=hours>=pulangStart && hours<pulangEnd; const datangSlot=document.querySelector('.time-slot.datang'); const datangStatus=datangSlot.querySelector('.slot-status'); if(isDatangTime) { datangSlot.classList.add('active'); datangStatus.textContent='Aktif Sekarang'; datangStatus.className='slot-status status-active'; document.getElementById('presensiType').value='Datang'; } else { datangSlot.classList.remove('active'); datangStatus.textContent=hours<datangStart?'Belum Aktif':'Tidak Aktif'; datangStatus.className='slot-status status-inactive'; } const pulangSlot=document.querySelector('.time-slot.pulang'); const pulangStatus=pulangSlot.querySelector('.slot-status'); if(isPulangTime) { pulangSlot.classList.add('active'); pulangStatus.textContent='Aktif Sekarang'; pulangStatus.className='slot-status status-active'; document.getElementById('presensiType').value='Pulang'; } else { pulangSlot.classList.remove('active'); pulangStatus.textContent=hours<pulangStart?'Belum Aktif':'Tidak Aktif'; pulangStatus.className='slot-status status-inactive'; } }
-    function isValidPresensiTime() { const now=new Date(); const wib=new Date(now.getTime()+(now.getTimezoneOffset()*60000)+(3600000*7)); const hours=wib.getHours()+wib.getMinutes()/60; const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams(); return (hours>=datangStart && hours<datangEnd) || (hours>=pulangStart && hours<pulangEnd); }
-    function checkPresensiTime() { const now=new Date(); const wib=new Date(now.getTime()+(now.getTimezoneOffset()*60000)+(3600000*7)); const hours=wib.getHours()+wib.getMinutes()/60; const currentTime=`${wib.getHours().toString().padStart(2,'0')}:${wib.getMinutes().toString().padStart(2,'0')} WIB`; const timeNotification=document.getElementById('timeNotification'); const text=document.getElementById('timeNotificationText'); const { datangStart, datangEnd, pulangStart, pulangEnd }=getPresensiParams(); if(isValidPresensiTime()) timeNotification.classList.remove('show'); else { if(hours<datangStart) text.innerHTML=`Saat ini ${currentTime}. Presensi Datang: 06.00-07.00 WIB.`; else if(hours>=datangEnd && hours<pulangStart) { let pulangInfo=isFriday()?'14.30-16.30 WIB':'15.00-16.30 WIB'; text.innerHTML=`Saat ini ${currentTime}. Presensi Pulang ${pulangInfo}.`; } else if(hours>=pulangEnd) text.innerHTML=`Saat ini ${currentTime}. Presensi hari ini sudah berakhir.`; timeNotification.classList.add('show'); } }
-    function updateDistanceDisplay(userLat,userLon,lembagaLat,lembagaLon,radius){ if(userLat&&userLon&&lembagaLat&&lembagaLon){ const dist=calculateDistance(userLat,userLon,lembagaLat,lembagaLon); document.getElementById('distanceValue').textContent=dist.toFixed(2); document.getElementById('distanceValue').style.color=dist>radius?'#f44336':'#4caf50'; return dist;} return 0; }
-    function startLocationTracking() { const gpsStatus=document.getElementById('gpsStatus'); const gpsDot=document.getElementById('gpsDot'); gpsStatus.innerHTML='<i class="fas fa-spinner fa-spin"></i> Mendeteksi lokasi...'; gpsDot.classList.remove('active'); if(watchID) navigator.geolocation.clearWatch(watchID); if(navigator.geolocation){ watchID=navigator.geolocation.watchPosition(position=>{ if(detectFakeGPS(position)){ showFakeGPSBlocker(); return; } const userLat=position.coords.latitude; const userLon=position.coords.longitude; document.getElementById('latitude').value=userLat; document.getElementById('longitude').value=userLon; const sessionData=JSON.parse(localStorage.getItem('sessionData')); if(sessionData){ updateDistanceDisplay(userLat,userLon,parseFloat(sessionData.lembagaLatitude),parseFloat(sessionData.lembagaLongitude),parseFloat(sessionData.lembagaRadius)); } gpsStatus.innerHTML='<i class="fas fa-check-circle" style="color:#28a745;"></i> Lokasi aktif'; gpsDot.classList.add('active'); document.getElementById('gpsBlocker').style.display='none'; }, error=>{ if(error.code===error.PERMISSION_DENIED){ document.getElementById('gpsBlocker').style.display='flex'; gpsStatus.innerHTML='<i class="fas fa-exclamation-circle"></i> GPS ditolak'; gpsDot.classList.remove('active'); } else { gpsStatus.innerHTML='<i class="fas fa-exclamation-circle"></i> Error: '+error.message; gpsDot.classList.remove('active'); } }, { enableHighAccuracy:true, timeout:5000, maximumAge:0 }); } else { gpsStatus.innerHTML='<i class="fas fa-exclamation-circle"></i> Geolocation tidak didukung.'; } }
-    function showLogoutModal(){ document.getElementById('logoutModal').style.display='flex'; }
-    function closeModal(){ document.getElementById('logoutModal').style.display='none'; }
-    function confirmLogout(){ closeModal(); logout(); }
-    async function logout() { const sessionId=localStorage.getItem('sessionId'); const logoutBtn=document.getElementById('logoutButton'); logoutBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Logout...'; logoutBtn.disabled=true; if(watchID) navigator.geolocation.clearWatch(watchID); if(stream) stream.getTracks().forEach(track=>track.stop()); if(sessionId){ try{ await fetch(`${PROXY_URL}?action=logout`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId})}); }catch(e){} } const notification=document.getElementById('logoutNotification'); notification.classList.add('show'); localStorage.removeItem('sessionId'); localStorage.removeItem('sessionData'); setTimeout(()=>window.location.href='/',2000); }
-    function closeTimeNotification(){ document.getElementById('timeNotification').classList.remove('show'); }
-    function compressImage(file,callback){ updateProgressMenu("Mengompres foto ...",45); const reader=new FileReader(); reader.onload=function(e){ const img=new Image(); img.onload=function(){ const canvasComp=document.createElement('canvas'); const ctx=canvasComp.getContext('2d'); const MAX_WIDTH=800; const scale=MAX_WIDTH/img.width; canvasComp.width=MAX_WIDTH; canvasComp.height=img.height*scale; ctx.drawImage(img,0,0,canvasComp.width,canvasComp.height); canvasComp.toBlob(blob=>callback(blob),'image/jpeg',0.7); }; img.src=e.target.result; }; reader.readAsDataURL(file); }
-    function showRadiusConfirmation(distance,radius,namaLembaga){ const percent=Math.min(100,(distance/radius)*100); document.getElementById('radiusWarningText').innerHTML=`Anda berada ${distance.toFixed(2)}m dari ${namaLembaga} (radius: ${radius}m). Tetap lanjutkan?`; document.getElementById('warningLembaga').textContent=namaLembaga; document.getElementById('warningDistance').textContent=`Jarak: ${distance.toFixed(2)} meter`; document.getElementById('warningRadius').textContent=`Radius diizinkan: ${radius} meter`; document.getElementById('progressPercentage').textContent=`${Math.round(percent)}%`; setTimeout(()=>document.getElementById('radiusProgressFill').style.width=`${percent}%`,100); document.getElementById('radiusWarningPopup').style.display='flex'; }
-    function continuePresensi(){ document.getElementById('radiusWarningPopup').style.display='none'; bypassRadiusCheck=true; submitPresensiForm(); }
-    function cancelPresensi(){ document.getElementById('radiusWarningPopup').style.display='none'; bypassRadiusCheck=false; if(!autoSubmitTriggered) startCamera(); else startCamera(); autoSubmitTriggered=false; }
-    function showSuccessPopup() { presensiBlockedCount=0; const popup=document.getElementById('successPopup'); popup.style.display='flex'; let seconds=5; const countdownText=document.getElementById('countdownText'); const countdownBar=document.getElementById('countdownBar'); countdownBar.style.animation='none'; void countdownBar.offsetWidth; countdownBar.style.animation='countdown 5s linear forwards'; const interval=setInterval(()=>{ seconds--; countdownText.textContent=`${seconds} detik`; if(seconds<=0){ clearInterval(interval); logout(); } },1000); }
+    // ==================== FAKE GPS DETECTION ====================
+    function detectFakeGPS(position) {
+      if (typeof position.mocked !== 'undefined' && position.mocked) return true;
+      if (position.coords.accuracy < 1 || position.coords.accuracy > 10000) return true;
+      const currentTime = Date.now();
+      const lastPosition = window.lastPosition || { timestamp: 0, coords: { latitude: 0, longitude: 0 } };
+      const distance = calculateDistance(
+        lastPosition.coords.latitude, lastPosition.coords.longitude,
+        position.coords.latitude, position.coords.longitude
+      );
+      const timeDiff = (currentTime - lastPosition.timestamp) / 1000;
+      window.lastPosition = { timestamp: currentTime, coords: position.coords };
+      if (timeDiff > 0 && timeDiff < 5 && distance > 500) return true;
+      if (position.coords.altitude !== null && position.coords.altitude < -100) return true;
+      if (position.coords.speed !== null && position.coords.speed * 3.6 > 200) return true;
+      return false;
+    }
     
-    async function submitPresensiForm() { const messageEl=document.getElementById('message'); messageEl.textContent=''; messageEl.style.display='none'; const clientTimestamp=Date.now(); document.getElementById('clientTime').value=clientTimestamp; const latitude=document.getElementById('latitude').value; const longitude=document.getElementById('longitude').value; if(!latitude||!longitude){ presensiBlockedCount++; showErrorPopup('Mohon dapatkan lokasi terlebih dahulu.', presensiBlockedCount>=2); if(!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered=false; startCamera(); } return; } const fileToUpload=window.capturedFile; if(!fileToUpload){ presensiBlockedCount++; showErrorPopup('Mohon ambil foto terlebih dahulu.', presensiBlockedCount>=2); if(!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered=false; startCamera(); } return; } if(!isValidPresensiTime()){ presensiBlockedCount++; showErrorPopup('Tidak dapat presensi di luar jam yang ditentukan.', presensiBlockedCount>=2); if(!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered=false; startCamera(); } return; } if(!bypassRadiusCheck){ const sessionData=JSON.parse(localStorage.getItem('sessionData')); if(sessionData){ const lembagaLat=parseFloat(sessionData.lembagaLatitude); const lembagaLon=parseFloat(sessionData.lembagaLongitude); const radius=parseFloat(sessionData.lembagaRadius); const distance=calculateDistance(parseFloat(latitude),parseFloat(longitude),lembagaLat,lembagaLon); if(distance>radius){ showRadiusConfirmation(distance,radius,sessionData.namaLembaga); return; } } } else { bypassRadiusCheck=false; } faceStatusDiv.innerHTML="📤 Mengirim presensi..."; showProgressMenu("Menyiapkan data presensi...",20); compressImage(fileToUpload, async function(compressedBlob){ const compressedFile=new File([compressedBlob],'presensi.jpg',{type:'image/jpeg',lastModified:Date.now()}); const reader=new FileReader(); reader.onload=async function(event){ const fileData=event.target.result.split(',')[1]; const formData={ sessionId:document.getElementById('sessionId').value, presensi:document.getElementById('presensiType').value, namaLembaga:document.getElementById('namaLembaga').value, namaPegawai:document.getElementById('namaPegawai').value, latitude:latitude, longitude:longitude, file:{name:'presensi.jpg',type:'image/jpeg',data:fileData}, clientTime:document.getElementById('clientTime').value, timeDrift:document.getElementById('timeDrift').value, lastPresensiTime:document.getElementById('lastPresensiTime').value }; updateProgressMenu("Mengirim data ke server ...",70); try{ const response=await fetch(`${PROXY_URL}?action=presensi`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formData)}); if(response.status===504){ updateProgressMenu("Server sibuk, presensi tercatat",100); setTimeout(()=>{ hideProgressMenu(); showSuccessPopup(); },400); return; } if(!response.ok) throw new Error(`HTTP ${response.status}`); const result=await response.json(); if(result.success){ updateProgressMenu("Berhasil! Memperbarui data ...",100); setTimeout(()=>{ hideProgressMenu(); localStorage.setItem('lastPresensi',new Date().toISOString()); showSuccessPopup(); },500); } else { hideProgressMenu(); presensiBlockedCount++; showErrorPopup(result.message||'Presensi gagal, coba lagi.', presensiBlockedCount>=2); if(!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered=false; startCamera(); } } } catch(error){ console.error(error); hideProgressMenu(); if(error.message.includes('504')){ hideProgressMenu(); showSuccessPopup(); } else { presensiBlockedCount++; showErrorPopup('Error: '+error.message, presensiBlockedCount>=2); if(!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered=false; startCamera(); } } } }; reader.readAsDataURL(compressedFile); }); }
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI/180;
+      const φ2 = lat2 * Math.PI/180;
+      const Δφ = (lat2-lat1) * Math.PI/180;
+      const Δλ = (lon2-lon1) * Math.PI/180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
     
-    // Initialize app
-    document.addEventListener('DOMContentLoaded', function() { if(!checkDevice()) return; document.body.classList.add('splash-active'); setTimeout(()=>{ document.getElementById('splashScreen').classList.add('hide'); setTimeout(()=>{ document.getElementById('splashScreen').style.display='none'; document.body.classList.remove('splash-active'); initializeApp(); },800); },3000); });
-    async function initializeApp() { document.getElementById('logoutButton').addEventListener('click', showLogoutModal); document.querySelector('.modal-btn.cancel').addEventListener('click', closeModal); document.querySelector('.modal-btn.logout').addEventListener('click', confirmLogout); const lastPresensi=localStorage.getItem('lastPresensi'); if(lastPresensi) document.getElementById('lastPresensiTime').value=lastPresensi; let timeDrift=0; if(lastPresensi){ const now=new Date(); const lastTime=new Date(lastPresensi); timeDrift=(now-lastTime)/(1000*60); } document.getElementById('timeDrift').value=timeDrift; document.getElementById('presensiForm').addEventListener('submit',e=>e.preventDefault()); const urlParams=new URLSearchParams(window.location.search); let sessionId=urlParams.get('session')||localStorage.getItem('sessionId'); if(!sessionId){ alert('Sesi tidak valid.'); logout(); return; } document.getElementById('sessionId').value=sessionId; localStorage.setItem('sessionId',sessionId); try{ const response=await fetch(`${PROXY_URL}?action=getSession`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId})}); if(!response.ok)throw new Error(`HTTP ${response.status}`); const userData=await response.json(); if(!userData){ alert('Sesi tidak valid.'); logout(); } else { localStorage.setItem('sessionData',JSON.stringify(userData)); document.getElementById('namaLembaga').value=userData.namaLembaga; document.getElementById('namaPegawai').value=userData.namaPegawai; document.getElementById('lembagaLatitude').textContent=userData.lembagaLatitude; document.getElementById('lembagaLongitude').textContent=userData.lembagaLongitude; document.getElementById('lembagaRadius').textContent=`(Radius: ${userData.lembagaRadius} m)`; document.getElementById('radiusValue').textContent=userData.lembagaRadius; updateCurrentTime(); setInterval(updateCurrentTime,1000); updateSlotTimesDisplay(); updateAttendanceStatus(); setInterval(()=>{ updateAttendanceStatus(); updateSlotTimesDisplay(); },60000); startLocationTracking(); setInterval(checkPresensiTime,60000); checkPresensiTime(); setTimeout(()=>startCamera(),500); } } catch(err){ alert('Error: '+err.message); logout(); } }
+    function showFakeGPSBlocker() {
+      document.getElementById('fakeGPSBlocker').style.display = 'flex';
+      document.getElementById('latitude').value = '';
+      document.getElementById('longitude').value = '';
+      document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-ban" style="color: #f44336;"></i> Lokasi palsu terdeteksi!';
+      document.getElementById('gpsDot').classList.remove('active');
+    }
+    
+    // ==================== DESKTOP BLOCKER ====================
+    function checkDevice() {
+      const userAgent = navigator.userAgent;
+      const isDesktop = ['Windows', 'Mac OS', 'Linux'].some(os => userAgent.includes(os));
+      const isMobile = ['Android', 'iPhone', 'iPad', 'iPod'].some(os => userAgent.includes(os));
+      if (isDesktop && !isMobile) {
+        document.getElementById('desktopBlocker').style.display = 'flex';
+        document.body.classList.add('desktop-blocked');
+        return false;
+      }
+      return true;
+    }
+    
+    // ==================== SPLASH SCREEN ====================
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!checkDevice()) return;
+      document.body.classList.add('splash-active');
+      setTimeout(() => {
+        const splashScreen = document.getElementById('splashScreen');
+        splashScreen.classList.add('hide');
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          document.body.classList.remove('splash-active');
+          initializeApp();
+        }, 800);
+      }, 3000);
+    });
+    
+    // ==================== PRESENSI TIME CONFIGURATION ====================
+    function isFriday() {
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+      return wibTime.getDay() === 5;
+    }
+    
+    function getPresensiParams() {
+      const datangStart = 6.0, datangEnd = 7.25;
+      let pulangStart = 15.0;
+      const pulangEnd = 17.5;
+      if (isFriday()) pulangStart = 14.5;
+      return { datangStart, datangEnd, pulangStart, pulangEnd };
+    }
+    
+    function updateSlotTimesDisplay() {
+      const pulangSlot = document.querySelector('.time-slot.pulang .slot-time');
+      if (pulangSlot) pulangSlot.textContent = isFriday() ? '14:30 - 16:30' : '15:00 - 16:30';
+      const datangSlot = document.querySelector('.time-slot.datang .slot-time');
+      if (datangSlot) datangSlot.textContent = '06:00 - 07:00';
+    }
+    
+    function updateAttendanceStatus() {
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+      const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
+      const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams();
+      const isDatangTime = hours >= datangStart && hours < datangEnd;
+      const isPulangTime = hours >= pulangStart && hours < pulangEnd;
+      const datangSlot = document.querySelector('.time-slot.datang');
+      const datangStatus = datangSlot.querySelector('.slot-status');
+      if (isDatangTime) {
+        datangSlot.classList.add('active');
+        datangStatus.textContent = 'Aktif Sekarang';
+        datangStatus.className = 'slot-status status-active';
+        document.getElementById('presensiType').value = 'Datang';
+      } else {
+        datangSlot.classList.remove('active');
+        datangStatus.textContent = hours < datangStart ? 'Belum Aktif' : 'Tidak Aktif';
+        datangStatus.className = 'slot-status status-inactive';
+      }
+      const pulangSlot = document.querySelector('.time-slot.pulang');
+      const pulangStatus = pulangSlot.querySelector('.slot-status');
+      if (isPulangTime) {
+        pulangSlot.classList.add('active');
+        pulangStatus.textContent = 'Aktif Sekarang';
+        pulangStatus.className = 'slot-status status-active';
+        document.getElementById('presensiType').value = 'Pulang';
+      } else {
+        pulangSlot.classList.remove('active');
+        pulangStatus.textContent = hours < pulangStart ? 'Belum Aktif' : 'Tidak Aktif';
+        pulangStatus.className = 'slot-status status-inactive';
+      }
+    }
+    
+    function isValidPresensiTime() {
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+      const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
+      const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams();
+      return (hours >= datangStart && hours < datangEnd) || (hours >= pulangStart && hours < pulangEnd);
+    }
+    
+    function checkPresensiTime() {
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+      const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
+      const currentTime = `${wibTime.getHours().toString().padStart(2,'0')}:${wibTime.getMinutes().toString().padStart(2,'0')} WIB`;
+      const timeNotification = document.getElementById('timeNotification');
+      const text = document.getElementById('timeNotificationText');
+      const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams();
+      if (isValidPresensiTime()) {
+        timeNotification.classList.remove('show');
+      } else {
+        if (hours < datangStart) text.innerHTML = `Saat ini pukul ${currentTime}. Presensi Datang: 06.00 - 07.00 WIB.`;
+        else if (hours >= datangEnd && hours < pulangStart) {
+          let pulangInfo = isFriday() ? '14.30 - 16.30 WIB' : '15.00 - 16.30 WIB';
+          text.innerHTML = `Saat ini pukul ${currentTime}. Presensi Pulang ${pulangInfo}.`;
+        } else if (hours >= pulangEnd) text.innerHTML = `Saat ini pukul ${currentTime}. Presensi untuk hari ini sudah berakhir.`;
+        timeNotification.classList.add('show');
+      }
+    }
+    
+    async function initializeApp() {
+      document.getElementById('logoutButton').addEventListener('click', showLogoutModal);
+      document.querySelector('.modal-btn.cancel').addEventListener('click', closeModal);
+      document.querySelector('.modal-btn.logout').addEventListener('click', confirmLogout);
+      
+      const lastPresensi = localStorage.getItem('lastPresensi');
+      if (lastPresensi) document.getElementById('lastPresensiTime').value = lastPresensi;
+      let timeDrift = 0;
+      if (lastPresensi) {
+        const now = new Date();
+        const lastTime = new Date(lastPresensi);
+        timeDrift = (now - lastTime) / (1000 * 60);
+      }
+      document.getElementById('timeDrift').value = timeDrift;
+      
+      document.getElementById('presensiForm').addEventListener('submit', e => e.preventDefault());
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      let sessionId = urlParams.get('session') || localStorage.getItem('sessionId');
+      if (!sessionId) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); return; }
+      
+      document.getElementById('sessionId').value = sessionId;
+      localStorage.setItem('sessionId', sessionId);
+      
+      try {
+        const response = await fetch(`${PROXY_URL}?action=getSession`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId })
+        });
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        const userData = await response.json();
+        if (!userData) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); }
+        else {
+          localStorage.setItem('sessionData', JSON.stringify(userData));
+          document.getElementById('namaLembaga').value = userData.namaLembaga;
+          document.getElementById('namaPegawai').value = userData.namaPegawai;
+          document.getElementById('lembagaLatitude').textContent = userData.lembagaLatitude;
+          document.getElementById('lembagaLongitude').textContent = userData.lembagaLongitude;
+          document.getElementById('lembagaRadius').textContent = `(Radius: ${userData.lembagaRadius} m)`;
+          document.getElementById('radiusValue').textContent = userData.lembagaRadius;
+          updateCurrentTime();
+          setInterval(updateCurrentTime, 1000);
+          updateSlotTimesDisplay();
+          updateAttendanceStatus();
+          setInterval(() => { updateAttendanceStatus(); updateSlotTimesDisplay(); }, 60000);
+          startLocationTracking();
+          setInterval(checkPresensiTime, 60000);
+          checkPresensiTime();
+          setTimeout(() => startCamera(), 500);
+        }
+      } catch (err) {
+        console.error('Initialize error:', err);
+        alert('Terjadi kesalahan: ' + err.message);
+        logout();
+      }
+    }
+    
+    function updateDistanceDisplay(userLat, userLon, lembagaLat, lembagaLon, radius) {
+      if (userLat && userLon && lembagaLat && lembagaLon) {
+        const distance = calculateDistance(userLat, userLon, lembagaLat, lembagaLon);
+        document.getElementById('distanceValue').textContent = distance.toFixed(2);
+        document.getElementById('distanceValue').style.color = distance > radius ? '#f44336' : '#4caf50';
+        return distance;
+      }
+      return 0;
+    }
+    
+    function startLocationTracking() {
+      const gpsStatus = document.getElementById('gpsStatus');
+      const gpsDot = document.getElementById('gpsDot');
+      gpsStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi lokasi...';
+      gpsDot.classList.remove('active');
+      if (watchID) navigator.geolocation.clearWatch(watchID);
+      if (navigator.geolocation) {
+        watchID = navigator.geolocation.watchPosition(
+          position => {
+            if (detectFakeGPS(position)) { showFakeGPSBlocker(); return; }
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            document.getElementById('latitude').value = userLat;
+            document.getElementById('longitude').value = userLon;
+            const sessionData = JSON.parse(localStorage.getItem('sessionData'));
+            if (sessionData) {
+              updateDistanceDisplay(userLat, userLon, 
+                parseFloat(sessionData.lembagaLatitude), 
+                parseFloat(sessionData.lembagaLongitude), 
+                parseFloat(sessionData.lembagaRadius));
+            }
+            gpsStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Lokasi berhasil didapatkan';
+            gpsDot.classList.add('active');
+            document.getElementById('gpsBlocker').style.display = 'none';
+          },
+          error => {
+            if (error.code === error.PERMISSION_DENIED) {
+              document.getElementById('gpsBlocker').style.display = 'flex';
+              gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Akses GPS ditolak';
+              gpsDot.classList.remove('active');
+            } else {
+              gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Error: ' + error.message;
+              gpsDot.classList.remove('active');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      } else {
+        gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Geolocation tidak didukung.';
+      }
+    }
+    
+    function updateCurrentTime() {
+      const now = new Date();
+      const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+      const hours = wibTime.getHours().toString().padStart(2,'0');
+      const minutes = wibTime.getMinutes().toString().padStart(2,'0');
+      const seconds = wibTime.getSeconds().toString().padStart(2,'0');
+      document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds} WIB`;
+    }
+    
+    function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('logoutModal').style.display = 'none'; }
+    function confirmLogout() { closeModal(); logout(); }
+    
+    async function logout() {
+      const sessionId = localStorage.getItem('sessionId');
+      const logoutBtn = document.getElementById('logoutButton');
+      logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+      logoutBtn.disabled = true;
+      if (watchID) navigator.geolocation.clearWatch(watchID);
+      if (detectionInterval) clearInterval(detectionInterval);
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      if (sessionId) {
+        try { await fetch(`${PROXY_URL}?action=logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) }); }
+        catch (err) { console.error('Logout error:', err); }
+      }
+      const notification = document.getElementById('logoutNotification');
+      notification.classList.add('show');
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('sessionData');
+      setTimeout(() => window.location.href = '/', 2000);
+    }
+    
+    function closeTimeNotification() { document.getElementById('timeNotification').classList.remove('show'); }
+    
+    function compressImage(file, callback) {
+      updateProgressMenu("Mengompres foto ...", 45);
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvasComp = document.createElement('canvas');
+          const ctx = canvasComp.getContext('2d');
+          const MAX_WIDTH = 800;
+          const scale = MAX_WIDTH / img.width;
+          canvasComp.width = MAX_WIDTH;
+          canvasComp.height = img.height * scale;
+          ctx.drawImage(img, 0, 0, canvasComp.width, canvasComp.height);
+          canvasComp.toBlob(blob => callback(blob), 'image/jpeg', 0.7);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function showRadiusConfirmation(distance, radius, namaLembaga) {
+      const progressPercent = Math.min(100, (distance / radius) * 100);
+      document.getElementById('radiusWarningText').innerHTML = `Anda berada ${distance.toFixed(2)}m dari ${namaLembaga} (radius: ${radius}m). Tetap lanjutkan?`;
+      document.getElementById('warningLembaga').textContent = namaLembaga;
+      document.getElementById('warningDistance').textContent = `Jarak: ${distance.toFixed(2)} meter`;
+      document.getElementById('warningRadius').textContent = `Radius yang diizinkan: ${radius} meter`;
+      document.getElementById('progressPercentage').textContent = `${Math.round(progressPercent)}%`;
+      setTimeout(() => document.getElementById('radiusProgressFill').style.width = `${progressPercent}%`, 100);
+      document.getElementById('radiusWarningPopup').style.display = 'flex';
+    }
+    
+    function continuePresensi() {
+      document.getElementById('radiusWarningPopup').style.display = 'none';
+      bypassRadiusCheck = true;
+      submitPresensiForm();
+    }
+    
+    function cancelPresensi() {
+      document.getElementById('radiusWarningPopup').style.display = 'none';
+      bypassRadiusCheck = false;
+      if (!autoSubmitTriggered) startCamera();
+    }
+    
+    function showSuccessPopup() {
+      const successPopup = document.getElementById('successPopup');
+      successPopup.style.display = 'flex';
+      let seconds = 5;
+      const countdownText = document.getElementById('countdownText');
+      const countdownBar = document.getElementById('countdownBar');
+      countdownBar.style.animation = 'none';
+      void countdownBar.offsetWidth;
+      countdownBar.style.animation = 'countdown 5s linear forwards';
+      const countdownInterval = setInterval(() => {
+        seconds--;
+        countdownText.textContent = `${seconds} detik`;
+        if (seconds <= 0) { clearInterval(countdownInterval); logout(); }
+      }, 1000);
+    }
+    
+    async function submitPresensiForm() {
+      const messageEl = document.getElementById('message');
+      messageEl.textContent = '';
+      messageEl.className = '';
+      messageEl.style.display = 'none';
+      
+      const clientTimestamp = Date.now();
+      document.getElementById('clientTime').value = clientTimestamp;
+      
+      const latitude = document.getElementById('latitude').value;
+      const longitude = document.getElementById('longitude').value;
+      if (!latitude || !longitude) { alert('Mohon dapatkan lokasi terlebih dahulu.'); return; }
+      
+      const fileToUpload = window.capturedFile;
+      if (!fileToUpload) { alert('Mohon ambil foto terlebih dahulu.'); return; }
+      
+      if (!isValidPresensiTime()) { alert('Tidak dapat melakukan presensi di luar jam yang ditentukan.'); return; }
+      
+      if (!bypassRadiusCheck) {
+        const sessionData = JSON.parse(localStorage.getItem('sessionData'));
+        if (sessionData) {
+          const lembagaLat = parseFloat(sessionData.lembagaLatitude);
+          const lembagaLon = parseFloat(sessionData.lembagaLongitude);
+          const radius = parseFloat(sessionData.lembagaRadius);
+          const distance = calculateDistance(parseFloat(latitude), parseFloat(longitude), lembagaLat, lembagaLon);
+          if (distance > radius) { showRadiusConfirmation(distance, radius, sessionData.namaLembaga); return; }
+        }
+      } else { bypassRadiusCheck = false; }
+      
+      faceStatusDiv.innerHTML = "📤 Mengirim presensi...";
+      
+      // TAMPILKAN MENU PROGRES SETELAH FOTO DIAMBIL DAN SEBELUM PROSES KIRIM
+      showProgressMenu("Menyiapkan data presensi...", 20);
+      
+      compressImage(fileToUpload, async function(compressedBlob) {
+        const compressedFile = new File([compressedBlob], 'presensi.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+          const fileData = event.target.result.split(',')[1];
+          const formData = {
+            sessionId: document.getElementById('sessionId').value,
+            presensi: document.getElementById('presensiType').value,
+            namaLembaga: document.getElementById('namaLembaga').value,
+            namaPegawai: document.getElementById('namaPegawai').value,
+            latitude: latitude,
+            longitude: longitude,
+            file: { name: 'presensi.jpg', type: 'image/jpeg', data: fileData },
+            clientTime: document.getElementById('clientTime').value,
+            timeDrift: document.getElementById('timeDrift').value,
+            lastPresensiTime: document.getElementById('lastPresensiTime').value
+          };
+          
+          updateProgressMenu("Mengirim data ke server ...", 70);
+          
+          try {
+            const response = await fetch(`${PROXY_URL}?action=presensi`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData)
+            });
+            if (response.status === 504) { 
+              updateProgressMenu("Server sibuk, presensi tercatat", 100);
+              setTimeout(() => { hideProgressMenu(); showSuccessPopup(); }, 400);
+              return; 
+            }
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            const result = await response.json();
+            if (result.success) {
+              updateProgressMenu("Berhasil! Memperbarui data ...", 100);
+              setTimeout(() => {
+                hideProgressMenu();
+                localStorage.setItem('lastPresensi', new Date().toISOString());
+                showSuccessPopup();
+              }, 500);
+            } else {
+              hideProgressMenu();
+              messageEl.textContent = result.message;
+              messageEl.classList.add('error');
+              messageEl.style.display = 'block';
+              if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+            }
+          } catch (error) {
+            console.error('Submit error:', error);
+            hideProgressMenu();
+            if (error.message.includes('504')) {
+              hideProgressMenu();
+              showSuccessPopup();
+            } else {
+              messageEl.textContent = 'Error: ' + error.message;
+              messageEl.classList.add('error');
+              messageEl.style.display = 'block';
+              if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+            }
+          }
+        };
+        reader.readAsDataURL(compressedFile);
+      });
+    }
   </script>
 </body>
 </html>
