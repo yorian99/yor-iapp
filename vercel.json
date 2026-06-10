@@ -2,12 +2,12 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "presensi/api/proxy.js": {
+    "api/proxy.js": {
       "maxDuration": 10
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "presensi/api/proxy" },
+    { "source": "/api/(.*)", "destination": "api/proxy" },
     { "source": "/(.*)", "destination": "presensi/public/$1" }
   ]
 }
