@@ -7,8 +7,6 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "api/proxy" },
-    { "source": "/(.*)", "destination": "public/$1" }
+    { "source": "/api/(.*)", "destination": "/api/proxy" }
   ]
 }
-
