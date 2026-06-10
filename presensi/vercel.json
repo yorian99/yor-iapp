@@ -5,7 +5,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/proxy" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/api/(.*)", "destination": "presensi/api/proxy" },
+    { "source": "/(.*)", "destination": "presensi/public/$1" }
   ]
 }
