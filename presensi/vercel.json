@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/proxy.js": {
+    "presensi/api/proxy.js": {
       "maxDuration": 10
     }
   },
