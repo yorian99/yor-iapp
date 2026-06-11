@@ -657,99 +657,6 @@
       background: #F5F5F5;
     }
 
-    /* ==================== INFO POPUP UNTUK PRESENSI GANDA ==================== */
-    #infoPresensiPopup {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 2300;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(5px);
-    }
-
-    .info-popup-container {
-      background: white;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 400px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      transform: scale(0.9);
-      opacity: 0;
-      animation: popupAppear 0.3s ease-out forwards;
-    }
-
-    .info-popup-header {
-      background: #e3f2fd;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #bbdef5;
-    }
-
-    .info-popup-icon {
-      font-size: 3rem;
-      color: #1976d2;
-      margin-bottom: 10px;
-    }
-
-    .info-popup-title {
-      color: #0d47a1;
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .info-popup-body {
-      padding: 20px;
-    }
-
-    .info-popup-detail {
-      background: #f5f9ff;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 10px;
-    }
-
-    .info-popup-detail p {
-      margin: 8px 0;
-      font-size: 0.95rem;
-      color: #2c3e50;
-    }
-
-    .info-popup-detail strong {
-      color: #1565c0;
-    }
-
-    .info-popup-footer {
-      display: flex;
-      border-top: 1px solid #EEE;
-    }
-
-    .info-popup-btn {
-      flex: 1;
-      padding: 15px;
-      border: none;
-      background: none;
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: #1565c0;
-    }
-
-    .info-popup-btn:hover {
-      background: #eef2ff;
-    }
-
     /* ==================== EXISTING STYLES ==================== */
     :root {
       --primary: #4361ee;
@@ -1821,27 +1728,6 @@
     </div>
   </div>
 
-  <!-- ============== POPUP INFORMASI PRESENSI GANDA ============== -->
-  <div id="infoPresensiPopup">
-    <div class="info-popup-container">
-      <div class="info-popup-header">
-        <i class="fas fa-info-circle info-popup-icon"></i>
-        <h3 class="info-popup-title">Informasi Presensi</h3>
-      </div>
-      <div class="info-popup-body">
-        <div class="info-popup-detail" id="infoPresensiDetail">
-          <!-- detail akan diisi javascript -->
-        </div>
-        <p style="font-size: 0.85rem; color: #0d47a1; text-align: center;">Anda sudah melakukan presensi hari ini. Sistem akan logout.</p>
-      </div>
-      <div class="info-popup-footer">
-        <button class="info-popup-btn" id="closeInfoPopupBtn">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
-    </div>
-  </div>
-
   <div class="container">
     <div class="card">
       <button class="logout-btn" id="logoutButton">
@@ -2042,44 +1928,6 @@
       hideErrorPopup();
       logout();
     });
-
-    // ========== INFO POPUP PRESENSI GANDA ==========
-    const infoPopup = document.getElementById('infoPresensiPopup');
-    const infoDetail = document.getElementById('infoPresensiDetail');
-    const closeInfoBtn = document.getElementById('closeInfoPopupBtn');
-
-    function showInfoPresensiPopup(data) {
-      // data: { namaLembaga, namaPegawai, nip, waktu, jenisPresensi }
-      let html = `
-        <p><strong><i class="fas fa-building"></i> Lembaga:</strong> ${escapeHtml(data.namaLembaga || '-')}</p>
-        <p><strong><i class="fas fa-user"></i> Pegawai:</strong> ${escapeHtml(data.namaPegawai || '-')}</p>
-        <p><strong><i class="fas fa-id-card"></i> NIP:</strong> ${escapeHtml(data.nip || '-')}</p>
-        <p><strong><i class="fas fa-calendar-check"></i> Waktu Presensi:</strong> ${escapeHtml(data.waktu || '-')}</p>
-        <p><strong><i class="fas fa-tag"></i> Jenis:</strong> ${escapeHtml(data.jenisPresensi || 'Presensi')}</p>
-      `;
-      infoDetail.innerHTML = html;
-      infoPopup.style.display = 'flex';
-    }
-
-    function hideInfoPresensiPopup() {
-      infoPopup.style.display = 'none';
-    }
-
-    closeInfoBtn.addEventListener('click', () => {
-      hideInfoPresensiPopup();
-      logout();
-    });
-
-    // helper escape HTML
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
-    }
 
     // ==================== FACE DETECTION ====================
     async function loadFaceModels() {
@@ -2290,7 +2138,7 @@
     function getPresensiParams() {
       const datangStart = 6.0, datangEnd = 10.0;
       let pulangStart = 15.0;
-      const pulangEnd = 19.5;
+      const pulangEnd = 17.5;
       if (isFriday()) pulangStart = 14.5;
       return { datangStart, datangEnd, pulangStart, pulangEnd };
     }
@@ -2363,38 +2211,6 @@
       }
     }
     
-    // ========== CEK PRESENSI HARI INI ==========
-    async function checkTodayPresensi(sessionId, userData) {
-      try {
-        const response = await fetch(`${PROXY_URL}?action=getTodayPresensi`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
-        });
-        if (!response.ok) {
-          // Jika endpoint tidak tersedia, lanjutkan tanpa menghalangi
-          console.warn("Endpoint getTodayPresensi tidak tersedia atau error, lanjutkan inisialisasi.");
-          return false;
-        }
-        const result = await response.json();
-        if (result && result.hasPresensi === true && result.presensi) {
-          // Tampilkan popup informasi
-          showInfoPresensiPopup({
-            namaLembaga: result.presensi.namaLembaga || userData.namaLembaga,
-            namaPegawai: result.presensi.namaPegawai || userData.namaPegawai,
-            nip: result.presensi.nip || userData.nip || 'Tidak tersedia',
-            waktu: result.presensi.waktu,
-            jenisPresensi: result.presensi.jenis || (result.presensi.jenisPresensi || 'Presensi')
-          });
-          return true; // sudah presensi
-        }
-        return false;
-      } catch (err) {
-        console.error("Error checking today presensi:", err);
-        return false; // anggap belum presensi agar proses tetap jalan
-      }
-    }
-    
     async function initializeApp() {
       document.getElementById('logoutButton').addEventListener('click', showLogoutModal);
       document.querySelector('.modal-btn.cancel').addEventListener('click', closeModal);
@@ -2427,34 +2243,25 @@
         });
         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
         const userData = await response.json();
-        if (!userData) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); return; }
-        
-        // Simpan data user
-        localStorage.setItem('sessionData', JSON.stringify(userData));
-        document.getElementById('namaLembaga').value = userData.namaLembaga;
-        document.getElementById('namaPegawai').value = userData.namaPegawai;
-        document.getElementById('lembagaLatitude').textContent = userData.lembagaLatitude;
-        document.getElementById('lembagaLongitude').textContent = userData.lembagaLongitude;
-        document.getElementById('lembagaRadius').textContent = `(Radius: ${userData.lembagaRadius} m)`;
-        document.getElementById('radiusValue').textContent = userData.lembagaRadius;
-        
-        // Cek apakah sudah melakukan presensi hari ini
-        const alreadyPresenced = await checkTodayPresensi(sessionId, userData);
-        if (alreadyPresenced) {
-          // Jangan lanjutkan inisialisasi lebih lanjut karena akan logout setelah popup ditutup
-          return;
+        if (!userData) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); }
+        else {
+          localStorage.setItem('sessionData', JSON.stringify(userData));
+          document.getElementById('namaLembaga').value = userData.namaLembaga;
+          document.getElementById('namaPegawai').value = userData.namaPegawai;
+          document.getElementById('lembagaLatitude').textContent = userData.lembagaLatitude;
+          document.getElementById('lembagaLongitude').textContent = userData.lembagaLongitude;
+          document.getElementById('lembagaRadius').textContent = `(Radius: ${userData.lembagaRadius} m)`;
+          document.getElementById('radiusValue').textContent = userData.lembagaRadius;
+          updateCurrentTime();
+          setInterval(updateCurrentTime, 1000);
+          updateSlotTimesDisplay();
+          updateAttendanceStatus();
+          setInterval(() => { updateAttendanceStatus(); updateSlotTimesDisplay(); }, 60000);
+          startLocationTracking();
+          setInterval(checkPresensiTime, 60000);
+          checkPresensiTime();
+          setTimeout(() => startCamera(), 500);
         }
-        
-        updateCurrentTime();
-        setInterval(updateCurrentTime, 1000);
-        updateSlotTimesDisplay();
-        updateAttendanceStatus();
-        setInterval(() => { updateAttendanceStatus(); updateSlotTimesDisplay(); }, 60000);
-        startLocationTracking();
-        setInterval(checkPresensiTime, 60000);
-        checkPresensiTime();
-        setTimeout(() => startCamera(), 500);
-        
       } catch (err) {
         console.error('Initialize error:', err);
         alert('Terjadi kesalahan: ' + err.message);
