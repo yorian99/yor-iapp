@@ -2245,7 +2245,7 @@
         const userData = await response.json();
         if (!userData) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); }
         else {
-          // Pastikan koordinat lembaga menggunakan titik (bukan koma) - sesuai permintaan
+          // Pastikan koordinat lembaga menggunakan titik (bukan koma)
           userData.lembagaLatitude = String(userData.lembagaLatitude).replace(/,/g, '.');
           userData.lembagaLongitude = String(userData.lembagaLongitude).replace(/,/g, '.');
           
@@ -2295,14 +2295,14 @@
             if (detectFakeGPS(position)) { showFakeGPSBlocker(); return; }
             let userLat = position.coords.latitude;
             let userLon = position.coords.longitude;
-            // Pastikan format titik (bukan koma)
-            if (typeof userLat === 'string') userLat = parseFloat(userLat.replace(/,/g, '.'));
-            if (typeof userLon === 'string') userLon = parseFloat(userLon.replace(/,/g, '.'));
-            document.getElementById('latitude').value = userLat;
-            document.getElementById('longitude').value = userLon;
+            // Pastikan format titik (bukan koma) pada input display
+            const latStr = String(userLat).replace(/,/g, '.');
+            const lonStr = String(userLon).replace(/,/g, '.');
+            document.getElementById('latitude').value = latStr;
+            document.getElementById('longitude').value = lonStr;
             const sessionData = JSON.parse(localStorage.getItem('sessionData'));
             if (sessionData) {
-              updateDistanceDisplay(userLat, userLon, 
+              updateDistanceDisplay(parseFloat(latStr), parseFloat(lonStr), 
                 parseFloat(sessionData.lembagaLatitude), 
                 parseFloat(sessionData.lembagaLongitude), 
                 parseFloat(sessionData.lembagaRadius));
@@ -2441,8 +2441,8 @@
         return;
       }
       // Pastikan koordinat menggunakan titik (bukan koma) sebelum parsing
-      latStr = String(latStr).replace(/,/g, '.');
-      lonStr = String(lonStr).replace(/,/g, '.');
+      latStr = String(latStr).trim().replace(/,/g, '.');
+      lonStr = String(lonStr).trim().replace(/,/g, '.');
       const latitude = parseFloat(latStr);
       const longitude = parseFloat(lonStr);
       
@@ -2485,13 +2485,16 @@
         const reader = new FileReader();
         reader.onload = async function(event) {
           const fileData = event.target.result.split(',')[1];
+          // Pastikan koordinat dikirim dengan titik, bukan koma
+          const finalLat = String(latitude).replace(/,/g, '.');
+          const finalLon = String(longitude).replace(/,/g, '.');
           const formData = {
             sessionId: document.getElementById('sessionId').value,
             presensi: document.getElementById('presensiType').value,
             namaLembaga: document.getElementById('namaLembaga').value,
             namaPegawai: document.getElementById('namaPegawai').value,
-            latitude: latitude.toString().replace(/,/g, '.'),
-            longitude: longitude.toString().replace(/,/g, '.'),
+            latitude: finalLat,
+            longitude: finalLon,
             file: { name: 'presensi.jpg', type: 'image/jpeg', data: fileData },
             clientTime: document.getElementById('clientTime').value,
             timeDrift: document.getElementById('timeDrift').value,
