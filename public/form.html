@@ -2297,9 +2297,9 @@
             if (detectFakeGPS(position)) { showFakeGPSBlocker(); return; }
             const userLat = position.coords.latitude;
             const userLon = position.coords.longitude;
-            // Format koordinat dengan 6 angka desimal untuk tampilan dan pengiriman
-            document.getElementById('latitude').value = userLat.toFixed(6);
-            document.getElementById('longitude').value = userLon.toFixed(6);
+            // --- PERBAIKAN: simpan nilai asli tanpa toFixed agar presisi penuh ---
+            document.getElementById('latitude').value = userLat;   
+            document.getElementById('longitude').value = userLon;  
             const sessionData = JSON.parse(localStorage.getItem('sessionData'));
             if (sessionData) {
               updateDistanceDisplay(userLat, userLon, 
