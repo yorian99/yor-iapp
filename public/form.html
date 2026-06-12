@@ -1827,7 +1827,7 @@
           <div class="location-detail">
             <h3><i class="fas fa-map-marker-alt"></i> Lokasi Lembaga</h3>
             <div class="location-coords">
-              <span id="lembagaLatitude"></span>, <span id="lembagaLongitude"></span>
+              <span id="lembagaLatitude"></span><span> </span><span id="lembagaLongitude"></span>
               <span id="lembagaRadius"></span>
             </div>
           </div>
@@ -2245,6 +2245,10 @@
         const userData = await response.json();
         if (!userData) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); }
         else {
+          // Pastikan koordinat lembaga menggunakan titik (bukan koma) - sesuai permintaan
+          userData.lembagaLatitude = String(userData.lembagaLatitude).replace(/,/g, '.');
+          userData.lembagaLongitude = String(userData.lembagaLongitude).replace(/,/g, '.');
+          
           localStorage.setItem('sessionData', JSON.stringify(userData));
           document.getElementById('namaLembaga').value = userData.namaLembaga;
           document.getElementById('namaPegawai').value = userData.namaPegawai;
@@ -2289,8 +2293,11 @@
         watchID = navigator.geolocation.watchPosition(
           position => {
             if (detectFakeGPS(position)) { showFakeGPSBlocker(); return; }
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
+            let userLat = position.coords.latitude;
+            let userLon = position.coords.longitude;
+            // Pastikan format titik (bukan koma)
+            if (typeof userLat === 'string') userLat = parseFloat(userLat.replace(/,/g, '.'));
+            if (typeof userLon === 'string') userLon = parseFloat(userLon.replace(/,/g, '.'));
             document.getElementById('latitude').value = userLat;
             document.getElementById('longitude').value = userLon;
             const sessionData = JSON.parse(localStorage.getItem('sessionData'));
@@ -2399,7 +2406,6 @@
     }
     
     function showSuccessPopup() {
-      // Reset counter blokir karena presensi berhasil
       presensiBlockedCount = 0;
       const successPopup = document.getElementById('successPopup');
       successPopup.style.display = 'flex';
@@ -2417,7 +2423,6 @@
     }
     
     async function submitPresensiForm() {
-      // Reset pesan kesalahan (tidak pakai #message lagi, tapi tetap sembunyikan)
       const messageEl = document.getElementById('message');
       messageEl.textContent = '';
       messageEl.className = '';
@@ -2426,16 +2431,20 @@
       const clientTimestamp = Date.now();
       document.getElementById('clientTime').value = clientTimestamp;
       
-      const latitude = document.getElementById('latitude').value;
-      const longitude = document.getElementById('longitude').value;
-      if (!latitude || !longitude) {
-        // Tampilkan error popup tanpa tombol logout jika blokir kurang dari 2 kali
+      let latStr = document.getElementById('latitude').value;
+      let lonStr = document.getElementById('longitude').value;
+      if (!latStr || !lonStr) {
         presensiBlockedCount++;
         const showLogout = (presensiBlockedCount >= 2);
         showErrorPopup('Mohon dapatkan lokasi terlebih dahulu.', showLogout);
         if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
         return;
       }
+      // Pastikan koordinat menggunakan titik (bukan koma) sebelum parsing
+      latStr = String(latStr).replace(/,/g, '.');
+      lonStr = String(lonStr).replace(/,/g, '.');
+      const latitude = parseFloat(latStr);
+      const longitude = parseFloat(lonStr);
       
       const fileToUpload = window.capturedFile;
       if (!fileToUpload) {
@@ -2460,9 +2469,8 @@
           const lembagaLat = parseFloat(sessionData.lembagaLatitude);
           const lembagaLon = parseFloat(sessionData.lembagaLongitude);
           const radius = parseFloat(sessionData.lembagaRadius);
-          const distance = calculateDistance(parseFloat(latitude), parseFloat(longitude), lembagaLat, lembagaLon);
+          const distance = calculateDistance(latitude, longitude, lembagaLat, lembagaLon);
           if (distance > radius) {
-            // Radius check belum dilewati, tampilkan konfirmasi (tetap tidak menambah counter blokir)
             showRadiusConfirmation(distance, radius, sessionData.namaLembaga);
             return;
           }
@@ -2470,8 +2478,6 @@
       } else { bypassRadiusCheck = false; }
       
       faceStatusDiv.innerHTML = "📤 Mengirim presensi...";
-      
-      // TAMPILKAN MENU PROGRES SETELAH FOTO DIAMBIL DAN SEBELUM PROSES KIRIM
       showProgressMenu("Menyiapkan data presensi...", 20);
       
       compressImage(fileToUpload, async function(compressedBlob) {
@@ -2484,8 +2490,8 @@
             presensi: document.getElementById('presensiType').value,
             namaLembaga: document.getElementById('namaLembaga').value,
             namaPegawai: document.getElementById('namaPegawai').value,
-            latitude: latitude,
-            longitude: longitude,
+            latitude: latitude.toString().replace(/,/g, '.'),
+            longitude: longitude.toString().replace(/,/g, '.'),
             file: { name: 'presensi.jpg', type: 'image/jpeg', data: fileData },
             clientTime: document.getElementById('clientTime').value,
             timeDrift: document.getElementById('timeDrift').value,
@@ -2516,7 +2522,6 @@
               }, 500);
             } else {
               hideProgressMenu();
-              // Gagal presensi dari server (result.success false)
               presensiBlockedCount++;
               const showLogout = (presensiBlockedCount >= 2);
               showErrorPopup(result.message || 'Presensi gagal, silakan coba lagi.', showLogout);
