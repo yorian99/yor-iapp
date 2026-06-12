@@ -2135,7 +2135,7 @@
     }
     
     function getPresensiParams() {
-      const datangStart = 6.0, datangEnd = 8.25;
+      const datangStart = 6.0, datangEnd = 10.0;
       let pulangStart = 15.0;
       const pulangEnd = 22.5;
       if (isFriday()) pulangStart = 14.5;
@@ -2210,6 +2210,12 @@
       }
     }
     
+    // Fungsi format koordinat agar tampilan konsisten dengan 6 angka desimal
+    function formatCoordinate(coord) {
+      if (coord === undefined || coord === null || isNaN(parseFloat(coord))) return '-';
+      return parseFloat(coord).toFixed(6);
+    }
+    
     async function initializeApp() {
       document.getElementById('logoutButton').addEventListener('click', showLogoutModal);
       document.querySelector('.modal-btn.cancel').addEventListener('click', closeModal);
@@ -2247,8 +2253,9 @@
           localStorage.setItem('sessionData', JSON.stringify(userData));
           document.getElementById('namaLembaga').value = userData.namaLembaga;
           document.getElementById('namaPegawai').value = userData.namaPegawai;
-          document.getElementById('lembagaLatitude').textContent = userData.lembagaLatitude;
-          document.getElementById('lembagaLongitude').textContent = userData.lembagaLongitude;
+          // Format koordinat lembaga dengan 6 desimal agar tampilan seragam
+          document.getElementById('lembagaLatitude').textContent = formatCoordinate(userData.lembagaLatitude);
+          document.getElementById('lembagaLongitude').textContent = formatCoordinate(userData.lembagaLongitude);
           document.getElementById('lembagaRadius').textContent = `(Radius: ${userData.lembagaRadius} m)`;
           document.getElementById('radiusValue').textContent = userData.lembagaRadius;
           updateCurrentTime();
@@ -2290,8 +2297,9 @@
             if (detectFakeGPS(position)) { showFakeGPSBlocker(); return; }
             const userLat = position.coords.latitude;
             const userLon = position.coords.longitude;
-            document.getElementById('latitude').value = userLat;
-            document.getElementById('longitude').value = userLon;
+            // Format koordinat dengan 6 angka desimal untuk tampilan dan pengiriman
+            document.getElementById('latitude').value = userLat.toFixed(6);
+            document.getElementById('longitude').value = userLon.toFixed(6);
             const sessionData = JSON.parse(localStorage.getItem('sessionData'));
             if (sessionData) {
               updateDistanceDisplay(userLat, userLon, 
@@ -2349,7 +2357,7 @@
       notification.classList.add('show');
       localStorage.removeItem('sessionId');
       localStorage.removeItem('sessionData');
-      setTimeout(() => window.location.href = '/', 2000);
+      setTimeout(() => window.location.href = 'https://www.yoriapp.site/presensi', 2000);
     }
     
     function closeTimeNotification() { document.getElementById('timeNotification').classList.remove('show'); }
@@ -2416,7 +2424,7 @@
     }
     
     async function submitPresensiForm() {
-      // Reset pesan kesalahan (tidak pakai #message lagi, tapi tetap sembunyikan)
+      // Reset pesan kesalahan
       const messageEl = document.getElementById('message');
       messageEl.textContent = '';
       messageEl.className = '';
@@ -2425,11 +2433,8 @@
       const clientTimestamp = Date.now();
       document.getElementById('clientTime').value = clientTimestamp;
       
-      let latitude = document.getElementById('latitude').value;
-      let longitude = document.getElementById('longitude').value;
-      
-      // === PERBAIKAN FORMAT KOORDINAT ===
-      // Pastikan nilai tidak kosong, trim spasi, dan konversi ke number dengan format desimal yang benar
+      const latitude = document.getElementById('latitude').value;
+      const longitude = document.getElementById('longitude').value;
       if (!latitude || !longitude) {
         presensiBlockedCount++;
         const showLogout = (presensiBlockedCount >= 2);
@@ -2437,23 +2442,6 @@
         if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
         return;
       }
-      
-      // Trim spasi dan konversi ke number (format desimal dengan titik)
-      let latNum = parseFloat(latitude.toString().trim());
-      let lonNum = parseFloat(longitude.toString().trim());
-      
-      // Validasi apakah koordinat valid (bukan NaN)
-      if (isNaN(latNum) || isNaN(lonNum)) {
-        presensiBlockedCount++;
-        const showLogout = (presensiBlockedCount >= 2);
-        showErrorPopup('Format koordinat tidak valid. Silakan dapatkan lokasi ulang.', showLogout);
-        if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
-        return;
-      }
-      
-      // Bulatkan koordinat menjadi 6 angka desimal agar konsisten dengan standar penyimpanan
-      latNum = parseFloat(latNum.toFixed(6));
-      lonNum = parseFloat(lonNum.toFixed(6));
       
       const fileToUpload = window.capturedFile;
       if (!fileToUpload) {
@@ -2478,9 +2466,8 @@
           const lembagaLat = parseFloat(sessionData.lembagaLatitude);
           const lembagaLon = parseFloat(sessionData.lembagaLongitude);
           const radius = parseFloat(sessionData.lembagaRadius);
-          const distance = calculateDistance(latNum, lonNum, lembagaLat, lembagaLon);
+          const distance = calculateDistance(parseFloat(latitude), parseFloat(longitude), lembagaLat, lembagaLon);
           if (distance > radius) {
-            // Radius check belum dilewati, tampilkan konfirmasi (tetap tidak menambah counter blokir)
             showRadiusConfirmation(distance, radius, sessionData.namaLembaga);
             return;
           }
@@ -2489,7 +2476,7 @@
       
       faceStatusDiv.innerHTML = "📤 Mengirim presensi...";
       
-      // TAMPILKAN MENU PROGRES SETELAH FOTO DIAMBIL DAN SEBELUM PROSES KIRIM
+      // TAMPILKAN MENU PROGRES
       showProgressMenu("Menyiapkan data presensi...", 20);
       
       compressImage(fileToUpload, async function(compressedBlob) {
@@ -2502,8 +2489,8 @@
             presensi: document.getElementById('presensiType').value,
             namaLembaga: document.getElementById('namaLembaga').value,
             namaPegawai: document.getElementById('namaPegawai').value,
-            latitude: latNum,   // Kirim sebagai number dengan format desimal yang sudah dibulatkan
-            longitude: lonNum,  // Kirim sebagai number
+            latitude: latitude,
+            longitude: longitude,
             file: { name: 'presensi.jpg', type: 'image/jpeg', data: fileData },
             clientTime: document.getElementById('clientTime').value,
             timeDrift: document.getElementById('timeDrift').value,
@@ -2534,7 +2521,6 @@
               }, 500);
             } else {
               hideProgressMenu();
-              // Gagal presensi dari server (result.success false)
               presensiBlockedCount++;
               const showLogout = (presensiBlockedCount >= 2);
               showErrorPopup(result.message || 'Presensi gagal, silakan coba lagi.', showLogout);
