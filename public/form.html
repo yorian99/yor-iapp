@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Form Presensi Pegawai - Korwil </title>
@@ -2136,7 +2135,7 @@
     }
     
     function getPresensiParams() {
-      const datangStart = 6.0, datangEnd = 10.0;
+      const datangStart = 0.0, datangEnd = 7.25;
       let pulangStart = 15.0;
       const pulangEnd = 17.5;
       if (isFriday()) pulangStart = 14.5;
@@ -2350,7 +2349,7 @@
       notification.classList.add('show');
       localStorage.removeItem('sessionId');
       localStorage.removeItem('sessionData');
-      setTimeout(() => window.location.href = 'https://www.yoriapp.site/presensi', 2000);
+      setTimeout(() => window.location.href = '/', 2000);
     }
     
     function closeTimeNotification() { document.getElementById('timeNotification').classList.remove('show'); }
@@ -2426,16 +2425,35 @@
       const clientTimestamp = Date.now();
       document.getElementById('clientTime').value = clientTimestamp;
       
-      const latitude = document.getElementById('latitude').value;
-      const longitude = document.getElementById('longitude').value;
+      let latitude = document.getElementById('latitude').value;
+      let longitude = document.getElementById('longitude').value;
+      
+      // === PERBAIKAN FORMAT KOORDINAT ===
+      // Pastikan nilai tidak kosong, trim spasi, dan konversi ke number dengan format desimal yang benar
       if (!latitude || !longitude) {
-        // Tampilkan error popup tanpa tombol logout jika blokir kurang dari 2 kali
         presensiBlockedCount++;
         const showLogout = (presensiBlockedCount >= 2);
         showErrorPopup('Mohon dapatkan lokasi terlebih dahulu.', showLogout);
         if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
         return;
       }
+      
+      // Trim spasi dan konversi ke number (format desimal dengan titik)
+      let latNum = parseFloat(latitude.toString().trim());
+      let lonNum = parseFloat(longitude.toString().trim());
+      
+      // Validasi apakah koordinat valid (bukan NaN)
+      if (isNaN(latNum) || isNaN(lonNum)) {
+        presensiBlockedCount++;
+        const showLogout = (presensiBlockedCount >= 2);
+        showErrorPopup('Format koordinat tidak valid. Silakan dapatkan lokasi ulang.', showLogout);
+        if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+        return;
+      }
+      
+      // Bulatkan koordinat menjadi 6 angka desimal agar konsisten dengan standar penyimpanan
+      latNum = parseFloat(latNum.toFixed(6));
+      lonNum = parseFloat(lonNum.toFixed(6));
       
       const fileToUpload = window.capturedFile;
       if (!fileToUpload) {
@@ -2460,7 +2478,7 @@
           const lembagaLat = parseFloat(sessionData.lembagaLatitude);
           const lembagaLon = parseFloat(sessionData.lembagaLongitude);
           const radius = parseFloat(sessionData.lembagaRadius);
-          const distance = calculateDistance(parseFloat(latitude), parseFloat(longitude), lembagaLat, lembagaLon);
+          const distance = calculateDistance(latNum, lonNum, lembagaLat, lembagaLon);
           if (distance > radius) {
             // Radius check belum dilewati, tampilkan konfirmasi (tetap tidak menambah counter blokir)
             showRadiusConfirmation(distance, radius, sessionData.namaLembaga);
@@ -2484,8 +2502,8 @@
             presensi: document.getElementById('presensiType').value,
             namaLembaga: document.getElementById('namaLembaga').value,
             namaPegawai: document.getElementById('namaPegawai').value,
-            latitude: latitude,
-            longitude: longitude,
+            latitude: latNum,   // Kirim sebagai number dengan format desimal yang sudah dibulatkan
+            longitude: lonNum,  // Kirim sebagai number
             file: { name: 'presensi.jpg', type: 'image/jpeg', data: fileData },
             clientTime: document.getElementById('clientTime').value,
             timeDrift: document.getElementById('timeDrift').value,
