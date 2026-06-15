@@ -98,81 +98,6 @@
       color: #777;
     }
 
-    /* ==================== DESKTOP BLOCKER STYLES ==================== */
-    #desktopBlocker {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #4361ee, #3a56d4);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      padding: 20px;
-      text-align: center;
-      display: none;
-    }
-
-    .blocker-content {
-      max-width: 600px;
-      padding: 30px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    }
-
-    .blocker-icon {
-      font-size: 4rem;
-      margin-bottom: 20px;
-      color: #ffcc00;
-    }
-
-    .blocker-title {
-      font-size: 2.2rem;
-      margin-bottom: 20px;
-      font-weight: 700;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .blocker-message {
-      font-size: 1.1rem;
-      margin-bottom: 30px;
-      line-height: 1.6;
-    }
-
-    .device-icons {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin: 30px 0;
-    }
-
-    .device-icon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .device-icon i {
-      font-size: 3.5rem;
-      color: white;
-    }
-
-    .device-icon span {
-      font-size: 1rem;
-    }
-
-    .blocker-footer {
-      margin-top: 30px;
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
-
     /* ==================== SPLASH SCREEN STYLES ==================== */
     #splashScreen {
       position: fixed;
@@ -690,10 +615,6 @@
     
     @keyframes fadeInContent {
       to { opacity: 1; }
-    }
-    
-    body.desktop-blocked {
-      overflow: hidden;
     }
 
     .container {
@@ -1542,32 +1463,6 @@
     </div>
   </div>
   
-  <!-- Desktop Blocker -->
-  <div id="desktopBlocker">
-    <div class="blocker-content">
-      <i class="fas fa-lock blocker-icon"></i>
-      <h2 class="blocker-title">Akses Dibatasi</h2>
-      <p class="blocker-message">
-        Aplikasi Presensi Pegawai Korwil  hanya dapat diakses melalui perangkat mobile (Smartphone).
-        Silakan gunakan smartphone Android atau iPhone Anda untuk melakukan presensi.
-      </p>
-      
-      <div class="device-icons">
-        <div class="device-icon">
-          <i class="fab fa-android"></i>
-          <span>Android</span>
-        </div>
-        <div class="device-icon">
-          <i class="fab fa-apple"></i>
-          <span>iPhone</span>
-        </div>
-      </div>
-      
-      <p class="blocker-footer">
-        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil . 
-    </div>
-  </div>
-  
   <!-- Splash Screen -->
   <div id="splashScreen">
     <div class="splash-content">
@@ -1796,13 +1691,14 @@
           <label for="file">Bukti Dukung</label>
           <div class="alert alert-light p-2 mb-2" style="font-size: 0.9rem; border: 1px solid #eee;">
             <div class="mb-1">1. Foto harus Jelas Menampilkan Pegawai Yang Melakukan Presensi.</div>
-            <div> 2. Hindari Foto background alam (pohon, dinding, pemandangan)</div>
+            <div> 2. Posisikan wajah agar fitur sinkronisasi mata & mulut dapat terdeteksi (Otomatis Jepret).</div>
           </div>
           
           <div id="cameraPreview" style="margin: 15px 0; display: none;">
             <div class="camera-container">
               <video id="video" autoplay playsinline style="width: 100%; border-radius: 12px; background: #000;"></video>
-              <canvas id="faceOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+              <!-- Menambahkan scaleX(-1) untuk sinkronisasi gambar overlay dengan cermin video -->
+              <canvas id="faceOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1);"></canvas>
               <div class="face-border">
                 <svg viewBox="0 0 200 200">
                   <rect x="10" y="10" width="180" height="180" fill="none" stroke="#00ffcc" stroke-width="4" stroke-dasharray="10 5" rx="20" ry="20" />
@@ -1932,8 +1828,12 @@
     // ==================== FACE DETECTION ====================
     async function loadFaceModels() {
       try {
-        faceStatusDiv.innerHTML = "🔄 Memuat model deteksi wajah...";
+        faceStatusDiv.innerHTML = "🔄 Memuat model wajah & landmark...";
+        // Load tiny face detector
         await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
+        // Load face landmark model (Untuk Mata dan Mulut)
+        await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
+        
         modelsLoaded = true;
         faceStatusDiv.innerHTML = "✅ Silahkan posisikan wajah di dalam border";
         faceStatusDiv.classList.remove('detection-warning');
@@ -1975,19 +1875,42 @@
         faceStatusDiv.innerHTML = "❌ Kamera tidak dapat diakses";
       }
     }
+
+    // Fungsi menggambar garis sinkronisasi untuk mata & mulut
+    function drawSyncPath(ctx, points, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for(let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      // Tambahkan titik pijar pada mata/mulut
+      ctx.fillStyle = color;
+      points.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 1.5, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
     
     function startFaceDetection() {
       if (detectionInterval) clearInterval(detectionInterval);
       detectionInterval = setInterval(async () => {
         if (!modelsLoaded || !video.videoWidth || video.paused || video.ended) return;
         try {
-          const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+          // Ganti dari sekadar mendeteksi wajah menjadi dengan Face Landmarks (Sinkronisasi)
+          const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+          
           const overlayCtx = faceOverlay.getContext('2d');
           overlayCtx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
-          faceOverlay.width = video.videoWidth;
-          faceOverlay.height = video.videoHeight;
+          faceapi.matchDimensions(faceOverlay, video);
           
-          const hasFace = detections.length > 0;
+          const resizedDetections = faceapi.resizeResults(detections, { width: video.videoWidth, height: video.videoHeight });
+          
+          const hasFace = resizedDetections.length > 0;
           if (hasFace) {
             const videoRect = { width: video.videoWidth, height: video.videoHeight };
             const borderMarginX = videoRect.width * 0.15;
@@ -1997,35 +1920,51 @@
               width: videoRect.width - (borderMarginX * 2),
               height: videoRect.height - (borderMarginY * 2)
             };
+            
             let faceInside = false;
-            for (const detection of detections) {
-              const box = detection.box;
+            
+            for (const detection of resizedDetections) {
+              const box = detection.detection.box;
+              const landmarks = detection.landmarks;
+              
+              // Gambar sinkronisasi mata & mulut
+              drawSyncPath(overlayCtx, landmarks.getLeftEye(), '#00ffcc');  // Mata kiri Cyan
+              drawSyncPath(overlayCtx, landmarks.getRightEye(), '#00ffcc'); // Mata kanan Cyan
+              drawSyncPath(overlayCtx, landmarks.getMouth(), '#ffcc00');    // Mulut Kuning
+              
               const intersectX = Math.max(box.x, borderBox.x);
               const intersectY = Math.max(box.y, borderBox.y);
               const intersectW = Math.min(box.x + box.width, borderBox.x + borderBox.width) - intersectX;
               const intersectH = Math.min(box.y + box.height, borderBox.y + borderBox.height) - intersectY;
+              
               if (intersectW > 0 && intersectH > 0) {
                 const intersectArea = intersectW * intersectH;
                 const faceArea = box.width * box.height;
-                if (intersectArea / faceArea > 0.7) { faceInside = true; break; }
+                // Verifikasi bahwa face, dan landmark lengkap (termasuk mata/mulut di dalam area)
+                if (intersectArea / faceArea > 0.7 && landmarks.getMouth() && landmarks.getLeftEye()) { 
+                  faceInside = true; 
+                  break; 
+                }
               }
             }
+            
             if (faceInside) {
               if (!faceDetected) {
                 faceDetected = true;
-                faceStatusDiv.innerHTML = "✅ Wajah terdeteksi dalam area! Mengirim presensi...";
+                faceStatusDiv.innerHTML = "✅ Wajah tersinkronisasi! Mengirim presensi...";
                 faceStatusDiv.classList.add('detection-success');
                 if (!autoSubmitTriggered) {
                   autoSubmitTriggered = true;
                   if (detectionInterval) clearInterval(detectionInterval);
-                  captureAndSubmit();
+                  // Tambahkan sedikit penundaan agar user melihat indikator sinkronisasi menyala
+                  setTimeout(() => captureAndSubmit(), 400);
                 }
               } else {
-                faceStatusDiv.innerHTML = "✅ Wajah dalam area - siap kirim";
+                faceStatusDiv.innerHTML = "✅ Mata & Mulut tersinkronisasi - siap kirim";
               }
             } else {
               faceDetected = false;
-              faceStatusDiv.innerHTML = "⚠️ Posisikan wajah di dalam border!";
+              faceStatusDiv.innerHTML = "⚠️ Posisikan wajah, mata, dan mulut dalam border!";
               faceStatusDiv.classList.add('detection-warning');
             }
           } else {
@@ -2034,7 +1973,7 @@
             faceStatusDiv.classList.add('detection-warning');
           }
         } catch (err) { console.error("Face detection error:", err); }
-      }, 500);
+      }, 300); // Dipercepat untuk sinkronisasi gerakan yang lebih mulus (300ms)
     }
     
     async function captureAndSubmit() {
@@ -2100,16 +2039,9 @@
       document.getElementById('gpsDot').classList.remove('active');
     }
     
-    // ==================== DESKTOP BLOCKER ====================
+    // ==================== DESKTOP BLOCKER (BYPASSED) ====================
     function checkDevice() {
-      const userAgent = navigator.userAgent;
-      const isDesktop = ['Windows', 'Mac OS', 'Linux'].some(os => userAgent.includes(os));
-      const isMobile = ['Android', 'iPhone', 'iPad', 'iPod'].some(os => userAgent.includes(os));
-      if (isDesktop && !isMobile) {
-        document.getElementById('desktopBlocker').style.display = 'flex';
-        document.body.classList.add('desktop-blocked');
-        return false;
-      }
+      // By pass desktop blocker agar bisa diakses menggunakan laptop/PC
       return true;
     }
     
