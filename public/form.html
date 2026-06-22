@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Face-api.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js">
+  </script>
   <style>
     /* ==================== FAKE GPS BLOCKER STYLES ==================== */
     #fakeGPSBlocker {
@@ -41,13 +42,27 @@
       font-size: 5rem;
       color: #f44336;
       margin-bottom: 20px;
-      animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) infinite;
+      animation: shake 0.8s cubic-bezier(.36, .07, .19, .97) infinite;
     }
 
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-      20%, 40%, 60%, 80% { transform: translateX(10px); }
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+      10%,
+      30%,
+      50%,
+      70%,
+      90% {
+        transform: translateX(-10px);
+      }
+      20%,
+      40%,
+      60%,
+      80% {
+        transform: translateX(10px);
+      }
     }
 
     .fakegps-title {
@@ -190,12 +205,12 @@
       transition: opacity 0.8s ease-out;
       overflow: hidden;
     }
-    
+
     #splashScreen.hide {
       opacity: 0;
       pointer-events: none;
     }
-    
+
     .splash-content {
       text-align: center;
       display: flex;
@@ -203,7 +218,7 @@
       align-items: center;
       justify-content: center;
     }
-    
+
     .splash-logo-container {
       width: 180px;
       height: 180px;
@@ -214,25 +229,34 @@
       animation: zoomIn 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       transform-origin: center;
     }
-    
+
     .splash-logo {
       width: 100%;
       height: 100%;
       object-fit: contain;
       filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
     }
-    
+
     @keyframes zoomIn {
-      0% { transform: scale(0.1); opacity: 0; }
-      70% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
+      0% {
+        transform: scale(0.1);
+        opacity: 0;
+      }
+      70% {
+        transform: scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
-    
+
     .splash-text-container {
       overflow: hidden;
       margin-top: 20px;
     }
-    
+
     .splash-text {
       color: white;
       font-size: 2.4rem;
@@ -243,7 +267,7 @@
       animation: fadeInUp 1s ease-out 1.2s forwards;
       transform: translateY(20px);
     }
-    
+
     .splash-subtext {
       color: rgba(255, 255, 255, 0.9);
       font-size: 1.2rem;
@@ -251,7 +275,7 @@
       opacity: 0;
       animation: fadeIn 1s ease-out 1.5s forwards;
     }
-    
+
     .progress-container {
       width: 240px;
       height: 8px;
@@ -263,7 +287,7 @@
       animation: fadeIn 0.8s ease-out 1.8s forwards;
       position: relative;
     }
-    
+
     .progress-bar {
       height: 100%;
       width: 0%;
@@ -271,7 +295,7 @@
       border-radius: 4px;
       animation: progress 3s ease-in-out forwards;
     }
-    
+
     .progress-pulse {
       position: absolute;
       top: 0;
@@ -283,28 +307,36 @@
       animation: pulse 1.5s infinite;
       opacity: 0;
     }
-    
+
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
-    
+
     @keyframes fadeInUp {
-      from { 
+      from {
         opacity: 0;
         transform: translateY(20px);
       }
-      to { 
+      to {
         opacity: 1;
         transform: translateY(0);
       }
     }
-    
+
     @keyframes progress {
-      0% { width: 0%; }
-      100% { width: 100%; }
+      0% {
+        width: 0%;
+      }
+      100% {
+        width: 100%;
+      }
     }
-    
+
     @keyframes pulse {
       0% {
         transform: translateX(0) scaleX(1);
@@ -315,7 +347,7 @@
         opacity: 0;
       }
     }
-    
+
     body.splash-active {
       overflow: hidden;
     }
@@ -438,6 +470,44 @@
       transition: width 0.5s ease;
     }
 
+    /* ====== TAMBAHAN: KONFIRMASI KEBERSEDIAAN DI LUAR RADIUS ====== */
+    .radius-confirmation-box {
+      background: #f0f7ff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 16px 0 12px 0;
+      border-left: 4px solid #4361ee;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: background 0.2s ease;
+    }
+    .radius-confirmation-box.checked {
+      background: #e8f5e9;
+      border-left-color: #2e7d32;
+    }
+    .radius-confirmation-box input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      margin-top: 1px;
+      cursor: pointer;
+      accent-color: #4361ee;
+      flex-shrink: 0;
+    }
+    .radius-confirmation-box label {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #1e293b;
+      cursor: pointer;
+      font-weight: 500;
+      user-select: none;
+    }
+    .radius-confirmation-box .highlight {
+      color: #d32f2f;
+      font-weight: 600;
+    }
+
     .radius-warning-footer {
       display: flex;
       border-top: 1px solid #EEE;
@@ -467,8 +537,22 @@
       border-left: 1px solid #EEE;
     }
 
+    .radius-warning-btn.continue:disabled {
+      color: #b0b0b0;
+      cursor: not-allowed;
+      background: #f5f5f5;
+    }
+
+    .radius-warning-btn.continue:disabled:hover {
+      background: #f5f5f5;
+    }
+
     .radius-warning-btn:hover {
       background: #F5F5F5;
+    }
+
+    .radius-warning-btn.continue:not(:disabled):hover {
+      background: #e8edff;
     }
 
     /* ==================== PROGRESS PENGIRIMAN PRESENSI (BARU) ==================== */
@@ -499,8 +583,14 @@
     }
 
     @keyframes modalAppear {
-      from { opacity: 0; transform: scale(0.92) translateY(12px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     .progress-icon {
@@ -521,8 +611,12 @@
     }
 
     @keyframes spinProgress {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     .progress-delivery-container h3 {
@@ -687,11 +781,13 @@
       opacity: 0;
       animation: fadeInContent 1s ease-out forwards;
     }
-    
+
     @keyframes fadeInContent {
-      to { opacity: 1; }
+      to {
+        opacity: 1;
+      }
     }
-    
+
     body.desktop-blocked {
       overflow: hidden;
     }
@@ -759,7 +855,8 @@
       font-size: 0.95rem;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: 14px;
       border: 1px solid #e0e0e0;
@@ -769,7 +866,8 @@
       background-color: #f9f9f9;
     }
 
-    input:focus, select:focus {
+    input:focus,
+    select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
@@ -821,7 +919,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     #message {
@@ -881,14 +981,14 @@
       box-shadow: 0 4px 12px rgba(67, 97, 238, 0.08);
       transition: var(--transition);
     }
-    
+
     .attendance-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
-    
+
     .attendance-title {
       display: flex;
       align-items: center;
@@ -896,11 +996,11 @@
       font-weight: 600;
       color: var(--dark);
     }
-    
+
     .attendance-title i {
       font-size: 1.2rem;
     }
-    
+
     .current-time {
       background: var(--primary);
       color: white;
@@ -912,13 +1012,13 @@
       align-items: center;
       gap: 6px;
     }
-    
+
     .time-slots {
       display: flex;
       gap: 15px;
       flex-wrap: wrap;
     }
-    
+
     .time-slot {
       flex: 1;
       min-width: 140px;
@@ -929,7 +1029,7 @@
       position: relative;
       overflow: hidden;
     }
-    
+
     .time-slot::after {
       content: '';
       position: absolute;
@@ -938,31 +1038,31 @@
       width: 100%;
       height: 4px;
     }
-    
+
     .time-slot.datang::after {
       background: linear-gradient(90deg, #4caf50, #8bc34a);
     }
-    
+
     .time-slot.pulang::after {
       background: linear-gradient(90deg, #2196f3, #03a9f4);
     }
-    
+
     .time-slot.active {
       transform: translateY(-5px);
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
       border-color: transparent;
     }
-    
+
     .time-slot.active.datang {
       background: linear-gradient(to bottom, rgba(76, 175, 80, 0.05), white);
       border: 1px solid rgba(76, 175, 80, 0.3);
     }
-    
+
     .time-slot.active.pulang {
       background: linear-gradient(to bottom, rgba(33, 150, 243, 0.05), white);
       border: 1px solid rgba(33, 150, 243, 0.3);
     }
-    
+
     .slot-header {
       display: flex;
       align-items: center;
@@ -971,38 +1071,38 @@
       margin-bottom: 10px;
       font-weight: 600;
     }
-    
+
     .slot-header.datang {
       color: #4caf50;
     }
-    
+
     .slot-header.pulang {
       color: #2196f3;
     }
-    
+
     .slot-time {
       font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: 5px;
     }
-    
+
     .slot-status {
       font-size: 0.85rem;
       padding: 4px 10px;
       border-radius: 20px;
       display: inline-block;
     }
-    
+
     .status-active {
       background: rgba(76, 175, 80, 0.15);
       color: #2e7d32;
     }
-    
+
     .status-inactive {
       background: rgba(158, 158, 158, 0.15);
       color: #616161;
     }
-    
+
     .slot-description {
       font-size: 0.85rem;
       color: var(--gray);
@@ -1035,8 +1135,14 @@
     }
 
     @keyframes modal-appear {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .modal-content i {
@@ -1189,7 +1295,7 @@
       justify-content: center;
       display: none;
     }
-    
+
     .success-content {
       background: white;
       padding: 30px;
@@ -1200,44 +1306,56 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       animation: scaleIn 0.5s ease-out;
     }
-    
+
     @keyframes scaleIn {
-      from { transform: scale(0.8); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
-    
+
     .success-icon {
       font-size: 5rem;
       color: #28a745;
       margin-bottom: 20px;
       animation: pulse 1.5s infinite;
     }
-    
+
     @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
     }
-    
+
     .success-title {
       font-size: 1.8rem;
       margin-bottom: 15px;
       color: #28a745;
     }
-    
+
     .success-message {
       font-size: 1.1rem;
       margin-bottom: 25px;
       color: #333;
     }
-    
+
     .countdown {
       font-size: 1.2rem;
       font-weight: bold;
       color: #4361ee;
       margin-top: 20px;
     }
-    
+
     .progress-container {
       width: 100%;
       height: 10px;
@@ -1246,7 +1364,7 @@
       margin-top: 20px;
       overflow: hidden;
     }
-    
+
     .countdown-bar {
       height: 100%;
       width: 100%;
@@ -1254,10 +1372,14 @@
       border-radius: 5px;
       animation: countdown 5s linear forwards;
     }
-    
+
     @keyframes countdown {
-      0% { width: 100%; }
-      100% { width: 0%; }
+      0% {
+        width: 100%;
+      }
+      100% {
+        width: 0%;
+      }
     }
 
     /* GPS Tracking Indicator */
@@ -1285,9 +1407,15 @@
     }
 
     @keyframes pulseDot {
-      0% { transform: scale(0.8); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(0.8); }
+      0% {
+        transform: scale(0.8);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(0.8);
+      }
     }
 
     /* Image Preview Styles */
@@ -1296,7 +1424,7 @@
       display: none;
     }
     .mirror-mode {
-       transform: scaleX(-1);
+      transform: scaleX(-1);
     }
     .image-preview {
       max-width: 100%;
@@ -1322,11 +1450,11 @@
       font-weight: 600;
       color: var(--primary);
     }
-    
+
     .location-info h3 i {
       font-size: 1.2rem;
     }
-    
+
     .location-coords {
       font-family: monospace;
       background: #f0f4ff;
@@ -1335,25 +1463,25 @@
       margin-top: 5px;
       font-size: 0.9rem;
     }
-    
+
     .distance-info {
       margin-top: 15px;
       padding-top: 15px;
       border-top: 1px dashed #ddd;
     }
-    
+
     #distanceDisplay {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 0.95rem;
     }
-    
+
     #distanceValue {
       font-weight: 600;
       color: var(--primary);
     }
-    
+
     #radiusValue {
       font-weight: 600;
       color: var(--secondary);
@@ -1405,9 +1533,18 @@
       ry: 20;
     }
     @keyframes borderPulse {
-      0% { stroke: #00ffcc; stroke-width: 4; }
-      50% { stroke: #ffcc00; stroke-width: 6; }
-      100% { stroke: #00ffcc; stroke-width: 4; }
+      0% {
+        stroke: #00ffcc;
+        stroke-width: 4;
+      }
+      50% {
+        stroke: #ffcc00;
+        stroke-width: 6;
+      }
+      100% {
+        stroke: #00ffcc;
+        stroke-width: 4;
+      }
     }
     .face-detection-status {
       position: absolute;
@@ -1415,7 +1552,7 @@
       left: 0;
       right: 0;
       text-align: center;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       color: white;
       padding: 6px;
       font-size: 0.8rem;
@@ -1428,10 +1565,10 @@
       backdrop-filter: blur(4px);
     }
     .detection-success {
-      background: rgba(40,167,69,0.8);
+      background: rgba(40, 167, 69, 0.8);
     }
     .detection-warning {
-      background: rgba(255,193,7,0.8);
+      background: rgba(255, 193, 7, 0.8);
       color: #000;
     }
 
@@ -1443,11 +1580,11 @@
       h1 {
         font-size: 1.5rem;
       }
-      
+
       .time-slots {
         flex-direction: column;
       }
-      
+
       .time-slot {
         min-width: 100%;
       }
@@ -1459,20 +1596,20 @@
       .modal-btn {
         width: 100%;
       }
-      
+
       .splash-text {
         font-size: 1.8rem;
       }
-      
+
       .splash-logo-container {
         width: 140px;
         height: 140px;
       }
-      
+
       .splash-text {
         font-size: 1.8rem;
       }
-      
+
       .splash-subtext {
         font-size: 1rem;
       }
@@ -1489,17 +1626,24 @@
       .success-title {
         font-size: 1.5rem;
       }
-      
+
       .fakegps-content {
         padding: 20px;
       }
-      
+
       .fakegps-title {
         font-size: 1.5rem;
       }
-      
+
       .face-border svg {
         width: 85%;
+      }
+
+      .radius-confirmation-box {
+        padding: 12px 14px;
+      }
+      .radius-confirmation-box label {
+        font-size: 0.85rem;
       }
     }
   </style>
@@ -1511,14 +1655,14 @@
       <i class="fas fa-ban fakegps-icon"></i>
       <h2 class="fakegps-title">PEMALSUAN LOKASI TERDETEKSI!</h2>
       <p class="fakegps-message">Sistem mendeteksi penggunaan aplikasi pemalsu lokasi (Fake GPS) yang dilarang dalam presensi.</p>
-      
+
       <div class="fakegps-warning">
         <i class="fas fa-exclamation-triangle"></i>
         <div>
           <strong>Peringatan:</strong> Penggunaan aplikasi seperti Fake GPS, GPS Emulator, atau alat pemalsu lokasi lainnya merupakan pelanggaran berat terhadap aturan presensi.
         </div>
       </div>
-      
+
       <div class="fakegps-instructions">
         <i class="fas fa-info-circle"></i>
         <div>
@@ -1531,27 +1675,27 @@
           </ol>
         </div>
       </div>
-      
+
       <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 15px;">
         <i class="fas fa-sync-alt"></i> Muat Ulang Halaman
       </button>
-      
+
       <p class="fakegps-footer">
         Ⓨ 2026 Sistem Presensi Pegawai .
       </p>
     </div>
   </div>
-  
+
   <!-- Desktop Blocker -->
   <div id="desktopBlocker">
     <div class="blocker-content">
       <i class="fas fa-lock blocker-icon"></i>
       <h2 class="blocker-title">Akses Dibatasi</h2>
       <p class="blocker-message">
-        Aplikasi Presensi Pegawai Korwil  hanya dapat diakses melalui perangkat mobile (Smartphone).
+        Aplikasi Presensi Pegawai Korwil hanya dapat diakses melalui perangkat mobile (Smartphone).
         Silakan gunakan smartphone Android atau iPhone Anda untuk melakukan presensi.
       </p>
-      
+
       <div class="device-icons">
         <div class="device-icon">
           <i class="fab fa-android"></i>
@@ -1562,40 +1706,41 @@
           <span>iPhone</span>
         </div>
       </div>
-      
+
       <p class="blocker-footer">
-        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil . 
+        Ⓨ 2026 Sistem Presensi Pegawai - Team Korwil .
+      </p>
     </div>
   </div>
-  
+
   <!-- Splash Screen -->
   <div id="splashScreen">
     <div class="splash-content">
       <div class="splash-logo-container">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" 
-             alt="Logo E-Presensi" class="splash-logo">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png"
+        alt="Logo E-Presensi" class="splash-logo">
       </div>
-      
+
       <div class="splash-text-container">
         <h1 class="splash-text">E-Presensi Korwil </h1>
         <p class="splash-subtext">Sistem Presensi Pegawai</p>
         <p class="splash-subtext">Tahun 2026</p>
         <p class="splash-subtext">Memuat Presensi</p>
       </div>
-      
+
       <div class="progress-container">
         <div class="progress-bar"></div>
         <div class="progress-pulse"></div>
       </div>
     </div>
   </div>
-  
+
   <!-- Notifikasi Logout -->
   <div id="logoutNotification" class="logout-notification">
     <i class="fas fa-check-circle"></i>
     <span>Anda berhasil logout</span>
   </div>
-  
+
   <!-- Modal Konfirmasi Logout -->
   <div id="logoutModal" class="modal">
     <div class="modal-content">
@@ -1608,7 +1753,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- GPS Blocker -->
   <div id="gpsBlocker" class="gps-blocker">
     <i class="fas fa-location-slash"></i>
@@ -1618,7 +1763,7 @@
       <i class="fas fa-sync-alt"></i> Muat Ulang Halaman
     </button>
   </div>
-  
+
   <!-- Notifikasi Jam Presensi -->
   <div id="timeNotification" class="time-notification">
     <i class="fas fa-clock"></i>
@@ -1628,7 +1773,7 @@
       <i class="fas fa-times"></i> Tutup
     </button>
   </div>
-  
+
   <!-- Popup Sukses Presensi -->
   <div id="successPopup">
     <div class="success-content">
@@ -1642,7 +1787,7 @@
     </div>
   </div>
 
-  <!-- Improved Radius Warning Popup -->
+  <!-- ====== RADIUS WARNING POPUP dengan KONFIRMASI KEBERSEDIAAN ====== -->
   <div id="radiusWarningPopup">
     <div class="radius-warning-container">
       <div class="radius-warning-header">
@@ -1651,7 +1796,7 @@
       </div>
       <div class="radius-warning-body">
         <p class="radius-warning-text" id="radiusWarningText">Anda berada di luar radius yang ditentukan.</p>
-        
+
         <div class="radius-details">
           <div class="radius-detail-item">
             <div class="radius-detail-icon">
@@ -1672,7 +1817,7 @@
             <span id="warningRadius">-</span>
           </div>
         </div>
-        
+
         <div class="radius-progress-container">
           <div class="radius-progress-label">
             <span>Jarak Anda</span>
@@ -1682,12 +1827,22 @@
             <div class="radius-progress-fill" id="radiusProgressFill"></div>
           </div>
         </div>
+
+        <!-- ====== TAMBAHAN: KOTAK KONFIRMASI KEBERSEDIAAN ====== -->
+        <div class="radius-confirmation-box" id="radiusConfirmBox">
+          <input type="checkbox" id="radiusConfirmCheck">
+          <label for="radiusConfirmCheck">
+            Saya menyatakan <span class="highlight">KEBERSEDIAAN</span> bahwa presensi ini akan
+            <span class="highlight">terekam di luar lingkup area sekolah / lembaga</span>
+            dan saya bertanggung jawab penuh atas presensi ini.
+          </label>
+        </div>
       </div>
       <div class="radius-warning-footer">
         <button class="radius-warning-btn cancel" onclick="cancelPresensi()">
           <i class="fas fa-times"></i> Batalkan
         </button>
-        <button class="radius-warning-btn continue" onclick="continuePresensi()">
+        <button class="radius-warning-btn continue" id="radiusContinueBtn" onclick="continuePresensi()" disabled>
           <i class="fas fa-check"></i> Lanjutkan
         </button>
       </div>
@@ -1746,7 +1901,7 @@
         <input type="hidden" name="clientTime" id="clientTime">
         <input type="hidden" name="timeDrift" id="timeDrift">
         <input type="hidden" name="lastPresensiTime" id="lastPresensiTime">
-        
+
         <div class="attendance-notification">
           <div class="attendance-header">
             <div class="attendance-title">
@@ -1758,7 +1913,7 @@
               <span id="currentTime">00:00:00 WIB</span>
             </div>
           </div>
-          
+
           <div class="time-slots">
             <div class="time-slot datang" data-type="Datang">
               <div class="slot-header datang">
@@ -1769,7 +1924,7 @@
               <div class="slot-status status-inactive">Tidak Aktif</div>
               <div class="slot-description">Presensi masuk Pegawai</div>
             </div>
-            
+
             <div class="time-slot pulang" data-type="Pulang">
               <div class="slot-header pulang">
                 <i class="fas fa-sign-out-alt"></i>
@@ -1798,7 +1953,7 @@
             <div class="mb-1">1. Foto harus Jelas Menampilkan Pegawai Yang Melakukan Presensi.</div>
             <div> 2. Hindari Foto background alam (pohon, dinding, pemandangan)</div>
           </div>
-          
+
           <div id="cameraPreview" style="margin: 15px 0; display: none;">
             <div class="camera-container">
               <video id="video" autoplay playsinline style="width: 100%; border-radius: 12px; background: #000;"></video>
@@ -1811,10 +1966,10 @@
               <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
             </div>
           </div>
-          
+
           <canvas id="canvas" style="display: none;"></canvas>
           <input type="hidden" id="photoData" name="photoData">
-          
+
           <div id="imagePreviewContainer" class="image-preview-container">
             <img id="imagePreview" class="image-preview">
             <button id="retakeBtn" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
@@ -1859,7 +2014,7 @@
   <script>
     const PROXY_URL = '/api/proxy';
     let bypassRadiusCheck = false;
-    
+
     // Elemen kamera
     const video = document.getElementById('video');
     const photoData = document.getElementById('photoData');
@@ -1869,7 +2024,7 @@
     const retakeBtn = document.getElementById('retakeBtn');
     const faceStatusDiv = document.getElementById('faceStatus');
     const faceOverlay = document.getElementById('faceOverlay');
-    
+
     let stream = null;
     let detectionInterval = null;
     let faceDetected = false;
@@ -1879,6 +2034,22 @@
 
     // Counter untuk jumlah blokir/pemblokiran absen berturut-turut
     let presensiBlockedCount = 0;
+
+    // ====== ELEMEN KONFIRMASI RADIUS ======
+    const radiusConfirmCheck = document.getElementById('radiusConfirmCheck');
+    const radiusContinueBtn = document.getElementById('radiusContinueBtn');
+    const radiusConfirmBox = document.getElementById('radiusConfirmBox');
+
+    // Event listener untuk checkbox konfirmasi
+    radiusConfirmCheck.addEventListener('change', function() {
+      const checked = this.checked;
+      radiusContinueBtn.disabled = !checked;
+      if (checked) {
+        radiusConfirmBox.classList.add('checked');
+      } else {
+        radiusConfirmBox.classList.remove('checked');
+      }
+    });
 
     // ========== PROGRESS MENU CONTROL ==========
     const progressModal = document.getElementById('progressDeliveryModal');
@@ -1933,7 +2104,8 @@
     async function loadFaceModels() {
       try {
         faceStatusDiv.innerHTML = "🔄 Memuat model deteksi wajah...";
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+          'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights');
         modelsLoaded = true;
         faceStatusDiv.innerHTML = "✅ Silahkan posisikan wajah di dalam border";
         faceStatusDiv.classList.remove('detection-warning');
@@ -1946,7 +2118,7 @@
         return false;
       }
     }
-    
+
     function dataURLtoBlob(dataUrl) {
       const arr = dataUrl.split(',');
       const mime = arr[0].match(/:(.*?);/)[1];
@@ -1956,7 +2128,7 @@
       while (n--) u8arr[n] = bstr.charCodeAt(n);
       return new Blob([u8arr], { type: mime });
     }
-    
+
     async function startCamera() {
       try {
         const constraints = {
@@ -1975,7 +2147,7 @@
         faceStatusDiv.innerHTML = "❌ Kamera tidak dapat diakses";
       }
     }
-    
+
     function startFaceDetection() {
       if (detectionInterval) clearInterval(detectionInterval);
       detectionInterval = setInterval(async () => {
@@ -1986,14 +2158,15 @@
           overlayCtx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
           faceOverlay.width = video.videoWidth;
           faceOverlay.height = video.videoHeight;
-          
+
           const hasFace = detections.length > 0;
           if (hasFace) {
             const videoRect = { width: video.videoWidth, height: video.videoHeight };
             const borderMarginX = videoRect.width * 0.15;
             const borderMarginY = videoRect.height * 0.15;
             const borderBox = {
-              x: borderMarginX, y: borderMarginY,
+              x: borderMarginX,
+              y: borderMarginY,
               width: videoRect.width - (borderMarginX * 2),
               height: videoRect.height - (borderMarginY * 2)
             };
@@ -2036,7 +2209,7 @@
         } catch (err) { console.error("Face detection error:", err); }
       }, 500);
     }
-    
+
     async function captureAndSubmit() {
       const captureCanvas = document.createElement('canvas');
       const ctx = captureCanvas.getContext('2d');
@@ -2049,13 +2222,14 @@
       photoData.value = dataUrl;
       imagePreview.src = dataUrl;
       imagePreviewContainer.style.display = 'block';
-      if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+      if (stream) { stream.getTracks().forEach(track => track.stop());
+        stream = null; }
       cameraPreview.style.display = 'none';
       const blob = dataURLtoBlob(dataUrl);
-      window.capturedFile = new File([blob], "presensi.jpg", {type: 'image/jpeg'});
+      window.capturedFile = new File([blob], "presensi.jpg", { type: 'image/jpeg' });
       submitPresensiForm();
     }
-    
+
     retakeBtn.addEventListener('click', function() {
       imagePreviewContainer.style.display = 'none';
       cameraPreview.style.display = 'block';
@@ -2063,7 +2237,7 @@
       autoSubmitTriggered = false;
       faceDetected = false;
     });
-    
+
     // ==================== FAKE GPS DETECTION ====================
     function detectFakeGPS(position) {
       if (typeof position.mocked !== 'undefined' && position.mocked) return true;
@@ -2081,17 +2255,17 @@
       if (position.coords.speed !== null && position.coords.speed * 3.6 > 200) return true;
       return false;
     }
-    
+
     function calculateDistance(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
-      const φ1 = lat1 * Math.PI/180;
-      const φ2 = lat2 * Math.PI/180;
-      const Δφ = (lat2-lat1) * Math.PI/180;
-      const Δλ = (lon2-lon1) * Math.PI/180;
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
-    
+
     function showFakeGPSBlocker() {
       document.getElementById('fakeGPSBlocker').style.display = 'flex';
       document.getElementById('latitude').value = '';
@@ -2099,7 +2273,7 @@
       document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-ban" style="color: #f44336;"></i> Lokasi palsu terdeteksi!';
       document.getElementById('gpsDot').classList.remove('active');
     }
-    
+
     // ==================== DESKTOP BLOCKER ====================
     function checkDevice() {
       const userAgent = navigator.userAgent;
@@ -2112,7 +2286,7 @@
       }
       return true;
     }
-    
+
     // ==================== SPLASH SCREEN ====================
     document.addEventListener('DOMContentLoaded', function() {
       if (!checkDevice()) return;
@@ -2127,29 +2301,30 @@
         }, 800);
       }, 3000);
     });
-    
+
     // ==================== PRESENSI TIME CONFIGURATION ====================
     function isFriday() {
       const now = new Date();
       const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
       return wibTime.getDay() === 5;
     }
-    
+
     function getPresensiParams() {
-      const datangStart = 0.0, datangEnd = 8.0;
+      const datangStart = 0.0,
+        datangEnd = 8.0;
       let pulangStart = 15.0;
       const pulangEnd = 18.5;
       if (isFriday()) pulangStart = 14.5;
       return { datangStart, datangEnd, pulangStart, pulangEnd };
     }
-    
+
     function updateSlotTimesDisplay() {
       const pulangSlot = document.querySelector('.time-slot.pulang .slot-time');
       if (pulangSlot) pulangSlot.textContent = isFriday() ? '14:30 - 16:30' : '15:00 - 16:30';
       const datangSlot = document.querySelector('.time-slot.datang .slot-time');
       if (datangSlot) datangSlot.textContent = '06:00 - 07:00';
     }
-    
+
     function updateAttendanceStatus() {
       const now = new Date();
       const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
@@ -2182,7 +2357,7 @@
         pulangStatus.className = 'slot-status status-inactive';
       }
     }
-    
+
     function isValidPresensiTime() {
       const now = new Date();
       const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
@@ -2190,19 +2365,21 @@
       const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams();
       return (hours >= datangStart && hours < datangEnd) || (hours >= pulangStart && hours < pulangEnd);
     }
-    
+
     function checkPresensiTime() {
       const now = new Date();
       const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
       const hours = wibTime.getHours() + (wibTime.getMinutes() / 60);
-      const currentTime = `${wibTime.getHours().toString().padStart(2,'0')}:${wibTime.getMinutes().toString().padStart(2,'0')} WIB`;
+      const currentTime =
+        `${wibTime.getHours().toString().padStart(2,'0')}:${wibTime.getMinutes().toString().padStart(2,'0')} WIB`;
       const timeNotification = document.getElementById('timeNotification');
       const text = document.getElementById('timeNotificationText');
       const { datangStart, datangEnd, pulangStart, pulangEnd } = getPresensiParams();
       if (isValidPresensiTime()) {
         timeNotification.classList.remove('show');
       } else {
-        if (hours < datangStart) text.innerHTML = `Saat ini pukul ${currentTime}. Presensi Datang: 06.00 - 07.00 WIB.`;
+        if (hours < datangStart) text.innerHTML =
+          `Saat ini pukul ${currentTime}. Presensi Datang: 06.00 - 07.00 WIB.`;
         else if (hours >= datangEnd && hours < pulangStart) {
           let pulangInfo = isFriday() ? '14.30 - 16.30 WIB' : '15.00 - 16.30 WIB';
           text.innerHTML = `Saat ini pukul ${currentTime}. Presensi Pulang ${pulangInfo}.`;
@@ -2210,12 +2387,12 @@
         timeNotification.classList.add('show');
       }
     }
-    
+
     async function initializeApp() {
       document.getElementById('logoutButton').addEventListener('click', showLogoutModal);
       document.querySelector('.modal-btn.cancel').addEventListener('click', closeModal);
       document.querySelector('.modal-btn.logout').addEventListener('click', confirmLogout);
-      
+
       const lastPresensi = localStorage.getItem('lastPresensi');
       if (lastPresensi) document.getElementById('lastPresensiTime').value = lastPresensi;
       let timeDrift = 0;
@@ -2225,16 +2402,17 @@
         timeDrift = (now - lastTime) / (1000 * 60);
       }
       document.getElementById('timeDrift').value = timeDrift;
-      
+
       document.getElementById('presensiForm').addEventListener('submit', e => e.preventDefault());
-      
+
       const urlParams = new URLSearchParams(window.location.search);
       let sessionId = urlParams.get('session') || localStorage.getItem('sessionId');
-      if (!sessionId) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); return; }
-      
+      if (!sessionId) { alert('Sesi tidak valid. Silakan login kembali.');
+        logout(); return; }
+
       document.getElementById('sessionId').value = sessionId;
       localStorage.setItem('sessionId', sessionId);
-      
+
       try {
         const response = await fetch(`${PROXY_URL}?action=getSession`, {
           method: 'POST',
@@ -2243,12 +2421,12 @@
         });
         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
         const userData = await response.json();
-        if (!userData) { alert('Sesi tidak valid. Silakan login kembali.'); logout(); }
-        else {
+        if (!userData) { alert('Sesi tidak valid. Silakan login kembali.');
+          logout(); } else {
           // Pastikan koordinat lembaga menggunakan titik (bukan koma)
           userData.lembagaLatitude = String(userData.lembagaLatitude).replace(/,/g, '.');
           userData.lembagaLongitude = String(userData.lembagaLongitude).replace(/,/g, '.');
-          
+
           localStorage.setItem('sessionData', JSON.stringify(userData));
           document.getElementById('namaLembaga').value = userData.namaLembaga;
           document.getElementById('namaPegawai').value = userData.namaPegawai;
@@ -2260,7 +2438,8 @@
           setInterval(updateCurrentTime, 1000);
           updateSlotTimesDisplay();
           updateAttendanceStatus();
-          setInterval(() => { updateAttendanceStatus(); updateSlotTimesDisplay(); }, 60000);
+          setInterval(() => { updateAttendanceStatus();
+            updateSlotTimesDisplay(); }, 60000);
           startLocationTracking();
           setInterval(checkPresensiTime, 60000);
           checkPresensiTime();
@@ -2272,7 +2451,7 @@
         logout();
       }
     }
-    
+
     function updateDistanceDisplay(userLat, userLon, lembagaLat, lembagaLon, radius) {
       if (userLat && userLon && lembagaLat && lembagaLon) {
         const distance = calculateDistance(userLat, userLon, lembagaLat, lembagaLon);
@@ -2282,7 +2461,7 @@
       }
       return 0;
     }
-    
+
     function startLocationTracking() {
       const gpsStatus = document.getElementById('gpsStatus');
       const gpsDot = document.getElementById('gpsDot');
@@ -2302,9 +2481,9 @@
             document.getElementById('longitude').value = lonStr;
             const sessionData = JSON.parse(localStorage.getItem('sessionData'));
             if (sessionData) {
-              updateDistanceDisplay(parseFloat(latStr), parseFloat(lonStr), 
-                parseFloat(sessionData.lembagaLatitude), 
-                parseFloat(sessionData.lembagaLongitude), 
+              updateDistanceDisplay(parseFloat(latStr), parseFloat(lonStr),
+                parseFloat(sessionData.lembagaLatitude),
+                parseFloat(sessionData.lembagaLongitude),
                 parseFloat(sessionData.lembagaRadius));
             }
             gpsStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Lokasi berhasil didapatkan';
@@ -2320,27 +2499,29 @@
               gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Error: ' + error.message;
               gpsDot.classList.remove('active');
             }
-          },
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+          }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
       } else {
         gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Geolocation tidak didukung.';
       }
     }
-    
+
     function updateCurrentTime() {
       const now = new Date();
       const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
-      const hours = wibTime.getHours().toString().padStart(2,'0');
-      const minutes = wibTime.getMinutes().toString().padStart(2,'0');
-      const seconds = wibTime.getSeconds().toString().padStart(2,'0');
+      const hours = wibTime.getHours().toString().padStart(2, '0');
+      const minutes = wibTime.getMinutes().toString().padStart(2, '0');
+      const seconds = wibTime.getSeconds().toString().padStart(2, '0');
       document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds} WIB`;
     }
-    
+
     function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+
     function closeModal() { document.getElementById('logoutModal').style.display = 'none'; }
-    function confirmLogout() { closeModal(); logout(); }
-    
+
+    function confirmLogout() { closeModal();
+      logout(); }
+
     async function logout() {
       const sessionId = localStorage.getItem('sessionId');
       const logoutBtn = document.getElementById('logoutButton');
@@ -2350,8 +2531,8 @@
       if (detectionInterval) clearInterval(detectionInterval);
       if (stream) stream.getTracks().forEach(track => track.stop());
       if (sessionId) {
-        try { await fetch(`${PROXY_URL}?action=logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) }); }
-        catch (err) { console.error('Logout error:', err); }
+        try { await fetch(`${PROXY_URL}?action=logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }) }); } catch (err) { console.error('Logout error:', err); }
       }
       const notification = document.getElementById('logoutNotification');
       notification.classList.add('show');
@@ -2359,9 +2540,9 @@
       localStorage.removeItem('sessionData');
       setTimeout(() => window.location.href = 'https://www.yoriapp.site/presensi', 2000);
     }
-    
+
     function closeTimeNotification() { document.getElementById('timeNotification').classList.remove('show'); }
-    
+
     function compressImage(file, callback) {
       updateProgressMenu("Mengompres foto ...", 45);
       const reader = new FileReader();
@@ -2381,10 +2562,16 @@
       };
       reader.readAsDataURL(file);
     }
-    
+
     function showRadiusConfirmation(distance, radius, namaLembaga) {
+      // Reset checkbox dan tombol
+      radiusConfirmCheck.checked = false;
+      radiusContinueBtn.disabled = true;
+      radiusConfirmBox.classList.remove('checked');
+
       const progressPercent = Math.min(100, (distance / radius) * 100);
-      document.getElementById('radiusWarningText').innerHTML = `Anda berada ${distance.toFixed(2)}m dari ${namaLembaga} (radius: ${radius}m). Tetap lanjutkan?`;
+      document.getElementById('radiusWarningText').innerHTML =
+        `Anda berada ${distance.toFixed(2)}m dari ${namaLembaga} (radius: ${radius}m). Tetap lanjutkan?`;
       document.getElementById('warningLembaga').textContent = namaLembaga;
       document.getElementById('warningDistance').textContent = `Jarak: ${distance.toFixed(2)} meter`;
       document.getElementById('warningRadius').textContent = `Radius yang diizinkan: ${radius} meter`;
@@ -2392,19 +2579,34 @@
       setTimeout(() => document.getElementById('radiusProgressFill').style.width = `${progressPercent}%`, 100);
       document.getElementById('radiusWarningPopup').style.display = 'flex';
     }
-    
+
     function continuePresensi() {
+      // Pastikan checkbox sudah dicentang
+      if (!radiusConfirmCheck.checked) {
+        // Tampilkan peringatan singkat
+        radiusConfirmBox.style.borderLeftColor = '#f44336';
+        radiusConfirmBox.style.background = '#fff0f0';
+        setTimeout(() => {
+          radiusConfirmBox.style.borderLeftColor = '#4361ee';
+          radiusConfirmBox.style.background = '#f0f7ff';
+        }, 800);
+        return;
+      }
       document.getElementById('radiusWarningPopup').style.display = 'none';
       bypassRadiusCheck = true;
       submitPresensiForm();
     }
-    
+
     function cancelPresensi() {
       document.getElementById('radiusWarningPopup').style.display = 'none';
       bypassRadiusCheck = false;
+      // Reset checkbox
+      radiusConfirmCheck.checked = false;
+      radiusContinueBtn.disabled = true;
+      radiusConfirmBox.classList.remove('checked');
       if (!autoSubmitTriggered) startCamera();
     }
-    
+
     function showSuccessPopup() {
       presensiBlockedCount = 0;
       const successPopup = document.getElementById('successPopup');
@@ -2418,26 +2620,29 @@
       const countdownInterval = setInterval(() => {
         seconds--;
         countdownText.textContent = `${seconds} detik`;
-        if (seconds <= 0) { clearInterval(countdownInterval); logout(); }
+        if (seconds <= 0) { clearInterval(countdownInterval);
+          logout(); }
       }, 1000);
     }
-    
+
     async function submitPresensiForm() {
       const messageEl = document.getElementById('message');
       messageEl.textContent = '';
       messageEl.className = '';
       messageEl.style.display = 'none';
-      
+
       const clientTimestamp = Date.now();
       document.getElementById('clientTime').value = clientTimestamp;
-      
+
       let latStr = document.getElementById('latitude').value;
       let lonStr = document.getElementById('longitude').value;
       if (!latStr || !lonStr) {
         presensiBlockedCount++;
         const showLogout = (presensiBlockedCount >= 2);
         showErrorPopup('Mohon dapatkan lokasi terlebih dahulu.', showLogout);
-        if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+        if (!autoSubmitTriggered) startCamera();
+        else { autoSubmitTriggered = false;
+          startCamera(); }
         return;
       }
       // Pastikan koordinat menggunakan titik (bukan koma) sebelum parsing
@@ -2445,24 +2650,28 @@
       lonStr = String(lonStr).trim().replace(/,/g, '.');
       const latitude = parseFloat(latStr);
       const longitude = parseFloat(lonStr);
-      
+
       const fileToUpload = window.capturedFile;
       if (!fileToUpload) {
         presensiBlockedCount++;
         const showLogout = (presensiBlockedCount >= 2);
         showErrorPopup('Mohon ambil foto terlebih dahulu.', showLogout);
-        if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+        if (!autoSubmitTriggered) startCamera();
+        else { autoSubmitTriggered = false;
+          startCamera(); }
         return;
       }
-      
+
       if (!isValidPresensiTime()) {
         presensiBlockedCount++;
         const showLogout = (presensiBlockedCount >= 2);
         showErrorPopup('Tidak dapat melakukan presensi di luar jam yang ditentukan.', showLogout);
-        if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+        if (!autoSubmitTriggered) startCamera();
+        else { autoSubmitTriggered = false;
+          startCamera(); }
         return;
       }
-      
+
       if (!bypassRadiusCheck) {
         const sessionData = JSON.parse(localStorage.getItem('sessionData'));
         if (sessionData) {
@@ -2476,12 +2685,13 @@
           }
         }
       } else { bypassRadiusCheck = false; }
-      
+
       faceStatusDiv.innerHTML = "📤 Mengirim presensi...";
       showProgressMenu("Menyiapkan data presensi...", 20);
-      
+
       compressImage(fileToUpload, async function(compressedBlob) {
-        const compressedFile = new File([compressedBlob], 'presensi.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+        const compressedFile = new File([compressedBlob], 'presensi.jpg', { type: 'image/jpeg', lastModified: Date
+            .now() });
         const reader = new FileReader();
         reader.onload = async function(event) {
           const fileData = event.target.result.split(',')[1];
@@ -2500,19 +2710,20 @@
             timeDrift: document.getElementById('timeDrift').value,
             lastPresensiTime: document.getElementById('lastPresensiTime').value
           };
-          
+
           updateProgressMenu("Mengirim data ke server ...", 70);
-          
+
           try {
             const response = await fetch(`${PROXY_URL}?action=presensi`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(formData)
             });
-            if (response.status === 504) { 
+            if (response.status === 504) {
               updateProgressMenu("Server sibuk, presensi tercatat", 100);
-              setTimeout(() => { hideProgressMenu(); showSuccessPopup(); }, 400);
-              return; 
+              setTimeout(() => { hideProgressMenu();
+                showSuccessPopup(); }, 400);
+              return;
             }
             if (!response.ok) throw new Error(`HTTP error ${response.status}`);
             const result = await response.json();
@@ -2528,7 +2739,9 @@
               presensiBlockedCount++;
               const showLogout = (presensiBlockedCount >= 2);
               showErrorPopup(result.message || 'Presensi gagal, silakan coba lagi.', showLogout);
-              if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+              if (!autoSubmitTriggered) startCamera();
+              else { autoSubmitTriggered = false;
+                startCamera(); }
             }
           } catch (error) {
             console.error('Submit error:', error);
@@ -2540,7 +2753,9 @@
               presensiBlockedCount++;
               const showLogout = (presensiBlockedCount >= 2);
               showErrorPopup('Error: ' + error.message, showLogout);
-              if (!autoSubmitTriggered) startCamera(); else { autoSubmitTriggered = false; startCamera(); }
+              if (!autoSubmitTriggered) startCamera();
+              else { autoSubmitTriggered = false;
+                startCamera(); }
             }
           }
         };
