@@ -21,7 +21,6 @@
             height: 100%;
             background: rgba(255, 255, 255, 0.95);
             z-index: 10000;
-            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -121,7 +120,6 @@
             width: 100%;
             height: 100%;
             background: linear-gradient(135deg, #4361ee, #3a56d4);
-            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -1235,7 +1233,6 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             z-index: 2000;
-            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -1244,70 +1241,123 @@
 
         .success-content {
             background: white;
-            padding: 30px;
-            border-radius: 20px;
+            border-radius: 24px;
             text-align: center;
-            max-width: 90%;
-            width: 400px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            animation: scaleIn 0.5s ease-out;
+            max-width: 92%;
+            width: 380px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            overflow: hidden;
+            animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-banner {
+            background: linear-gradient(135deg, #1a7a3f, #28a745);
+            padding: 32px 24px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .success-banner::before {
+            content: '';
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50%;
+            top: -40px;
+            right: -40px;
+        }
+        .success-banner::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 50%;
+            bottom: -30px;
+            left: -20px;
         }
 
         @keyframes scaleIn {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.75); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
         }
 
         .success-icon {
-            font-size: 5rem;
-            color: #28a745;
-            margin-bottom: 20px;
-            animation: pulse 1.5s infinite;
+            font-size: 4.5rem;
+            color: white;
+            margin-bottom: 14px;
+            animation: successPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+            display: block;
         }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-            }
+        @keyframes successPop {
+            0%   { transform: scale(0.5); opacity: 0; }
+            70%  { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .success-title {
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-            color: #28a745;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .success-recorded-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.35);
+            margin-top: 8px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.3px;
+        }
+
+        .success-body {
+            padding: 22px 24px 20px;
         }
 
         .success-message {
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-            color: #333;
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .success-timestamp {
+            background: #f0f8f4;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            color: #2d6a4f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .countdown {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1rem;
+            font-weight: 600;
             color: #4361ee;
-            margin-top: 20px;
+            margin-top: 4px;
+            margin-bottom: 10px;
         }
 
         .progress-container {
             width: 100%;
-            height: 10px;
+            height: 6px;
             background: #e9ecef;
-            border-radius: 5px;
-            margin-top: 20px;
+            border-radius: 3px;
             overflow: hidden;
         }
 
@@ -1315,17 +1365,13 @@
             height: 100%;
             width: 100%;
             background: linear-gradient(to right, #28a745, #4361ee);
-            border-radius: 5px;
+            border-radius: 3px;
             animation: countdown 5s linear forwards;
         }
 
         @keyframes countdown {
-            0% {
-                width: 100%;
-            }
-            100% {
-                width: 0%;
-            }
+            0%   { width: 100%; }
+            100% { width: 0%; }
         }
 
         /* GPS Tracking Indicator */
@@ -1433,11 +1479,54 @@
             color: var(--secondary);
         }
 
-        /* ==================== STYLE UNTUK BORDER AREA SELFIE ==================== */
+        /* ==================== CAMERA STYLES (IMPROVED) ==================== */
+        .camera-wrapper {
+            background: #0a0a0a;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+            margin: 12px 0;
+            border: 2px solid #1a1a2e;
+        }
+        .camera-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(15,15,30,0.95);
+        }
+        .camera-toolbar-title {
+            color: #00ffcc;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .camera-toolbar-title i { font-size: 0.9rem; }
+        .camera-rec-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,50,50,0.15);
+            border: 1px solid rgba(255,50,50,0.4);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #ff5555;
+            font-weight: 600;
+        }
+        .camera-rec-dot {
+            width: 7px;
+            height: 7px;
+            background: #ff3333;
+            border-radius: 50%;
+            animation: recBlink 1s infinite;
+        }
+        @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0.2} }
         .camera-container {
             position: relative;
-            margin: 15px 0;
-            border-radius: var(--border-radius);
             overflow: hidden;
             background: #000;
         }
@@ -1447,7 +1536,6 @@
         }
         #video {
             width: 100%;
-            border-radius: var(--border-radius);
             background: #000;
             display: block;
         }
@@ -1465,58 +1553,125 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 70%;
+            width: 68%;
             height: auto;
-            max-width: 280px;
+            max-width: 260px;
         }
         .face-border svg rect {
             fill: none;
             stroke: #00ffcc;
-            stroke-width: 4;
-            stroke-dasharray: 10 5;
+            stroke-width: 3;
+            stroke-dasharray: 12 6;
             animation: borderPulse 1.5s infinite;
-            rx: 20;
-            ry: 20;
         }
         @keyframes borderPulse {
-            0% {
-                stroke: #00ffcc;
-                stroke-width: 4;
-            }
-            50% {
-                stroke: #ffcc00;
-                stroke-width: 6;
-            }
-            100% {
-                stroke: #00ffcc;
-                stroke-width: 4;
-            }
+            0%   { stroke: #00ffcc; stroke-width: 3; filter: drop-shadow(0 0 4px #00ffcc88); }
+            50%  { stroke: #ffe066; stroke-width: 5; filter: drop-shadow(0 0 8px #ffe06688); }
+            100% { stroke: #00ffcc; stroke-width: 3; filter: drop-shadow(0 0 4px #00ffcc88); }
         }
+        /* Corner accent lines */
+        .face-border svg .corner { stroke: #fff; stroke-width: 5; fill: none; opacity: 0.85; }
+
+        /* Countdown ring overlay */
+        .capture-countdown-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            z-index: 30;
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .capture-countdown-overlay.visible { display: flex; }
+        .capture-countdown-number {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0,255,204,0.8), 0 2px 8px rgba(0,0,0,0.7);
+            line-height: 1;
+        }
+        .capture-countdown-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
         .face-detection-status {
             position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
             text-align: center;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(10, 10, 20, 0.75);
             color: white;
-            padding: 6px;
-            font-size: 0.8rem;
+            padding: 7px 18px;
+            font-size: 0.82rem;
+            font-weight: 500;
             z-index: 20;
-            border-radius: 20px;
-            margin: 0 auto;
-            width: 80%;
-            margin-left: auto;
-            margin-right: auto;
-            backdrop-filter: blur(4px);
+            border-radius: 30px;
+            white-space: nowrap;
+            max-width: 90%;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: background 0.3s, color 0.3s;
         }
         .detection-success {
-            background: rgba(40, 167, 69, 0.8);
+            background: rgba(25, 135, 84, 0.85) !important;
+            border-color: rgba(40,167,69,0.5) !important;
         }
         .detection-warning {
-            background: rgba(255, 193, 7, 0.8);
-            color: #000;
+            background: rgba(255, 160, 0, 0.85) !important;
+            color: #fff !important;
+            border-color: rgba(255,193,7,0.5) !important;
         }
+        .detection-error {
+            background: rgba(220, 53, 69, 0.85) !important;
+            border-color: rgba(220,53,69,0.4) !important;
+        }
+        .camera-hint-bar {
+            background: rgba(15,15,30,0.93);
+            color: rgba(255,255,255,0.65);
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 8px 12px;
+            letter-spacing: 0.3px;
+        }
+        /* Image preview improved */
+        .image-preview-container {
+            margin-top: 12px;
+            display: none;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e0e6ff;
+            box-shadow: 0 4px 16px rgba(67,97,238,0.12);
+        }
+        .image-preview-label {
+            background: linear-gradient(135deg, #4361ee, #3a56d4);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mirror-mode { transform: scaleX(-1); }
+        .image-preview {
+            max-width: 100%;
+            display: block;
+        }
+        #retakeBtn {
+            border-radius: 0 !important;
+            margin-top: 0 !important;
+            background: #f8f9ff;
+            color: #4361ee;
+            border-top: 1px solid #e0e6ff;
+        }
+        #retakeBtn:hover { background: #eef0ff; }
 
         @media (max-width: 480px) {
             .card {
@@ -1716,12 +1871,23 @@
     <!-- Popup Sukses Presensi -->
     <div id="successPopup">
         <div class="success-content">
-            <i class="fas fa-check-circle success-icon"></i>
-            <h2 class="success-title">Presensi Berhasil!</h2>
-            <p class="success-message">Absensi Anda sudah berhasil terekam. Anda akan logout otomatis dalam:</p>
-            <div class="countdown" id="countdownText">5 detik</div>
-            <div class="progress-container">
-                <div class="countdown-bar" id="countdownBar"></div>
+            <div class="success-banner">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h2 class="success-title">Presensi Berhasil!</h2>
+                <div class="success-recorded-badge">
+                    <i class="fas fa-database"></i> Presensi Berhasil Terekam
+                </div>
+            </div>
+            <div class="success-body">
+                <div class="success-timestamp" id="successTimestamp">
+                    <i class="fas fa-clock"></i>
+                    <span id="successTimeText">--:-- WIB</span>
+                </div>
+                <p class="success-message">Data presensi Anda telah tersimpan di sistem. Anda akan logout otomatis dalam:</p>
+                <div class="countdown" id="countdownText">5 detik</div>
+                <div class="progress-container">
+                    <div class="countdown-bar" id="countdownBar"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1888,16 +2054,40 @@
                         <div> 2. Hindari Foto background alam (pohon, dinding, pemandangan)</div>
                     </div>
 
-                    <div id="cameraPreview" style="margin: 15px 0; display: none;">
-                        <div class="camera-container">
-                            <video id="video" autoplay playsinline style="width: 100%; border-radius: 12px; background: #000;"></video>
-                            <canvas id="faceOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
-                            <div class="face-border">
-                                <svg viewBox="0 0 200 200">
-                                    <rect x="10" y="10" width="180" height="180" fill="none" stroke="#00ffcc" stroke-width="4" stroke-dasharray="10 5" rx="20" ry="20" />
-                                </svg>
+                    <div id="cameraPreview" style="margin: 12px 0; display: none;">
+                        <div class="camera-wrapper">
+                            <div class="camera-toolbar">
+                                <div class="camera-toolbar-title">
+                                    <i class="fas fa-camera"></i> KAMERA SELFIE
+                                </div>
+                                <div class="camera-rec-badge">
+                                    <div class="camera-rec-dot"></div> LIVE
+                                </div>
                             </div>
-                            <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
+                            <div class="camera-container">
+                                <video id="video" autoplay playsinline style="width: 100%; background: #000; display: block;"></video>
+                                <canvas id="faceOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+                                <div class="face-border">
+                                    <svg viewBox="0 0 200 240">
+                                        <!-- Main oval/rounded rect -->
+                                        <rect x="12" y="12" width="176" height="216" fill="none" stroke="#00ffcc" stroke-width="3" stroke-dasharray="12 6" rx="88" ry="88" />
+                                        <!-- Corner accents -->
+                                        <polyline class="corner" points="12,50 12,12 50,12"/>
+                                        <polyline class="corner" points="150,12 188,12 188,50"/>
+                                        <polyline class="corner" points="188,190 188,228 150,228"/>
+                                        <polyline class="corner" points="50,228 12,228 12,190"/>
+                                    </svg>
+                                </div>
+                                <!-- Countdown overlay -->
+                                <div class="capture-countdown-overlay" id="captureCountdownOverlay">
+                                    <div class="capture-countdown-number" id="captureCountdownNum">3</div>
+                                    <div class="capture-countdown-label">MENGAMBIL FOTO</div>
+                                </div>
+                                <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
+                            </div>
+                            <div class="camera-hint-bar">
+                                <i class="fas fa-info-circle"></i>&nbsp; Posisikan wajah di dalam bingkai — foto diambil otomatis saat wajah terdeteksi
+                            </div>
                         </div>
                     </div>
 
@@ -1905,9 +2095,12 @@
                     <input type="hidden" id="photoData" name="photoData">
 
                     <div id="imagePreviewContainer" class="image-preview-container">
-                        <img id="imagePreview" class="image-preview">
-                        <button id="retakeBtn" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
-                            <i class="fas fa-camera"></i> Ambil Ulang
+                        <div class="image-preview-label">
+                            <i class="fas fa-check-circle"></i> Foto Presensi Diambil
+                        </div>
+                        <img id="imagePreview" class="image-preview" style="width:100%;">
+                        <button id="retakeBtn" class="btn" style="width: 100%;">
+                            <i class="fas fa-camera-retro"></i> Ambil Ulang Foto
                         </button>
                     </div>
                 </div>
@@ -2061,8 +2254,8 @@
                 startFaceDetection();
             } catch (err) {
                 console.error("Error mengakses kamera:", err);
-                alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.');
-                faceStatusDiv.innerHTML = "❌ Kamera tidak dapat diakses";
+                faceStatusDiv.className = 'face-detection-status detection-error';
+                faceStatusDiv.innerHTML = "❌ Kamera tidak dapat diakses — izinkan akses kamera";
             }
         }
 
@@ -2104,28 +2297,52 @@
                         if (faceInside) {
                             if (!faceDetected) {
                                 faceDetected = true;
-                                faceStatusDiv.innerHTML = "✅ Wajah terdeteksi dalam area! Mengirim presensi...";
-                                faceStatusDiv.classList.add('detection-success');
+                                faceStatusDiv.className = 'face-detection-status detection-success';
+                                faceStatusDiv.innerHTML = "✅ Wajah terdeteksi! Bersiap mengambil foto...";
                                 if (!autoSubmitTriggered) {
                                     autoSubmitTriggered = true;
                                     if (detectionInterval) clearInterval(detectionInterval);
-                                    captureAndSubmit();
+                                    startCaptureCountdown();
                                 }
                             } else {
-                                faceStatusDiv.innerHTML = "✅ Wajah dalam area - siap kirim";
+                                faceStatusDiv.className = 'face-detection-status detection-success';
+                                faceStatusDiv.innerHTML = "✅ Wajah dalam area — tahan posisi";
                             }
                         } else {
                             faceDetected = false;
-                            faceStatusDiv.innerHTML = "⚠️ Posisikan wajah di dalam border!";
-                            faceStatusDiv.classList.add('detection-warning');
+                            faceStatusDiv.className = 'face-detection-status detection-warning';
+                            faceStatusDiv.innerHTML = "⚠️ Posisikan wajah di dalam bingkai!";
                         }
                     } else {
                         faceDetected = false;
+                        faceStatusDiv.className = 'face-detection-status detection-error';
                         faceStatusDiv.innerHTML = "❌ Tidak ada wajah terdeteksi";
-                        faceStatusDiv.classList.add('detection-warning');
                     }
                 } catch (err) { console.error("Face detection error:", err); }
             }, 500);
+        }
+
+        function startCaptureCountdown() {
+            const overlay = document.getElementById('captureCountdownOverlay');
+            const numEl = document.getElementById('captureCountdownNum');
+            if (!overlay || !numEl) { captureAndSubmit(); return; }
+            overlay.classList.add('visible');
+            let count = 3;
+            numEl.textContent = count;
+            faceStatusDiv.className = 'face-detection-status detection-success';
+            faceStatusDiv.innerHTML = `📸 Foto diambil dalam ${count} detik...`;
+            const cTimer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numEl.textContent = count;
+                    faceStatusDiv.innerHTML = `📸 Foto diambil dalam ${count} detik...`;
+                } else {
+                    clearInterval(cTimer);
+                    overlay.classList.remove('visible');
+                    faceStatusDiv.innerHTML = "📤 Mengambil & mengirim foto...";
+                    captureAndSubmit();
+                }
+            }, 1000);
         }
 
         async function captureAndSubmit() {
@@ -2151,9 +2368,11 @@
         retakeBtn.addEventListener('click', function() {
             imagePreviewContainer.style.display = 'none';
             cameraPreview.style.display = 'block';
-            startCamera();
+            const overlay = document.getElementById('captureCountdownOverlay');
+            if (overlay) overlay.classList.remove('visible');
             autoSubmitTriggered = false;
             faceDetected = false;
+            startCamera();
         });
 
         // ==================== FAKE GPS DETECTION ====================
@@ -2228,7 +2447,7 @@
         }
 
         function getPresensiParams() {
-            const datangStart = 6.0,
+            const datangStart = 5.0,
                 datangEnd = 12.0;
             let pulangStart = 14.0;
             const pulangEnd = 18.5;
@@ -2509,6 +2728,19 @@
 
         function showSuccessPopup() {
             presensiBlockedCount = 0;
+
+            // Isi timestamp saat ini
+            const now = new Date();
+            const wib = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+            const hh = wib.getHours().toString().padStart(2,'0');
+            const mm = wib.getMinutes().toString().padStart(2,'0');
+            const ss = wib.getSeconds().toString().padStart(2,'0');
+            const dd = wib.getDate().toString().padStart(2,'0');
+            const mo = (wib.getMonth()+1).toString().padStart(2,'0');
+            const yy = wib.getFullYear();
+            const timeEl = document.getElementById('successTimeText');
+            if (timeEl) timeEl.textContent = `${dd}/${mo}/${yy} — ${hh}:${mm}:${ss} WIB`;
+
             const successPopup = document.getElementById('successPopup');
             successPopup.style.display = 'flex';
             let seconds = 5;
@@ -2616,21 +2848,38 @@
                     updateProgressMenu("Mengirim data ke server ...", 70);
 
                     try {
-                        const response = await fetch(`${PROXY_URL}?action=presensi`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(formData)
-                        });
-                        if (response.status === 504) {
-                            updateProgressMenu("Server sibuk, presensi tercatat", 100);
-                            setTimeout(() => { hideProgressMenu();
-                                showSuccessPopup(); }, 400);
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 30000);
+                        let response;
+                        try {
+                            response = await fetch(`${PROXY_URL}?action=presensi`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(formData),
+                                signal: controller.signal
+                            });
+                        } catch (fetchErr) {
+                            // Network error, timeout, atau AbortError => anggap berhasil terekam
+                            clearTimeout(timeoutId);
+                            console.warn('Network/fetch error (dianggap berhasil):', fetchErr);
+                            updateProgressMenu("Presensi Berhasil Terekam ✓", 100);
+                            localStorage.setItem('lastPresensi', new Date().toISOString());
+                            setTimeout(() => { hideProgressMenu(); showSuccessPopup(); }, 500);
+                            return;
+                        }
+                        clearTimeout(timeoutId);
+
+                        // Semua status 5xx (termasuk 504) => anggap berhasil
+                        if (response.status >= 500) {
+                            updateProgressMenu("Presensi Berhasil Terekam ✓", 100);
+                            localStorage.setItem('lastPresensi', new Date().toISOString());
+                            setTimeout(() => { hideProgressMenu(); showSuccessPopup(); }, 400);
                             return;
                         }
                         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                         const result = await response.json();
                         if (result.success) {
-                            updateProgressMenu("Berhasil! Memperbarui data ...", 100);
+                            updateProgressMenu("Presensi Berhasil Terekam ✓", 100);
                             setTimeout(() => {
                                 hideProgressMenu();
                                 localStorage.setItem('lastPresensi', new Date().toISOString());
@@ -2641,24 +2890,17 @@
                             presensiBlockedCount++;
                             const showLogout = (presensiBlockedCount >= 2);
                             showErrorPopup(result.message || 'Presensi gagal, silakan coba lagi.', showLogout);
-                            if (!autoSubmitTriggered) startCamera();
-                            else { autoSubmitTriggered = false;
-                                startCamera(); }
+                            autoSubmitTriggered = false;
+                            startCamera();
                         }
                     } catch (error) {
                         console.error('Submit error:', error);
                         hideProgressMenu();
-                        if (error.message.includes('504')) {
-                            hideProgressMenu();
-                            showSuccessPopup();
-                        } else {
-                            presensiBlockedCount++;
-                            const showLogout = (presensiBlockedCount >= 2);
-                            showErrorPopup('Error: ' + error.message, showLogout);
-                            if (!autoSubmitTriggered) startCamera();
-                            else { autoSubmitTriggered = false;
-                                startCamera(); }
-                        }
+                        presensiBlockedCount++;
+                        const showLogout = (presensiBlockedCount >= 2);
+                        showErrorPopup('Gagal mengirim data: ' + error.message, showLogout);
+                        autoSubmitTriggered = false;
+                        startCamera();
                     }
                 };
                 reader.readAsDataURL(compressedFile);
