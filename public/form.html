@@ -1572,34 +1572,6 @@
         /* Corner accent lines */
         .face-border svg .corner { stroke: #fff; stroke-width: 5; fill: none; opacity: 0.85; }
 
-        /* Countdown ring overlay */
-        .capture-countdown-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%,-50%);
-            z-index: 30;
-            pointer-events: none;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .capture-countdown-overlay.visible { display: flex; }
-        .capture-countdown-number {
-            font-size: 5rem;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 30px rgba(0,255,204,0.8), 0 2px 8px rgba(0,0,0,0.7);
-            line-height: 1;
-        }
-        .capture-countdown-label {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.8);
-            letter-spacing: 2px;
-            margin-top: 4px;
-        }
-
         .face-detection-status {
             position: absolute;
             bottom: 12px;
@@ -2078,15 +2050,10 @@
                                         <polyline class="corner" points="50,228 12,228 12,190"/>
                                     </svg>
                                 </div>
-                                <!-- Countdown overlay -->
-                                <div class="capture-countdown-overlay" id="captureCountdownOverlay">
-                                    <div class="capture-countdown-number" id="captureCountdownNum">3</div>
-                                    <div class="capture-countdown-label">MENGAMBIL FOTO</div>
-                                </div>
                                 <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
                             </div>
                             <div class="camera-hint-bar">
-                                <i class="fas fa-info-circle"></i>&nbsp; Posisikan wajah di dalam bingkai — foto diambil otomatis saat wajah terdeteksi
+                                <i class="fas fa-shield-alt"></i>&nbsp; Wajah harus terdeteksi langsung dari kamera — foto diambil otomatis &amp; instan
                             </div>
                         </div>
                     </div>
@@ -2259,107 +2226,124 @@
             }
         }
 
-        function startFaceDetection() {
-            if (detectionInterval) clearInterval(detectionInterval);
-            detectionInterval = setInterval(async () => {
-                if (!modelsLoaded || !video.videoWidth || video.paused || video.ended) return;
-                try {
-                    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-                    const overlayCtx = faceOverlay.getContext('2d');
-                    overlayCtx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
-                    faceOverlay.width = video.videoWidth;
-                    faceOverlay.height = video.videoHeight;
+        // Berapa frame berturut-turut wajah harus ada di dalam bingkai sebelum capture
+        // 300ms interval × 4 frame = ~1.2 detik stabil → langsung ambil foto
+        const REQUIRED_FACE_STREAK = 4;
+        let faceStreak = 0;          // frame berturut-turut wajah di dalam bingkai
+        let isCapturing = false;     // sedang proses capture, jangan trigger ulang
 
-                    const hasFace = detections.length > 0;
-                    if (hasFace) {
-                        const videoRect = { width: video.videoWidth, height: video.videoHeight };
-                        const borderMarginX = videoRect.width * 0.15;
-                        const borderMarginY = videoRect.height * 0.15;
-                        const borderBox = {
-                            x: borderMarginX,
-                            y: borderMarginY,
-                            width: videoRect.width - (borderMarginX * 2),
-                            height: videoRect.height - (borderMarginY * 2)
-                        };
-                        let faceInside = false;
-                        for (const detection of detections) {
-                            const box = detection.box;
-                            const intersectX = Math.max(box.x, borderBox.x);
-                            const intersectY = Math.max(box.y, borderBox.y);
-                            const intersectW = Math.min(box.x + box.width, borderBox.x + borderBox.width) - intersectX;
-                            const intersectH = Math.min(box.y + box.height, borderBox.y + borderBox.height) - intersectY;
-                            if (intersectW > 0 && intersectH > 0) {
-                                const intersectArea = intersectW * intersectH;
-                                const faceArea = box.width * box.height;
-                                if (intersectArea / faceArea > 0.7) { faceInside = true; break; }
-                            }
-                        }
-                        if (faceInside) {
-                            if (!faceDetected) {
-                                faceDetected = true;
-                                faceStatusDiv.className = 'face-detection-status detection-success';
-                                faceStatusDiv.innerHTML = "✅ Wajah terdeteksi! Bersiap mengambil foto...";
-                                if (!autoSubmitTriggered) {
-                                    autoSubmitTriggered = true;
-                                    if (detectionInterval) clearInterval(detectionInterval);
-                                    startCaptureCountdown();
-                                }
-                            } else {
-                                faceStatusDiv.className = 'face-detection-status detection-success';
-                                faceStatusDiv.innerHTML = "✅ Wajah dalam area — tahan posisi";
-                            }
-                        } else {
-                            faceDetected = false;
-                            faceStatusDiv.className = 'face-detection-status detection-warning';
-                            faceStatusDiv.innerHTML = "⚠️ Posisikan wajah di dalam bingkai!";
-                        }
-                    } else {
-                        faceDetected = false;
-                        faceStatusDiv.className = 'face-detection-status detection-error';
-                        faceStatusDiv.innerHTML = "❌ Tidak ada wajah terdeteksi";
-                    }
-                } catch (err) { console.error("Face detection error:", err); }
-            }, 500);
+        function isFaceInsideBorder(detections) {
+            if (!detections || detections.length === 0) return false;
+            const vw = video.videoWidth, vh = video.videoHeight;
+            // Border area: tengah 70% lebar × 70% tinggi (sesuai SVG oval)
+            const mx = vw * 0.15, my = vh * 0.15;
+            const borderBox = { x: mx, y: my, width: vw - mx * 2, height: vh - my * 2 };
+            for (const det of detections) {
+                const b = det.box;
+                const ix = Math.max(b.x, borderBox.x);
+                const iy = Math.max(b.y, borderBox.y);
+                const iw = Math.min(b.x + b.width,  borderBox.x + borderBox.width)  - ix;
+                const ih = Math.min(b.y + b.height, borderBox.y + borderBox.height) - iy;
+                if (iw > 0 && ih > 0 && (iw * ih) / (b.width * b.height) > 0.65) return true;
+            }
+            return false;
         }
 
-        function startCaptureCountdown() {
-            const overlay = document.getElementById('captureCountdownOverlay');
-            const numEl = document.getElementById('captureCountdownNum');
-            if (!overlay || !numEl) { captureAndSubmit(); return; }
-            overlay.classList.add('visible');
-            let count = 3;
-            numEl.textContent = count;
-            faceStatusDiv.className = 'face-detection-status detection-success';
-            faceStatusDiv.innerHTML = `📸 Foto diambil dalam ${count} detik...`;
-            const cTimer = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    numEl.textContent = count;
-                    faceStatusDiv.innerHTML = `📸 Foto diambil dalam ${count} detik...`;
-                } else {
-                    clearInterval(cTimer);
-                    overlay.classList.remove('visible');
-                    faceStatusDiv.innerHTML = "📤 Mengambil & mengirim foto...";
-                    captureAndSubmit();
-                }
-            }, 1000);
+        function startFaceDetection() {
+            if (detectionInterval) clearInterval(detectionInterval);
+            faceStreak = 0;
+            isCapturing = false;
+            // Interval 300ms — cepat tapi tidak boros CPU
+            detectionInterval = setInterval(async () => {
+                if (isCapturing) return;
+                if (!modelsLoaded || !video.videoWidth || video.paused || video.ended) return;
+                try {
+                    const detections = await faceapi.detectAllFaces(
+                        video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+                    );
+                    // Bersihkan overlay
+                    faceOverlay.width  = video.videoWidth;
+                    faceOverlay.height = video.videoHeight;
+                    faceOverlay.getContext('2d').clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+
+                    const inside = isFaceInsideBorder(detections);
+
+                    if (inside) {
+                        faceStreak++;
+                        faceDetected = true;
+
+                        if (faceStreak < REQUIRED_FACE_STREAK) {
+                            // Masih akumulasi streak — tampilkan progress
+                            const pct = Math.round((faceStreak / REQUIRED_FACE_STREAK) * 100);
+                            faceStatusDiv.className = 'face-detection-status detection-success';
+                            faceStatusDiv.innerHTML = `✅ Wajah terdeteksi — tahan sebentar… ${pct}%`;
+                        } else if (!autoSubmitTriggered) {
+                            // Streak terpenuhi — ambil foto SEKARANG
+                            autoSubmitTriggered = true;
+                            isCapturing = true;
+                            clearInterval(detectionInterval);
+                            faceStatusDiv.className = 'face-detection-status detection-success';
+                            faceStatusDiv.innerHTML = "📸 Mengambil foto...";
+                            // Capture langsung (tanpa countdown)
+                            await captureAndSubmit();
+                        }
+                    } else {
+                        // Wajah hilang atau di luar bingkai — reset streak
+                        faceStreak = 0;
+                        faceDetected = false;
+                        if (detections.length === 0) {
+                            faceStatusDiv.className = 'face-detection-status detection-error';
+                            faceStatusDiv.innerHTML = "❌ Tidak ada wajah — arahkan kamera ke wajah Anda";
+                        } else {
+                            faceStatusDiv.className = 'face-detection-status detection-warning';
+                            faceStatusDiv.innerHTML = "⚠️ Posisikan wajah tepat di dalam bingkai!";
+                        }
+                    }
+                } catch (err) { console.error("Face detection error:", err); }
+            }, 300);
         }
 
         async function captureAndSubmit() {
+            // ── VERIFIKASI ULANG: wajah masih harus ada di frame saat capture ──
+            let verifyOk = false;
+            try {
+                const verify = await faceapi.detectAllFaces(
+                    video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+                );
+                verifyOk = isFaceInsideBorder(verify);
+            } catch (_) { verifyOk = false; }
+
+            if (!verifyOk) {
+                // Wajah tidak ada saat hendak capture → tolak, mulai ulang
+                faceStatusDiv.className = 'face-detection-status detection-error';
+                faceStatusDiv.innerHTML = "❌ Wajah tidak terdeteksi saat pengambilan foto — coba lagi";
+                isCapturing = false;
+                autoSubmitTriggered = false;
+                faceStreak = 0;
+                faceDetected = false;
+                setTimeout(() => startFaceDetection(), 800);
+                return;
+            }
+
+            // ── AMBIL FRAME DARI VIDEO (bukan dari luar) ──
             const captureCanvas = document.createElement('canvas');
             const ctx = captureCanvas.getContext('2d');
-            captureCanvas.width = video.videoWidth;
+            captureCanvas.width  = video.videoWidth;
             captureCanvas.height = video.videoHeight;
+            // Mirror (selfie) — flip horizontal
             ctx.translate(captureCanvas.width, 0);
             ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-            const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.8);
+
+            const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
             photoData.value = dataUrl;
             imagePreview.src = dataUrl;
             imagePreviewContainer.style.display = 'block';
-            if (stream) { stream.getTracks().forEach(track => track.stop());
-                stream = null; }
+
+            // Stop kamera segera setelah capture
+            if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
             cameraPreview.style.display = 'none';
+
             const blob = dataURLtoBlob(dataUrl);
             window.capturedFile = new File([blob], "presensi.jpg", { type: 'image/jpeg' });
             submitPresensiForm();
@@ -2368,10 +2352,11 @@
         retakeBtn.addEventListener('click', function() {
             imagePreviewContainer.style.display = 'none';
             cameraPreview.style.display = 'block';
-            const overlay = document.getElementById('captureCountdownOverlay');
-            if (overlay) overlay.classList.remove('visible');
             autoSubmitTriggered = false;
             faceDetected = false;
+            faceStreak = 0;
+            isCapturing = false;
+            window.capturedFile = null;
             startCamera();
         });
 
