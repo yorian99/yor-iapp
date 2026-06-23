@@ -719,7 +719,7 @@
 
         body {
             background: linear-gradient(135deg, #f5f7ff, #e6e9ff);
-            padding: 20px;
+            padding: 10px;
             position: relative;
             min-height: 100vh;
             opacity: 0;
@@ -743,69 +743,69 @@
 
         .card {
             background: white;
-            padding: 30px;
+            padding: 14px 16px 16px;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             position: relative;
         }
 
         .card-header {
-            text-align: center;
-            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef0ff;
             position: relative;
         }
 
         .card-header::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 2px;
+            display: none;
+        }
+
+        .card-header-text {
+            flex: 1;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 10px;
-            display: block;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
             object-fit: contain;
         }
 
         h1 {
             color: var(--dark);
-            font-weight: 600;
-            font-size: 1.8rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            line-height: 1.2;
         }
 
         .subtitle {
             color: var(--gray);
-            font-size: 0.95rem;
+            font-size: 0.75rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             font-weight: 500;
             color: var(--dark);
-            font-size: 0.95rem;
+            font-size: 0.82rem;
         }
 
         input,
         select {
             width: 100%;
-            padding: 14px;
+            padding: 9px 11px;
             border: 1px solid #e0e0e0;
-            border-radius: var(--border-radius);
-            font-size: 0.95rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
             transition: var(--transition);
             background-color: #f9f9f9;
         }
@@ -892,21 +892,21 @@
         }
 
         .logout-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             background: var(--danger);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: var(--border-radius);
+            padding: 6px 11px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
+            font-size: 0.78rem;
             transition: var(--transition);
             z-index: 10;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
         .logout-btn:hover {
@@ -915,61 +915,58 @@
             box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
         }
 
-        /* Modern Attendance Type Notification */
+        /* Modern Attendance Type Notification — COMPACT STRIP */
         .attendance-notification {
             background: #f8f9ff;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-top: 15px;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
             border: 1px solid #e0e6ff;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.08);
-            transition: var(--transition);
+            box-shadow: 0 2px 6px rgba(67, 97, 238, 0.07);
         }
 
         .attendance-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 6px;
         }
 
         .attendance-title {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
             font-weight: 600;
             color: var(--dark);
+            font-size: 0.8rem;
         }
 
-        .attendance-title i {
-            font-size: 1.2rem;
-        }
+        .attendance-title i { font-size: 0.9rem; }
 
         .current-time {
             background: var(--primary);
             color: white;
-            padding: 6px 12px;
+            padding: 3px 9px;
             border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.78rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
+        /* Compact slot row */
         .time-slots {
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 7px;
         }
 
         .time-slot {
             flex: 1;
-            min-width: 140px;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            text-align: center;
-            transition: var(--transition);
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 1px solid #e8eaff;
+            background: white;
             position: relative;
             overflow: hidden;
         }
@@ -980,7 +977,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 4px;
+            height: 3px;
         }
 
         .time-slot.datang::after {
@@ -992,66 +989,59 @@
         }
 
         .time-slot.active {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border-color: transparent;
         }
 
         .time-slot.active.datang {
-            background: linear-gradient(to bottom, rgba(76, 175, 80, 0.05), white);
-            border: 1px solid rgba(76, 175, 80, 0.3);
+            background: linear-gradient(to bottom, rgba(76,175,80,0.06), white);
+            border: 1px solid rgba(76,175,80,0.25);
         }
 
         .time-slot.active.pulang {
-            background: linear-gradient(to bottom, rgba(33, 150, 243, 0.05), white);
-            border: 1px solid rgba(33, 150, 243, 0.3);
+            background: linear-gradient(to bottom, rgba(33,150,243,0.06), white);
+            border: 1px solid rgba(33,150,243,0.25);
         }
 
         .slot-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 5px;
             font-weight: 600;
+            font-size: 0.72rem;
+            margin-bottom: 2px;
         }
 
-        .slot-header.datang {
-            color: #4caf50;
-        }
-
-        .slot-header.pulang {
-            color: #2196f3;
-        }
+        .slot-header.datang { color: #4caf50; }
+        .slot-header.pulang { color: #2196f3; }
 
         .slot-time {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #333;
         }
 
         .slot-status {
-            font-size: 0.85rem;
-            padding: 4px 10px;
+            font-size: 0.68rem;
+            padding: 2px 7px;
             border-radius: 20px;
             display: inline-block;
+            margin-top: 2px;
         }
 
         .status-active {
-            background: rgba(76, 175, 80, 0.15);
+            background: rgba(76,175,80,0.15);
             color: #2e7d32;
         }
 
         .status-inactive {
-            background: rgba(158, 158, 158, 0.15);
+            background: rgba(158,158,158,0.13);
             color: #616161;
         }
 
-        .slot-description {
-            font-size: 0.85rem;
-            color: var(--gray);
-            margin-top: 8px;
-        }
+        .slot-description { display: none; }
+
+        /* slot-description hidden via compact styles above */
 
         /* Modal Konfirmasi Logout */
         .modal {
@@ -1378,20 +1368,21 @@
         .gps-indicator {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            padding: 10px;
+            gap: 7px;
+            padding: 6px 9px;
             background: #f0f8ff;
-            border-radius: var(--border-radius);
+            border-radius: 6px;
             border: 1px solid #d1e7ff;
+            font-size: 0.8rem;
         }
 
         .gps-indicator .dot {
-            width: 12px;
-            height: 12px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
             background-color: #ccc;
             animation: pulseDot 1.5s infinite;
+            flex-shrink: 0;
         }
 
         .gps-indicator .dot.active {
@@ -1425,58 +1416,81 @@
             border: 1px solid #e0e0e0;
         }
 
-        /* ==================== LOCATION INFO STYLES ==================== */
+        /* ==================== LOCATION INFO STYLES — COMPACT ==================== */
         .location-info {
             background: #f8f9ff;
-            border-radius: var(--border-radius);
-            padding: 15px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            padding: 9px 11px;
+            margin-bottom: 10px;
             border: 1px solid #e0e6ff;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.08);
+            box-shadow: 0 2px 6px rgba(67, 97, 238, 0.07);
         }
 
-        .location-info h3 {
+        .location-grid {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .location-col {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .location-col-label {
+            font-size: 0.72rem;
             font-weight: 600;
             color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 3px;
         }
 
-        .location-info h3 i {
-            font-size: 1.2rem;
-        }
+        .location-col-label i { font-size: 0.75rem; }
 
         .location-coords {
             font-family: monospace;
             background: #f0f4ff;
-            padding: 8px 12px;
+            padding: 5px 8px;
             border-radius: 6px;
-            margin-top: 5px;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        .location-divider {
+            width: 1px;
+            background: #dde2ff;
+            margin: 2px 0;
+            flex-shrink: 0;
         }
 
         .distance-info {
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 7px;
+            padding-top: 6px;
             border-top: 1px dashed #ddd;
         }
 
         #distanceDisplay {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
+            gap: 6px;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
         }
 
         #distanceValue {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--primary);
         }
 
         #radiusValue {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--secondary);
+        }
+
+        .location-info h3 {
+            display: none; /* replaced by location-col-label */
         }
 
         /* ==================== CAMERA STYLES (IMPROVED) ==================== */
@@ -1655,11 +1669,11 @@
             }
 
             .time-slots {
-                flex-direction: column;
+                flex-direction: row;
             }
 
             .time-slot {
-                min-width: 100%;
+                min-width: 0;
             }
 
             .modal-buttons {
@@ -1957,14 +1971,15 @@
 
     <div class="container">
         <div class="card">
-            <button class="logout-btn" id="logoutButton">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-
             <div class="card-header">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo">
-                <h1>Presensi Pegawai</h1>
-                <p class="subtitle">Korwil Kecamatan - Tahun 2026</p>
+                <div class="card-header-text">
+                    <h1>Presensi Pegawai</h1>
+                    <p class="subtitle">Korwil Kecamatan · Tahun 2026</p>
+                </div>
+                <button class="logout-btn" id="logoutButton">
+                    <i class="fas fa-sign-out-alt"></i> Keluar
+                </button>
             </div>
 
             <form id="presensiForm">
@@ -2021,9 +2036,8 @@
 
                 <div class="form-group">
                     <label for="file">Bukti Dukung</label>
-                    <div class="alert alert-light p-2 mb-2" style="font-size: 0.9rem; border: 1px solid #eee;">
-                        <div class="mb-1">1. Foto harus Jelas Menampilkan Pegawai Yang Melakukan Presensi.</div>
-                        <div> 2. Hindari Foto background alam (pohon, dinding, pemandangan)</div>
+                    <div style="font-size: 0.75rem; color: #666; border: 1px solid #eee; border-radius:6px; padding:6px 10px; margin-bottom:6px; background:#fafafa; line-height:1.5;">
+                        ① Foto harus jelas menampilkan pegawai.&emsp;② Hindari background alam.
                     </div>
 
                     <div id="cameraPreview" style="margin: 12px 0; display: none;">
@@ -2073,32 +2087,34 @@
                 </div>
 
                 <div class="location-info">
-                    <div class="location-detail">
-                        <h3><i class="fas fa-map-marker-alt"></i> Lokasi Lembaga</h3>
-                        <div class="location-coords">
-                            <span id="lembagaLatitude"></span><span> </span><span id="lembagaLongitude"></span>
-                            <span id="lembagaRadius"></span>
+                    <div class="location-grid">
+                        <div class="location-col">
+                            <div class="location-col-label"><i class="fas fa-map-marker-alt"></i> Lokasi Lembaga</div>
+                            <div class="location-coords">
+                                <span id="lembagaLatitude"></span> <span id="lembagaLongitude"></span>
+                                <span id="lembagaRadius"></span>
+                            </div>
+                        </div>
+                        <div class="location-divider"></div>
+                        <div class="location-col">
+                            <div class="location-col-label"><i class="fas fa-crosshairs"></i> Lokasi Saat Ini</div>
+                            <div class="location-coords" id="currentCoordDisplay">Mendeteksi...</div>
                         </div>
                     </div>
                     <div class="distance-info">
                         <div id="distanceDisplay">
-                            <i class="fas fa-ruler-combined"></i> Jarak: <span id="distanceValue">-</span> m
-                            (Radius: <span id="radiusValue">-</span> m)
+                            <div class="gps-indicator" style="margin:0; padding:5px 8px; flex:1; border-radius:6px;">
+                                <div class="dot" id="gpsDot"></div>
+                                <span id="gpsStatus" style="font-size:0.78rem;">Mendeteksi lokasi...</span>
+                            </div>
+                            &nbsp;·&nbsp; <i class="fas fa-ruler-combined"></i>&nbsp;Jarak: <span id="distanceValue">-</span> m&nbsp;(Radius: <span id="radiusValue">-</span> m)
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Lokasi Saat Ini (Deteksi Otomatis)</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="latitude" name="latitude" placeholder="Latitude" readonly style="flex: 1;">
-                        <input type="text" id="longitude" name="longitude" placeholder="Longitude" readonly style="flex: 1;">
-                    </div>
-                    <div class="gps-indicator">
-                        <div class="dot" id="gpsDot"></div>
-                        <span id="gpsStatus">Mendeteksi lokasi...</span>
-                    </div>
-                </div>
+                <!-- Hidden fields for coordinates (referenced by JS) -->
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
 
                 <div id="message" style="display: none;"></div>
             </form>
@@ -2392,6 +2408,8 @@
             document.getElementById('fakeGPSBlocker').style.display = 'flex';
             document.getElementById('latitude').value = '';
             document.getElementById('longitude').value = '';
+            const coordDisp = document.getElementById('currentCoordDisplay');
+            if (coordDisp) coordDisp.textContent = 'Lokasi palsu terdeteksi!';
             document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-ban" style="color: #f44336;"></i> Lokasi palsu terdeteksi!';
             document.getElementById('gpsDot').classList.remove('active');
         }
@@ -2432,7 +2450,7 @@
         }
 
         function getPresensiParams() {
-            const datangStart = 6.0,
+            const datangStart = 5.0,
                 datangEnd = 12.0;
             let pulangStart = 14.0;
             const pulangEnd = 18.5;
@@ -2602,6 +2620,9 @@
                         const lonStr = String(userLon).replace(/,/g, '.');
                         document.getElementById('latitude').value = latStr;
                         document.getElementById('longitude').value = lonStr;
+                        // Update coordinate display
+                        const coordDisp = document.getElementById('currentCoordDisplay');
+                        if (coordDisp) coordDisp.textContent = latStr.substring(0,9) + ' ' + lonStr.substring(0,10);
                         const sessionData = JSON.parse(localStorage.getItem('sessionData'));
                         if (sessionData) {
                             updateDistanceDisplay(parseFloat(latStr), parseFloat(lonStr),
