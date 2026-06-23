@@ -695,7 +695,7 @@
             background: #F5F5F5;
         }
 
-        /* ==================== EXISTING STYLES ==================== */
+        /* ==================== CORE VARIABLES & RESET ==================== */
         :root {
             --primary: #4361ee;
             --primary-dark: #3a56d4;
@@ -703,528 +703,536 @@
             --success: #4cc9f0;
             --danger: #f72585;
             --light: #f8f9fa;
-            --dark: #212529;
+            --dark: #1a1d23;
             --gray: #6c757d;
-            --border-radius: 12px;
-            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --border-radius: 14px;
+            --radius-sm: 8px;
+            --box-shadow: 0 4px 24px rgba(67,97,238,0.08);
+            --shadow-md: 0 8px 32px rgba(67,97,238,0.13);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
         body {
-            background: linear-gradient(135deg, #f5f7ff, #e6e9ff);
-            padding: 20px;
-            position: relative;
+            background: #eef1fb;
+            background-image: radial-gradient(ellipse at 20% 0%, rgba(67,97,238,0.08) 0%, transparent 60%),
+                              radial-gradient(ellipse at 80% 100%, rgba(63,55,201,0.07) 0%, transparent 60%);
             min-height: 100vh;
+            padding: 0;
             opacity: 0;
-            animation: fadeInContent 1s ease-out forwards;
+            animation: fadeInContent 0.8s ease-out forwards;
         }
 
-        @keyframes fadeInContent {
-            to {
-                opacity: 1;
-            }
-        }
+        @keyframes fadeInContent { to { opacity: 1; } }
+        body.desktop-blocked { overflow: hidden; }
 
-        body.desktop-blocked {
-            overflow: hidden;
+        /* ── Page shell ── */
+        .page-topbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(67,97,238,0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .page-topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        .page-topbar-brand img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            opacity: 0.92;
+        }
+        .page-topbar-brand span {
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            opacity: 0.95;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.28);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .container {
-            max-width: 800px;
+            max-width: 520px;
             margin: 0 auto;
+            padding: 20px 16px 40px;
         }
 
-        .card {
-            background: white;
-            padding: 30px;
+        /* ── Hero identity card ── */
+        .identity-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            margin-bottom: 20px;
+            padding: 24px 22px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 28px rgba(67,97,238,0.28);
             position: relative;
+            overflow: hidden;
+            color: white;
         }
-
-        .card-header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .card-header::after {
+        .identity-card::before {
             content: '';
             position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 2px;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 10px;
-            display: block;
-            object-fit: contain;
-        }
-
-        h1 {
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 1.8rem;
-        }
-
-        .subtitle {
-            color: var(--gray);
-            font-size: 0.95rem;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--dark);
-            font-size: 0.95rem;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #e0e0e0;
-            border-radius: var(--border-radius);
-            font-size: 0.95rem;
-            transition: var(--transition);
-            background-color: #f9f9f9;
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-            background-color: white;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-        }
-
-        .btn-primary:disabled {
-            background: #cccccc;
-            transform: none;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-
-        .spinner {
-            display: none;
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.06);
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 8px;
+            top: -60px; right: -50px;
         }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        #message {
-            margin: 20px 0;
-            padding: 12px;
-            border-radius: var(--border-radius);
-            font-size: 0.9rem;
-            text-align: center;
-            display: none;
-        }
-
-        .error {
-            background-color: #fff0f0;
-            color: #dc3545;
-            border: 1px solid #ffcccc;
-            display: block;
-        }
-
-        .success {
-            background-color: #f0fff4;
-            color: #28a745;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-
-        .logout-btn {
+        .identity-card::after {
+            content: '';
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--danger);
+            width: 130px; height: 130px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            bottom: -40px; left: -30px;
+        }
+        .identity-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .identity-logo {
+            width: 56px; height: 56px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 6px;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .identity-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .identity-text { flex: 1; min-width: 0; }
+        .identity-text h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
             color: white;
+            line-height: 1.3;
+            margin-bottom: 2px;
+        }
+        .identity-text .subtitle {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.78);
+            font-weight: 400;
+        }
+        .identity-divider {
             border: none;
-            padding: 10px 15px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            margin: 16px 0 14px;
+            position: relative; z-index: 1;
+        }
+        .identity-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            position: relative; z-index: 1;
+        }
+        .identity-field {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+        }
+        .identity-field-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.65);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .identity-field-value {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .identity-field.full { grid-column: 1 / -1; }
+
+        /* ── Section card (generic white panel) ── */
+        .section-card {
+            background: white;
             border-radius: var(--border-radius);
-            cursor: pointer;
-            font-weight: 500;
-            transition: var(--transition);
-            z-index: 10;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .section-label {
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 14px 18px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #f0f2ff;
         }
+        .section-label i { font-size: 0.9rem; }
+        .section-body { padding: 16px 18px 18px; }
 
-        .logout-btn:hover {
-            background: #e01e6d;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
-        }
-
-        /* Modern Attendance Type Notification */
+        /* ── Time/Attendance section ── */
         .attendance-notification {
-            background: #f8f9ff;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-top: 15px;
-            border: 1px solid #e0e6ff;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.08);
-            transition: var(--transition);
+            /* overridden — uses section-card wrapping */
+            padding: 0;
+            border: none;
+            background: none;
+            box-shadow: none;
+            margin: 0;
         }
-
         .attendance-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
         }
-
         .attendance-title {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-weight: 600;
+            font-size: 0.88rem;
             color: var(--dark);
         }
-
-        .attendance-title i {
-            font-size: 1.2rem;
-        }
-
+        .attendance-title i { font-size: 1rem; color: var(--primary); }
         .current-time {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 6px 12px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.82rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(67,97,238,0.25);
         }
-
-        .time-slots {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
+        .time-slots { display: flex; gap: 10px; }
         .time-slot {
             flex: 1;
-            min-width: 140px;
-            padding: 15px;
-            border-radius: var(--border-radius);
+            padding: 13px 12px;
+            border-radius: 10px;
             text-align: center;
+            border: 1.5px solid #eef0f8;
+            background: #fafbff;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
         }
-
-        .time-slot::after {
+        .time-slot::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
         }
-
-        .time-slot.datang::after {
-            background: linear-gradient(90deg, #4caf50, #8bc34a);
-        }
-
-        .time-slot.pulang::after {
-            background: linear-gradient(90deg, #2196f3, #03a9f4);
-        }
-
+        .time-slot.datang::before { background: linear-gradient(90deg, #4caf50, #8bc34a); }
+        .time-slot.pulang::before { background: linear-gradient(90deg, #2196f3, #03a9f4); }
         .time-slot.active {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.09);
             border-color: transparent;
         }
-
         .time-slot.active.datang {
-            background: linear-gradient(to bottom, rgba(76, 175, 80, 0.05), white);
-            border: 1px solid rgba(76, 175, 80, 0.3);
+            background: linear-gradient(160deg, rgba(76,175,80,0.06), #fff);
+            border-color: rgba(76,175,80,0.3);
         }
-
         .time-slot.active.pulang {
-            background: linear-gradient(to bottom, rgba(33, 150, 243, 0.05), white);
-            border: 1px solid rgba(33, 150, 243, 0.3);
+            background: linear-gradient(160deg, rgba(33,150,243,0.06), #fff);
+            border-color: rgba(33,150,243,0.3);
         }
-
         .slot-header {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-bottom: 6px; font-weight: 600; font-size: 0.82rem;
+        }
+        .slot-header.datang { color: #3d9145; }
+        .slot-header.pulang { color: #1a7bc4; }
+        .slot-time { font-size: 1rem; font-weight: 700; margin-bottom: 5px; color: var(--dark); }
+        .slot-status {
+            font-size: 0.72rem; padding: 3px 9px;
+            border-radius: 20px; display: inline-block; font-weight: 500;
+        }
+        .status-active { background: rgba(76,175,80,0.14); color: #2e7d32; }
+        .status-inactive { background: rgba(158,158,158,0.12); color: #757575; }
+        .slot-description { font-size: 0.72rem; color: #aaa; margin-top: 5px; }
+
+        /* ── Photo / camera guide section ── */
+        .photo-guide {
+            display: flex;
+            gap: 10px;
+            background: #fffbf0;
+            border: 1px solid #fde9a0;
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .photo-guide-icon { color: #d4a012; font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
+        .photo-guide-text { font-size: 0.78rem; color: #7a5a00; line-height: 1.6; }
+        .photo-guide-text strong { display: block; margin-bottom: 2px; font-size: 0.8rem; color: #5a4000; }
+
+        /* ── GPS / Location section ── */
+        .location-info {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+        }
+        .location-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .location-chip {
+            background: #f4f6ff;
+            border: 1px solid #e2e6ff;
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+        }
+        .location-chip-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .location-chip-value {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-family: monospace;
+        }
+        .location-chip.full { grid-column: 1 / -1; }
+        .location-coords {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--dark);
+        }
+        .distance-badge {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            font-weight: 600;
+            justify-content: space-between;
+            background: #f0f8f0;
+            border: 1px solid #c3e6cb;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
         }
+        .distance-badge-left { display: flex; align-items: center; gap: 8px; }
+        .distance-badge-left i { color: #28a745; font-size: 1rem; }
+        .distance-badge-label { font-size: 0.75rem; color: #555; }
+        .distance-badge-value { font-size: 1rem; font-weight: 700; color: #1d6e38; }
+        .distance-badge-radius { font-size: 0.75rem; color: var(--gray); }
 
-        .slot-header.datang {
-            color: #4caf50;
-        }
-
-        .slot-header.pulang {
-            color: #2196f3;
-        }
-
-        .slot-time {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .slot-status {
-            font-size: 0.85rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        .status-active {
-            background: rgba(76, 175, 80, 0.15);
-            color: #2e7d32;
-        }
-
-        .status-inactive {
-            background: rgba(158, 158, 158, 0.15);
-            color: #616161;
-        }
-
-        .slot-description {
-            font-size: 0.85rem;
-            color: var(--gray);
-            margin-top: 8px;
-        }
-
-        /* Modal Konfirmasi Logout */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+        /* GPS status pill */
+        .gps-indicator {
+            display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
+            padding: 9px 12px;
+            background: #f4f6ff;
+            border-radius: var(--radius-sm);
+            border: 1px solid #e2e6ff;
+            margin-top: 10px;
         }
+        .gps-indicator .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%; background-color: #ccc;
+            animation: pulseDot 1.5s infinite; flex-shrink: 0;
+        }
+        .gps-indicator .dot.active { background-color: #28a745; }
+        @keyframes pulseDot {
+            0%,100% { transform: scale(0.85); }
+            50% { transform: scale(1.15); }
+        }
+        #gpsStatus { font-size: 0.82rem; color: var(--dark); }
+        .coords-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .coords-row input { flex: 1; }
 
+        /* ── Form fields ── */
+        .form-group { margin-bottom: 0; }
+        label {
+            display: block; margin-bottom: 6px;
+            font-weight: 600; color: #444; font-size: 0.8rem;
+            letter-spacing: 0.2px;
+        }
+        input, select {
+            width: 100%; padding: 11px 13px;
+            border: 1.5px solid #e4e7f5;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            transition: var(--transition);
+            background-color: #fafbff;
+            color: var(--dark);
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+            background-color: white;
+        }
+        input[readonly] { color: #444; cursor: default; }
+
+        /* ── Buttons ── */
+        .btn {
+            width: 100%; padding: 13px;
+            border: none; border-radius: var(--radius-sm);
+            font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; box-shadow: 0 4px 12px rgba(67,97,238,0.25);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(67,97,238,0.32); }
+        .btn-primary:disabled { background: #ccc; transform: none; box-shadow: none; cursor: not-allowed; }
+
+        .spinner {
+            display: none; width: 22px; height: 22px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%; border-top-color: white;
+            animation: spin 1s linear infinite; margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #message {
+            margin: 12px 0; padding: 10px 12px;
+            border-radius: var(--radius-sm); font-size: 0.88rem;
+            text-align: center; display: none;
+        }
+        .error { background: #fff0f0; color: #dc3545; border: 1px solid #ffcccc; display: block; }
+        .success-msg { background: #f0fff4; color: #28a745; border: 1px solid #c3e6cb; display: block; }
+
+        /* ── Modal / overlays ── */
+        .modal {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55); z-index: 1000;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(3px);
+        }
         .modal-content {
-            background: white;
-            padding: 30px;
+            background: white; padding: 30px;
             border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
+            box-shadow: var(--shadow-md);
+            text-align: center; max-width: 90%; width: 360px;
             animation: modal-appear 0.3s ease-out;
         }
-
         @keyframes modal-appear {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: scale(0.94) translateY(-12px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
         }
-
-        .modal-content i {
-            font-size: 3rem;
-            color: #f44336;
-            margin-bottom: 15px;
-        }
-
-        .modal-content h2 {
-            margin-bottom: 10px;
-            color: var(--dark);
-        }
-
-        .modal-content p {
-            color: var(--gray);
-            margin-bottom: 20px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
+        .modal-content i { font-size: 2.8rem; color: #f44336; margin-bottom: 14px; }
+        .modal-content h2 { margin-bottom: 8px; color: var(--dark); font-size: 1.2rem; }
+        .modal-content p { color: var(--gray); margin-bottom: 20px; font-size: 0.9rem; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
         .modal-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
+            padding: 10px 22px; border: none; border-radius: 8px;
+            font-weight: 600; cursor: pointer; transition: var(--transition); font-size: 0.9rem;
         }
+        .modal-btn.cancel { background: #f0f2f5; color: var(--dark); }
+        .modal-btn.cancel:hover { background: #e4e7ed; }
+        .modal-btn.logout { background: var(--danger); color: white; }
+        .modal-btn.logout:hover { background: #e01e6d; box-shadow: 0 3px 10px rgba(247,37,133,0.3); }
 
-        .modal-btn.cancel {
-            background: #e9ecef;
-            color: var(--dark);
-        }
-
-        .modal-btn.cancel:hover {
-            background: #dee2e6;
-        }
-
-        .modal-btn.logout {
-            background: var(--danger);
-            color: white;
-        }
-
-        .modal-btn.logout:hover {
-            background: #e01e6d;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(247, 37, 133, 0.3);
-        }
-
-        /* Notifikasi Logout */
+        /* Logout toast */
         .logout-notification {
-            position: fixed;
-            top: 20px;
-            right: -300px;
-            background: #28a745;
-            color: white;
-            padding: 15px 25px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 2000;
-            transition: right 0.5s ease;
+            position: fixed; top: 20px; right: -320px;
+            background: #1d7a3e; color: white;
+            padding: 13px 20px; border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            display: flex; align-items: center; gap: 10px;
+            z-index: 5000; transition: right 0.45s cubic-bezier(0.25,0.8,0.25,1);
+            font-size: 0.9rem; font-weight: 500;
         }
+        .logout-notification.show { right: 16px; }
 
-        .logout-notification.show {
-            right: 20px;
-        }
-
-        /* Popup Waktu Presensi */
+        /* Time-lock notification overlay */
         .time-notification {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15,15,40,0.82);
+            backdrop-filter: blur(6px);
             z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
             display: none;
+            flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 30px; text-align: center;
         }
-
-        .time-notification.show {
-            display: flex;
+        .time-notification.show { display: flex; }
+        .time-notification-box {
+            background: white; border-radius: 18px;
+            padding: 36px 28px; max-width: 360px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            animation: modal-appear 0.35s ease-out;
         }
+        .time-notification i { font-size: 3.5rem; color: var(--primary); margin-bottom: 18px; display: block; }
+        .time-notification h2 { margin-bottom: 12px; color: var(--dark); font-size: 1.25rem; }
+        .time-notification p { max-width: 320px; margin: 0 auto 24px; color: var(--gray); font-size: 0.9rem; line-height: 1.6; }
 
-        .time-notification i {
-            font-size: 4rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-        }
-
-        .time-notification h2 {
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
-
-        .time-notification p {
-            max-width: 400px;
-            margin-bottom: 30px;
-            color: var(--gray);
-        }
-
-        /* GPS Blocker */
+        /* GPS blocker overlay */
         .gps-blocker {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15,15,40,0.88);
+            backdrop-filter: blur(6px);
             z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
             display: none;
+            flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 30px; text-align: center;
+        }
+        .gps-blocker-box {
+            background: white; border-radius: 18px;
+            padding: 36px 28px; max-width: 360px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+        .gps-blocker i { font-size: 3.5rem; color: var(--danger); margin-bottom: 18px; display: block; }
+        .gps-blocker h2 { margin-bottom: 12px; color: var(--dark); font-size: 1.2rem; }
+        .gps-blocker p { color: var(--gray); margin-bottom: 22px; font-size: 0.88rem; line-height: 1.6; }
+
+        /* ── Page footer ── */
+        .page-footer {
+            text-align: center;
+            padding: 10px 0 4px;
+            font-size: 0.72rem;
+            color: #aaa;
+            letter-spacing: 0.3px;
         }
 
-        .gps-blocker i {
-            font-size: 4rem;
-            color: var(--danger);
-            margin-bottom: 20px;
-        }
-
-        /* Popup Sukses Presensi */
+        /* ── Popup Sukses Presensi ── */
         #successPopup {
             position: fixed;
             top: 0;
@@ -1571,6 +1579,34 @@
         }
         /* Corner accent lines */
         .face-border svg .corner { stroke: #fff; stroke-width: 5; fill: none; opacity: 0.85; }
+
+        /* Countdown ring overlay */
+        .capture-countdown-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            z-index: 30;
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .capture-countdown-overlay.visible { display: flex; }
+        .capture-countdown-number {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0,255,204,0.8), 0 2px 8px rgba(0,0,0,0.7);
+            line-height: 1;
+        }
+        .capture-countdown-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
 
         .face-detection-status {
             position: absolute;
@@ -2050,10 +2086,15 @@
                                         <polyline class="corner" points="50,228 12,228 12,190"/>
                                     </svg>
                                 </div>
+                                <!-- Countdown overlay -->
+                                <div class="capture-countdown-overlay" id="captureCountdownOverlay">
+                                    <div class="capture-countdown-number" id="captureCountdownNum">3</div>
+                                    <div class="capture-countdown-label">MENGAMBIL FOTO</div>
+                                </div>
                                 <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
                             </div>
                             <div class="camera-hint-bar">
-                                <i class="fas fa-shield-alt"></i>&nbsp; Wajah harus terdeteksi langsung dari kamera — foto diambil otomatis &amp; instan
+                                <i class="fas fa-info-circle"></i>&nbsp; Posisikan wajah di dalam bingkai — foto diambil otomatis saat wajah terdeteksi
                             </div>
                         </div>
                     </div>
@@ -2226,124 +2267,107 @@
             }
         }
 
-        // Berapa frame berturut-turut wajah harus ada di dalam bingkai sebelum capture
-        // 300ms interval × 4 frame = ~1.2 detik stabil → langsung ambil foto
-        const REQUIRED_FACE_STREAK = 4;
-        let faceStreak = 0;          // frame berturut-turut wajah di dalam bingkai
-        let isCapturing = false;     // sedang proses capture, jangan trigger ulang
-
-        function isFaceInsideBorder(detections) {
-            if (!detections || detections.length === 0) return false;
-            const vw = video.videoWidth, vh = video.videoHeight;
-            // Border area: tengah 70% lebar × 70% tinggi (sesuai SVG oval)
-            const mx = vw * 0.15, my = vh * 0.15;
-            const borderBox = { x: mx, y: my, width: vw - mx * 2, height: vh - my * 2 };
-            for (const det of detections) {
-                const b = det.box;
-                const ix = Math.max(b.x, borderBox.x);
-                const iy = Math.max(b.y, borderBox.y);
-                const iw = Math.min(b.x + b.width,  borderBox.x + borderBox.width)  - ix;
-                const ih = Math.min(b.y + b.height, borderBox.y + borderBox.height) - iy;
-                if (iw > 0 && ih > 0 && (iw * ih) / (b.width * b.height) > 0.65) return true;
-            }
-            return false;
-        }
-
         function startFaceDetection() {
             if (detectionInterval) clearInterval(detectionInterval);
-            faceStreak = 0;
-            isCapturing = false;
-            // Interval 300ms — cepat tapi tidak boros CPU
             detectionInterval = setInterval(async () => {
-                if (isCapturing) return;
                 if (!modelsLoaded || !video.videoWidth || video.paused || video.ended) return;
                 try {
-                    const detections = await faceapi.detectAllFaces(
-                        video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
-                    );
-                    // Bersihkan overlay
-                    faceOverlay.width  = video.videoWidth;
+                    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+                    const overlayCtx = faceOverlay.getContext('2d');
+                    overlayCtx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+                    faceOverlay.width = video.videoWidth;
                     faceOverlay.height = video.videoHeight;
-                    faceOverlay.getContext('2d').clearRect(0, 0, faceOverlay.width, faceOverlay.height);
 
-                    const inside = isFaceInsideBorder(detections);
-
-                    if (inside) {
-                        faceStreak++;
-                        faceDetected = true;
-
-                        if (faceStreak < REQUIRED_FACE_STREAK) {
-                            // Masih akumulasi streak — tampilkan progress
-                            const pct = Math.round((faceStreak / REQUIRED_FACE_STREAK) * 100);
-                            faceStatusDiv.className = 'face-detection-status detection-success';
-                            faceStatusDiv.innerHTML = `✅ Wajah terdeteksi — tahan sebentar… ${pct}%`;
-                        } else if (!autoSubmitTriggered) {
-                            // Streak terpenuhi — ambil foto SEKARANG
-                            autoSubmitTriggered = true;
-                            isCapturing = true;
-                            clearInterval(detectionInterval);
-                            faceStatusDiv.className = 'face-detection-status detection-success';
-                            faceStatusDiv.innerHTML = "📸 Mengambil foto...";
-                            // Capture langsung (tanpa countdown)
-                            await captureAndSubmit();
+                    const hasFace = detections.length > 0;
+                    if (hasFace) {
+                        const videoRect = { width: video.videoWidth, height: video.videoHeight };
+                        const borderMarginX = videoRect.width * 0.15;
+                        const borderMarginY = videoRect.height * 0.15;
+                        const borderBox = {
+                            x: borderMarginX,
+                            y: borderMarginY,
+                            width: videoRect.width - (borderMarginX * 2),
+                            height: videoRect.height - (borderMarginY * 2)
+                        };
+                        let faceInside = false;
+                        for (const detection of detections) {
+                            const box = detection.box;
+                            const intersectX = Math.max(box.x, borderBox.x);
+                            const intersectY = Math.max(box.y, borderBox.y);
+                            const intersectW = Math.min(box.x + box.width, borderBox.x + borderBox.width) - intersectX;
+                            const intersectH = Math.min(box.y + box.height, borderBox.y + borderBox.height) - intersectY;
+                            if (intersectW > 0 && intersectH > 0) {
+                                const intersectArea = intersectW * intersectH;
+                                const faceArea = box.width * box.height;
+                                if (intersectArea / faceArea > 0.7) { faceInside = true; break; }
+                            }
+                        }
+                        if (faceInside) {
+                            if (!faceDetected) {
+                                faceDetected = true;
+                                faceStatusDiv.className = 'face-detection-status detection-success';
+                                faceStatusDiv.innerHTML = "✅ Wajah terdeteksi! Bersiap mengambil foto...";
+                                if (!autoSubmitTriggered) {
+                                    autoSubmitTriggered = true;
+                                    if (detectionInterval) clearInterval(detectionInterval);
+                                    startCaptureCountdown();
+                                }
+                            } else {
+                                faceStatusDiv.className = 'face-detection-status detection-success';
+                                faceStatusDiv.innerHTML = "✅ Wajah dalam area — tahan posisi";
+                            }
+                        } else {
+                            faceDetected = false;
+                            faceStatusDiv.className = 'face-detection-status detection-warning';
+                            faceStatusDiv.innerHTML = "⚠️ Posisikan wajah di dalam bingkai!";
                         }
                     } else {
-                        // Wajah hilang atau di luar bingkai — reset streak
-                        faceStreak = 0;
                         faceDetected = false;
-                        if (detections.length === 0) {
-                            faceStatusDiv.className = 'face-detection-status detection-error';
-                            faceStatusDiv.innerHTML = "❌ Tidak ada wajah — arahkan kamera ke wajah Anda";
-                        } else {
-                            faceStatusDiv.className = 'face-detection-status detection-warning';
-                            faceStatusDiv.innerHTML = "⚠️ Posisikan wajah tepat di dalam bingkai!";
-                        }
+                        faceStatusDiv.className = 'face-detection-status detection-error';
+                        faceStatusDiv.innerHTML = "❌ Tidak ada wajah terdeteksi";
                     }
                 } catch (err) { console.error("Face detection error:", err); }
-            }, 300);
+            }, 500);
+        }
+
+        function startCaptureCountdown() {
+            const overlay = document.getElementById('captureCountdownOverlay');
+            const numEl = document.getElementById('captureCountdownNum');
+            if (!overlay || !numEl) { captureAndSubmit(); return; }
+            overlay.classList.add('visible');
+            let count = 3;
+            numEl.textContent = count;
+            faceStatusDiv.className = 'face-detection-status detection-success';
+            faceStatusDiv.innerHTML = `📸 Foto diambil dalam ${count} detik...`;
+            const cTimer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numEl.textContent = count;
+                    faceStatusDiv.innerHTML = `📸 Foto diambil dalam ${count} detik...`;
+                } else {
+                    clearInterval(cTimer);
+                    overlay.classList.remove('visible');
+                    faceStatusDiv.innerHTML = "📤 Mengambil & mengirim foto...";
+                    captureAndSubmit();
+                }
+            }, 1000);
         }
 
         async function captureAndSubmit() {
-            // ── VERIFIKASI ULANG: wajah masih harus ada di frame saat capture ──
-            let verifyOk = false;
-            try {
-                const verify = await faceapi.detectAllFaces(
-                    video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
-                );
-                verifyOk = isFaceInsideBorder(verify);
-            } catch (_) { verifyOk = false; }
-
-            if (!verifyOk) {
-                // Wajah tidak ada saat hendak capture → tolak, mulai ulang
-                faceStatusDiv.className = 'face-detection-status detection-error';
-                faceStatusDiv.innerHTML = "❌ Wajah tidak terdeteksi saat pengambilan foto — coba lagi";
-                isCapturing = false;
-                autoSubmitTriggered = false;
-                faceStreak = 0;
-                faceDetected = false;
-                setTimeout(() => startFaceDetection(), 800);
-                return;
-            }
-
-            // ── AMBIL FRAME DARI VIDEO (bukan dari luar) ──
             const captureCanvas = document.createElement('canvas');
             const ctx = captureCanvas.getContext('2d');
-            captureCanvas.width  = video.videoWidth;
+            captureCanvas.width = video.videoWidth;
             captureCanvas.height = video.videoHeight;
-            // Mirror (selfie) — flip horizontal
             ctx.translate(captureCanvas.width, 0);
             ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-
-            const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
+            const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.8);
             photoData.value = dataUrl;
             imagePreview.src = dataUrl;
             imagePreviewContainer.style.display = 'block';
-
-            // Stop kamera segera setelah capture
-            if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+            if (stream) { stream.getTracks().forEach(track => track.stop());
+                stream = null; }
             cameraPreview.style.display = 'none';
-
             const blob = dataURLtoBlob(dataUrl);
             window.capturedFile = new File([blob], "presensi.jpg", { type: 'image/jpeg' });
             submitPresensiForm();
@@ -2352,11 +2376,10 @@
         retakeBtn.addEventListener('click', function() {
             imagePreviewContainer.style.display = 'none';
             cameraPreview.style.display = 'block';
+            const overlay = document.getElementById('captureCountdownOverlay');
+            if (overlay) overlay.classList.remove('visible');
             autoSubmitTriggered = false;
             faceDetected = false;
-            faceStreak = 0;
-            isCapturing = false;
-            window.capturedFile = null;
             startCamera();
         });
 
