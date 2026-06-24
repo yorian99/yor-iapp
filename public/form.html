@@ -728,50 +728,53 @@
             position: relative;
         }
 
-        /* Top bar inside the card: holds the logout action, separate from the brand block */
+        /* Compact top bar: small brand (logo + title) on the left, logout action on the right */
         .card-topbar {
             display: flex;
-            justify-content: flex-end;
-            margin-bottom: 6px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #eef0fb;
         }
 
-        .card-header {
-            text-align: center;
-            margin-bottom: 28px;
-            padding-bottom: 22px;
-            position: relative;
+        .brand-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
         }
 
-        .card-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 2px;
-        }
-
-        .logo {
-            width: 76px;
-            height: 76px;
-            margin: 0 auto 12px;
-            display: block;
+        .logo-mini {
+            width: 36px;
+            height: 36px;
             object-fit: contain;
+            flex-shrink: 0;
         }
 
-        h1 {
-            color: var(--dark);
+        .brand-mini-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.25;
+        }
+
+        .brand-mini-title {
+            font-size: 1rem;
             font-weight: 600;
-            font-size: 1.8rem;
+            color: var(--dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .subtitle {
+        .brand-mini-subtitle {
+            font-size: 0.72rem;
             color: var(--gray);
-            font-size: 0.95rem;
-            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .form-group {
@@ -947,7 +950,7 @@
         .attendance-notification {
             background: #f8f9ff;
             border-radius: var(--border-radius);
-            padding: 20px;
+            padding: 14px 16px;
             margin-top: 15px;
             margin-bottom: 20px;
             border: 1px solid #e0e6ff;
@@ -959,7 +962,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .attendance-title {
@@ -968,10 +971,11 @@
             gap: 10px;
             font-weight: 600;
             color: var(--dark);
+            font-size: 0.92rem;
         }
 
         .attendance-title i {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         .current-time {
@@ -986,21 +990,34 @@
             gap: 6px;
         }
 
+        /* Compact, alternating slot display: only one of the two slots is shown at a time, cross-fading sideways */
         .time-slots {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            position: relative;
+            height: 46px;
         }
 
         .time-slot {
-            flex: 1;
-            min-width: 140px;
-            padding: 15px;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 14px 8px 16px;
             border-radius: var(--border-radius);
-            text-align: center;
-            transition: var(--transition);
-            position: relative;
+            background: white;
+            border: 1px solid #ececf7;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: opacity 0.45s ease, transform 0.45s ease, background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            pointer-events: none;
             overflow: hidden;
+        }
+
+        .time-slot.slot-visible {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
         }
 
         .time-slot::after {
@@ -1008,41 +1025,41 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 4px;
+            width: 4px;
+            height: 100%;
         }
 
         .time-slot.datang::after {
-            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            background: linear-gradient(180deg, #4caf50, #8bc34a);
         }
 
         .time-slot.pulang::after {
-            background: linear-gradient(90deg, #2196f3, #03a9f4);
+            background: linear-gradient(180deg, #2196f3, #03a9f4);
         }
 
         .time-slot.active {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
         }
 
         .time-slot.active.datang {
-            background: linear-gradient(to bottom, rgba(76, 175, 80, 0.05), white);
-            border: 1px solid rgba(76, 175, 80, 0.3);
+            background: linear-gradient(to right, rgba(76, 175, 80, 0.06), white);
+            border-color: rgba(76, 175, 80, 0.3);
         }
 
         .time-slot.active.pulang {
-            background: linear-gradient(to bottom, rgba(33, 150, 243, 0.05), white);
-            border: 1px solid rgba(33, 150, 243, 0.3);
+            background: linear-gradient(to right, rgba(33, 150, 243, 0.06), white);
+            border-color: rgba(33, 150, 243, 0.3);
         }
 
         .slot-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 7px;
             font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .slot-header.datang {
@@ -1054,16 +1071,20 @@
         }
 
         .slot-time {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--gray);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .slot-status {
-            font-size: 0.85rem;
-            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 3px 9px;
             border-radius: 20px;
-            display: inline-block;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .status-active {
@@ -1076,10 +1097,29 @@
             color: #616161;
         }
 
+        /* Kept in the DOM for accessibility/data, hidden from the compact view to save space */
         .slot-description {
-            font-size: 0.85rem;
-            color: var(--gray);
+            display: none;
+        }
+
+        /* Small dots showing which slot is currently displayed */
+        .time-slots-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
             margin-top: 8px;
+        }
+
+        .time-slots-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #d8dcf5;
+            transition: background 0.3s;
+        }
+
+        .time-slots-dots span.dot-active {
+            background: var(--primary);
         }
 
         /* Modal Konfirmasi Logout */
@@ -1691,16 +1731,25 @@
                 min-width: 100%;
             }
 
-            h1 {
-                font-size: 1.5rem;
+            .brand-mini-title {
+                font-size: 0.92rem;
             }
 
             .time-slots {
-                flex-direction: column;
+                height: 54px;
             }
 
-            .time-slot {
-                min-width: 100%;
+            .slot-header {
+                font-size: 0.74rem;
+            }
+
+            .slot-time {
+                font-size: 0.72rem;
+            }
+
+            .slot-status {
+                font-size: 0.66rem;
+                padding: 3px 7px;
             }
 
             .modal-buttons {
@@ -1999,15 +2048,16 @@
     <div class="container">
         <div class="card">
             <div class="card-topbar">
+                <div class="brand-mini">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo-mini">
+                    <div class="brand-mini-text">
+                        <h1 class="brand-mini-title">Presensi Pegawai</h1>
+                        <p class="brand-mini-subtitle">Korwil Kecamatan - Tahun 2026</p>
+                    </div>
+                </div>
                 <button class="logout-btn" id="logoutButton">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
-            </div>
-
-            <div class="card-header">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png" alt="Logo Kabupaten" class="logo">
-                <h1>Presensi Pegawai</h1>
-                <p class="subtitle">Korwil Kecamatan - Tahun 2026</p>
             </div>
 
             <form id="presensiForm">
@@ -2029,8 +2079,8 @@
                         </div>
                     </div>
 
-                    <div class="time-slots">
-                        <div class="time-slot datang" data-type="Datang">
+                    <div class="time-slots" id="timeSlots">
+                        <div class="time-slot datang slot-visible" data-type="Datang">
                             <div class="slot-header datang">
                                 <i class="fas fa-sign-in-alt"></i>
                                 <span>Presensi Masuk</span>
@@ -2049,6 +2099,10 @@
                             <div class="slot-status status-inactive">Tidak Aktif</div>
                             <div class="slot-description">Presensi pulang Pegawai</div>
                         </div>
+                    </div>
+                    <div class="time-slots-dots" id="timeSlotsDots">
+                        <span class="dot-active"></span>
+                        <span></span>
                     </div>
                 </div>
 
@@ -2532,6 +2586,25 @@
             }
         }
 
+        // ==================== ALTERNATING ATTENDANCE SLOT DISPLAY ====================
+        // Menampilkan info "Presensi Masuk" dan "Presensi Pulang" secara bergantian
+        // dalam satu baris ringkas, supaya tidak memakan banyak tempat.
+        let attendanceSlotIndex = 0;
+        function cycleAttendanceSlotDisplay() {
+            const slots = document.querySelectorAll('#timeSlots .time-slot');
+            const dots = document.querySelectorAll('#timeSlotsDots span');
+            if (!slots.length) return;
+            attendanceSlotIndex = (attendanceSlotIndex + 1) % slots.length;
+            slots.forEach((slot, i) => slot.classList.toggle('slot-visible', i === attendanceSlotIndex));
+            dots.forEach((dot, i) => dot.classList.toggle('dot-active', i === attendanceSlotIndex));
+        }
+
+        function startAttendanceSlotCycle() {
+            // Slot pertama (Presensi Masuk) sudah tampil dari markup awal;
+            // baru mulai bergantian setelah interval pertama berjalan.
+            setInterval(cycleAttendanceSlotDisplay, 4000);
+        }
+
         function isValidPresensiTime() {
             const now = new Date();
             const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
@@ -2615,6 +2688,7 @@
                     updateAttendanceStatus();
                     setInterval(() => { updateAttendanceStatus();
                         updateSlotTimesDisplay(); }, 60000);
+                    startAttendanceSlotCycle();
                     startLocationTracking();
                     setInterval(checkPresensiTime, 60000);
                     checkPresensiTime();
