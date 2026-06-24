@@ -156,7 +156,7 @@ const TablePagination = ({ currentPage, totalItems, rowsPerPage, onPageChange, o
   const total = Math.ceil(totalItems/rowsPerPage)||1;
   const [jump, setJump] = useState('');
   const doJump = () => {
-    let p = parseInt(jump,15); if(isNaN(p)) p=1;
+    let p = parseInt(jump,10); if(isNaN(p)) p=1;
     p = Math.min(Math.max(1,p),total);
     onPageChange(p); setJump('');
   };
