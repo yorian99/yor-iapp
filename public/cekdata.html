@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cek Presensi Hari Ini - Korwil</title>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray: #94a3b8;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f4ff;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ====== HEADER ====== */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 18px 20px 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: white;
+            position: relative;
+        }
+        .app-header .logo {
+            width: 46px; height: 46px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+        }
+        .app-header-text h1 {
+            font-size: 1.1rem; font-weight: 700;
+            line-height: 1.2;
+        }
+        .app-header-text p {
+            font-size: 0.75rem;
+            opacity: 0.85; margin-top: 2px;
+        }
+        .header-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* ====== DATE STRIP ====== */
+        .date-strip {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .date-strip strong { color: var(--text); }
+        .live-dot {
+            width: 8px; height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1.2s infinite;
+            margin-right: 6px;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ====== CONTAINER ====== */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        /* ====== CARD ====== */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .card-label i { font-size: 0.9rem; }
+
+        /* ====== SEARCH FORM ====== */
+        .search-group {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .input-wrap {
+            flex: 1;
+            position: relative;
+        }
+        .input-wrap i {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+        .input-wrap input {
+            width: 100%;
+            padding: 13px 14px 13px 40px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text);
+            transition: border-color 0.2s;
+            background: var(--light);
+            -webkit-appearance: none;
+        }
+        .input-wrap input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+        .input-wrap input::placeholder { color: var(--gray); }
+
+        .btn-cari {
+            padding: 13px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-cari:hover { background: var(--primary-dark); }
+        .btn-cari:active { transform: scale(0.97); }
+        .btn-cari.loading { opacity: 0.7; pointer-events: none; }
+
+        /* ====== RESULT AREA ====== */
+        #resultArea { display: none; }
+
+        /* Pegawai info */
+        .pegawai-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--light);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .pegawai-avatar {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.3rem; flex-shrink: 0;
+        }
+        .pegawai-detail { flex: 1; min-width: 0; }
+        .pegawai-nama {
+            font-weight: 700; font-size: 0.95rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .pegawai-sub {
+            font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;
+        }
+        .pegawai-nip {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 600;
+            background: #eff2ff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        /* ====== STATUS PRESENSI CARDS ====== */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .status-card {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .status-card.has-record { border-color: var(--success); }
+        .status-card.no-record  { border-color: var(--border); }
+
+        .status-card-header {
+            padding: 12px 14px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-card.datang .status-card-header {
+            background: linear-gradient(135deg, #dbeafe, #eff6ff);
+            color: #1d4ed8;
+        }
+        .status-card.pulang .status-card-header {
+            background: linear-gradient(135deg, #f3e8ff, #faf5ff);
+            color: #7e22ce;
+        }
+        .status-card-header i { font-size: 0.95rem; }
+
+        .status-card-body {
+            padding: 12px 14px;
+            background: white;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-badge.recorded {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .status-badge.not-recorded {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .record-time {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+        .record-time span { color: var(--success); }
+
+        .record-location {
+            margin-top: 4px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.4;
+        }
+
+        .btn-lihat-foto {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-lihat-foto:hover { background: var(--primary-dark); }
+        .btn-lihat-foto.pulang-btn { background: #7e22ce; }
+        .btn-lihat-foto.pulang-btn:hover { background: #6d28d9; }
+
+        /* ====== SUMMARY STRIP ====== */
+        .summary-strip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+        .summary-strip.complete {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .summary-strip.partial {
+            background: #fef9c3;
+            color: #92400e;
+        }
+        .summary-strip.none {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .summary-strip i { font-size: 1.2rem; }
+
+        /* ====== NOT FOUND ====== */
+        .not-found {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .not-found i {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 12px;
+            display: block;
+        }
+        .not-found p { color: var(--text-secondary); font-size: 0.9rem; }
+        .not-found strong { display: block; font-size: 1rem; color: var(--text); margin-bottom: 6px; }
+
+        /* ====== LOADING SKELETON ====== */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f4ff 25%, #e2e8f0 50%, #f0f4ff 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .skel-line { height: 14px; margin-bottom: 10px; }
+        .skel-line.short { width: 60%; }
+        .skel-line.full { width: 100%; }
+        .skel-sq { height: 80px; width: 100%; }
+
+        /* ====== MODAL FOTO ====== */
+        #fotoModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(6px);
+        }
+        #fotoModal.show { display: flex; }
+
+        .foto-modal-inner {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .foto-modal-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .foto-modal-header h3 {
+            font-size: 0.95rem; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .foto-modal-header h3 i { color: var(--primary); }
+        .btn-close-modal {
+            background: var(--light); border: none;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-close-modal:hover { background: var(--border); }
+
+        .foto-modal-body { padding: 16px; }
+
+        .foto-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+        .foto-meta strong { color: var(--text); }
+
+        .foto-container {
+            border-radius: 14px;
+            overflow: hidden;
+            background: #0f172a;
+            position: relative;
+        }
+        .foto-container img {
+            width: 100%;
+            display: block;
+            max-height: 360px;
+            object-fit: cover;
+        }
+        .foto-container .foto-loading {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: #0f172a; color: white; font-size: 0.85rem;
+            flex-direction: column; gap: 10px;
+        }
+        .foto-container .foto-loading i { font-size: 2rem; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .foto-modal-footer {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+        .foto-modal-footer button {
+            flex: 1; padding: 10px;
+            border: none; border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-tutup { background: var(--light); color: var(--text); }
+        .btn-tutup:hover { background: var(--border); }
+
+        /* ====== REKAP ROW ====== */
+        .rekap-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 0.82rem;
+        }
+        .rekap-row:last-child { border-bottom: none; }
+        .rekap-label { color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
+        .rekap-val { font-weight: 600; }
+        .rekap-val.ok { color: var(--success); }
+        .rekap-val.warn { color: var(--warning); }
+        .rekap-val.miss { color: var(--danger); }
+
+        /* ====== ERROR ====== */
+        .alert-error {
+            background: #fee2e2;
+            border-left: 4px solid var(--danger);
+            padding: 12px 16px;
+            border-radius: 0 10px 10px 0;
+            font-size: 0.85rem;
+            color: #991b1b;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .alert-error i { margin-top: 2px; flex-shrink: 0; }
+
+        /* ====== INFO BOX ====== */
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: 0 10px 10px 0;
+            font-size: 0.8rem;
+            color: #1e40af;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+        }
+        .info-box i { flex-shrink: 0; margin-top: 2px; }
+
+        /* ====== BOTTOM NOTE ====== */
+        .bottom-note {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-top: 8px;
+            padding: 0 10px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="app-header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png"
+             alt="Logo" class="logo">
+        <div class="app-header-text">
+            <h1>Cek Presensi Hari Ini</h1>
+            <p>Korwil Kecamatan &middot; Tahun 2026</p>
+        </div>
+        <div class="header-badge">
+            <i class="fas fa-calendar-check" style="margin-right:5px;"></i>
+            <span id="headerTanggal">–</span>
+        </div>
+    </div>
+
+    <!-- DATE STRIP -->
+    <div class="date-strip">
+        <span><span class="live-dot"></span><span id="stripHari">–</span></span>
+        <span id="stripJam" style="font-weight:600; color:var(--primary);">00:00:00 WIB</span>
+    </div>
+
+    <div class="container">
+
+        <!-- CARD: CARI NIP -->
+        <div class="card">
+            <div class="card-label">
+                <i class="fas fa-search"></i> Cari Berdasarkan NIP
+            </div>
+            <div class="search-group">
+                <div class="input-wrap">
+                    <i class="fas fa-id-badge"></i>
+                    <input type="number" id="nipInput" placeholder="Masukkan NIP pegawai..."
+                           inputmode="numeric" maxlength="18">
+                </div>
+                <button class="btn-cari" id="btnCari" onclick="cariPresensi()">
+                    <i class="fas fa-search"></i> Cari
+                </button>
+            </div>
+            <div class="info-box" style="margin-top:12px;">
+                <i class="fas fa-info-circle"></i>
+                <span>Halaman ini hanya menampilkan presensi <strong>Datang</strong> dan <strong>Pulang</strong> untuk hari ini. Data foto dapat dilihat langsung setelah presensi terekam.</span>
+            </div>
+        </div>
+
+        <!-- RESULT AREA -->
+        <div id="resultArea">
+
+            <!-- Pegawai info -->
+            <div class="card" id="cardPegawai"></div>
+
+            <!-- Status Datang & Pulang -->
+            <div class="card" id="cardStatus"></div>
+
+            <!-- Rekap -->
+            <div class="card" id="cardRekap"></div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL FOTO -->
+    <div id="fotoModal">
+        <div class="foto-modal-inner">
+            <div class="foto-modal-header">
+                <h3><i class="fas fa-camera"></i> <span id="modalTitle">Foto Presensi</span></h3>
+                <button class="btn-close-modal" onclick="tutupFoto()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="foto-modal-body">
+                <div class="foto-meta">
+                    <span><strong id="modalNama">–</strong></span>
+                    <span id="modalWaktu">–</span>
+                </div>
+                <div class="foto-container" id="fotoContainer">
+                    <div class="foto-loading" id="fotoLoading">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Memuat foto...</span>
+                    </div>
+                    <img id="fotoImg" src="" alt="Foto Presensi"
+                         style="display:none;"
+                         onload="fotoLoaded()" onerror="fotoError()">
+                </div>
+                <div style="margin-top:12px; font-size:0.75rem; color:var(--text-secondary);">
+                    <i class="fas fa-map-marker-alt" style="color:var(--primary);"></i>
+                    <span id="modalLokasi">–</span>
+                </div>
+            </div>
+            <div class="foto-modal-footer">
+                <button class="btn-tutup" onclick="tutupFoto()">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─────────────────────────────────────────────
+        //  KONFIGURASI — sesuaikan dengan sistem Anda
+        // ─────────────────────────────────────────────
+        const PROXY_URL = '/api/proxy';
+
+        // ─────────────────────────────────────────────
+        //  WAKTU WIB
+        // ─────────────────────────────────────────────
+        function getWIB() {
+            const now = new Date();
+            return new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
+        }
+
+        const HARI_NAME = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const BULAN_NAME = ['Januari','Februari','Maret','April','Mei','Juni',
+                            'Juli','Agustus','September','Oktober','November','Desember'];
+
+        function formatTanggal(d) {
+            return `${HARI_NAME[d.getDay()]}, ${d.getDate()} ${BULAN_NAME[d.getMonth()]} ${d.getFullYear()}`;
+        }
+        function formatJam(d) {
+            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')} WIB`;
+        }
+        function formatJamSingkat(d) {
+            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} WIB`;
+        }
+
+        function updateClock() {
+            const wib = getWIB();
+            const tgl = formatTanggal(wib);
+            document.getElementById('headerTanggal').textContent = `${wib.getDate()} ${BULAN_NAME[wib.getMonth()]}`;
+            document.getElementById('stripHari').textContent = tgl;
+            document.getElementById('stripJam').textContent = formatJam(wib);
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ─────────────────────────────────────────────
+        //  CEK HARI PRESENSI (hanya Datang & Pulang)
+        // ─────────────────────────────────────────────
+        function isFriday() { return getWIB().getDay() === 5; }
+
+        function getPresensiConfig() {
+            // Datang: 06:00 – 07:00
+            // Pulang: 15:00 – 16:30 (Jumat: 14:30 – 16:30)
+            return {
+                datangLabel: '06:00 – 07:00',
+                pulangLabel: isFriday() ? '14:30 – 16:30' : '15:00 – 16:30',
+            };
+        }
+
+        // ─────────────────────────────────────────────
+        //  HELPER UI
+        // ─────────────────────────────────────────────
+        function setLoading(on) {
+            const btn = document.getElementById('btnCari');
+            btn.classList.toggle('loading', on);
+            btn.innerHTML = on
+                ? '<i class="fas fa-circle-notch fa-spin"></i> Mencari...'
+                : '<i class="fas fa-search"></i> Cari';
+        }
+
+        // ─────────────────────────────────────────────
+        //  ENTER KEY
+        // ─────────────────────────────────────────────
+        document.getElementById('nipInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') cariPresensi();
+        });
+
+        // ─────────────────────────────────────────────
+        //  MAIN: CARI PRESENSI
+        // ─────────────────────────────────────────────
+        async function cariPresensi() {
+            const nip = document.getElementById('nipInput').value.trim();
+            if (!nip) {
+                alert('Silakan masukkan NIP terlebih dahulu.');
+                return;
+            }
+
+            setLoading(true);
+            document.getElementById('resultArea').style.display = 'none';
+
+            try {
+                // ── 1. Ambil data pegawai berdasarkan NIP ──
+                const resPegawai = await fetch(`${PROXY_URL}?action=getPegawaiByNip`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nip })
+                });
+
+                if (!resPegawai.ok) throw new Error(`HTTP error ${resPegawai.status}`);
+                const pegawai = await resPegawai.json();
+
+                if (!pegawai || !pegawai.nama) {
+                    renderNotFound(nip);
+                    setLoading(false);
+                    return;
+                }
+
+                // ── 2. Ambil rekap presensi hari ini ──
+                const wib = getWIB();
+                const tanggalHariIni = `${wib.getFullYear()}-${(wib.getMonth()+1).toString().padStart(2,'0')}-${wib.getDate().toString().padStart(2,'0')}`;
+
+                const resPresensi = await fetch(`${PROXY_URL}?action=getPresensiHariIni`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nip, tanggal: tanggalHariIni })
+                });
+
+                if (!resPresensi.ok) throw new Error(`HTTP error ${resPresensi.status}`);
+                const presensi = await resPresensi.json();
+
+                // presensi diharapkan: { datang: null | { waktu, latitude, longitude, fotoUrl }, pulang: null | {...} }
+                renderResult(pegawai, presensi, tanggalHariIni);
+
+            } catch (err) {
+                console.error('Cari presensi error:', err);
+                renderError(err.message);
+            }
+
+            setLoading(false);
+        }
+
+        // ─────────────────────────────────────────────
+        //  RENDER: PEGAWAI + STATUS
+        // ─────────────────────────────────────────────
+        function renderResult(pegawai, presensi, tanggal) {
+            const resultArea = document.getElementById('resultArea');
+            const cfg = getPresensiConfig();
+
+            // ── Pegawai info ──
+            const cardPegawai = document.getElementById('cardPegawai');
+            cardPegawai.innerHTML = `
+                <div class="card-label"><i class="fas fa-id-card"></i> Identitas Pegawai</div>
+                <div class="pegawai-info">
+                    <div class="pegawai-avatar"><i class="fas fa-user-tie"></i></div>
+                    <div class="pegawai-detail">
+                        <div class="pegawai-nama">${esc(pegawai.nama)}</div>
+                        <div class="pegawai-sub">${esc(pegawai.namaLembaga || '–')}</div>
+                    </div>
+                    <div class="pegawai-nip">${esc(pegawai.nip || document.getElementById('nipInput').value)}</div>
+                </div>
+            `;
+
+            // ── Status Datang & Pulang ──
+            const datang = presensi?.datang || null;
+            const pulang = presensi?.pulang || null;
+
+            const cardStatus = document.getElementById('cardStatus');
+            cardStatus.innerHTML = `
+                <div class="card-label"><i class="fas fa-clipboard-check"></i> Status Presensi – ${formatTanggalShort(tanggal)}</div>
+                <div class="status-grid">
+                    ${renderStatusCard('datang', datang, cfg.datangLabel, pegawai.nama)}
+                    ${renderStatusCard('pulang', pulang, cfg.pulangLabel, pegawai.nama)}
+                </div>
+            `;
+
+            // ── Summary strip ──
+            let summaryClass, summaryIcon, summaryText;
+            if (datang && pulang) {
+                summaryClass = 'complete'; summaryIcon = 'fas fa-check-circle';
+                summaryText = 'Presensi hari ini <strong>lengkap</strong>. Datang dan pulang sudah terekam.';
+            } else if (datang || pulang) {
+                summaryClass = 'partial'; summaryIcon = 'fas fa-exclamation-circle';
+                summaryText = datang
+                    ? 'Presensi <strong>datang</strong> sudah terekam. Presensi <strong>pulang</strong> belum tercatat.'
+                    : 'Presensi <strong>pulang</strong> terekam, namun <strong>datang</strong> belum tercatat.';
+            } else {
+                summaryClass = 'none'; summaryIcon = 'fas fa-times-circle';
+                summaryText = 'Presensi hari ini <strong>belum ada</strong>. Datang dan pulang belum terekam.';
+            }
+
+            // ── Rekap ──
+            const cardRekap = document.getElementById('cardRekap');
+            cardRekap.innerHTML = `
+                <div class="card-label"><i class="fas fa-chart-bar"></i> Ringkasan Hari Ini</div>
+                <div class="summary-strip ${summaryClass}" style="margin-bottom:14px;">
+                    <i class="${summaryIcon}"></i>
+                    <span>${summaryText}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-sign-in-alt" style="color:#3b82f6;"></i> Jam Datang</span>
+                    <span class="rekap-val ${datang ? 'ok' : 'miss'}">${datang ? formatWaktuDisplay(datang.waktu) : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-sign-out-alt" style="color:#7c3aed;"></i> Jam Pulang</span>
+                    <span class="rekap-val ${pulang ? 'ok' : 'miss'}">${pulang ? formatWaktuDisplay(pulang.waktu) : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-camera" style="color:#0891b2;"></i> Foto</span>
+                    <span class="rekap-val">
+                        ${datang && datang.fotoUrl ? '<span style="color:var(--success);">✓ Datang</span>' : ''}
+                        ${datang && datang.fotoUrl && pulang && pulang.fotoUrl ? ' &amp; ' : ''}
+                        ${pulang && pulang.fotoUrl ? '<span style="color:var(--success);">✓ Pulang</span>' : ''}
+                        ${!datang?.fotoUrl && !pulang?.fotoUrl ? '<span style="color:var(--gray);">–</span>' : ''}
+                    </span>
+                </div>
+                <p class="bottom-note" style="margin-top:12px;">
+                    <i class="fas fa-sync-alt"></i> Terakhir dicek: ${formatJam(getWIB())}
+                </p>
+            `;
+
+            resultArea.style.display = 'block';
+        }
+
+        function renderStatusCard(tipe, data, jamSlot, namaPegawai) {
+            const isDatang = tipe === 'datang';
+            const label = isDatang ? 'Datang' : 'Pulang';
+            const icon  = isDatang ? 'fas fa-sign-in-alt' : 'fas fa-sign-out-alt';
+
+            if (data) {
+                const btnClass = isDatang ? '' : 'pulang-btn';
+                const fotoBtn = data.fotoUrl
+                    ? `<button class="btn-lihat-foto ${btnClass}" onclick="lihatFoto('${esc(tipe)}','${esc(data.fotoUrl)}','${esc(namaPegawai)}','${esc(data.waktu)}','${esc(data.latitude || '')}','${esc(data.longitude || '')}')">
+                           <i class="fas fa-image"></i> Lihat Foto
+                       </button>`
+                    : `<div style="margin-top:10px; font-size:0.72rem; color:var(--gray);"><i class="fas fa-image"></i> Foto tidak tersedia</div>`;
+
+                return `
+                    <div class="status-card ${tipe} has-record">
+                        <div class="status-card-header"><i class="${icon}"></i> ${label}</div>
+                        <div class="status-card-body">
+                            <div class="status-badge recorded">
+                                <i class="fas fa-check-circle"></i> Terekam
+                            </div>
+                            <div class="record-time">
+                                <i class="fas fa-clock" style="font-size:0.75rem; color:var(--success); margin-right:3px;"></i>
+                                <span>${formatWaktuDisplay(data.waktu)}</span>
+                            </div>
+                            ${data.latitude && data.longitude
+                                ? `<div class="record-location"><i class="fas fa-map-marker-alt" style="color:var(--primary);flex-shrink:0;"></i>${data.latitude.substring?.(0,9) ?? data.latitude}, ${data.longitude.substring?.(0,10) ?? data.longitude}</div>`
+                                : ''}
+                            ${fotoBtn}
+                        </div>
+                    </div>`;
+            } else {
+                return `
+                    <div class="status-card ${tipe} no-record">
+                        <div class="status-card-header"><i class="${icon}"></i> ${label}</div>
+                        <div class="status-card-body">
+                            <div class="status-badge not-recorded">
+                                <i class="fas fa-minus-circle"></i> Belum
+                            </div>
+                            <div style="margin-top:8px; font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">
+                                <i class="fas fa-clock" style="margin-right:3px;"></i> ${jamSlot}
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  RENDER: NOT FOUND / ERROR
+        // ─────────────────────────────────────────────
+        function renderNotFound(nip) {
+            const cardPegawai = document.getElementById('cardPegawai');
+            cardPegawai.innerHTML = `
+                <div class="not-found">
+                    <i class="fas fa-user-slash"></i>
+                    <strong>NIP Tidak Ditemukan</strong>
+                    <p>NIP <strong>${esc(nip)}</strong> tidak terdaftar dalam sistem. Pastikan NIP yang dimasukkan benar.</p>
+                </div>`;
+            document.getElementById('cardStatus').innerHTML = '';
+            document.getElementById('cardRekap').innerHTML = '';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function renderError(msg) {
+            const cardPegawai = document.getElementById('cardPegawai');
+            cardPegawai.innerHTML = `
+                <div class="alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Gagal mengambil data: ${esc(msg)}. Silakan coba beberapa saat lagi.</span>
+                </div>`;
+            document.getElementById('cardStatus').innerHTML = '';
+            document.getElementById('cardRekap').innerHTML = '';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        // ─────────────────────────────────────────────
+        //  MODAL FOTO
+        // ─────────────────────────────────────────────
+        function lihatFoto(tipe, fotoUrl, nama, waktu, lat, lon) {
+            const label = tipe === 'datang' ? 'Presensi Datang' : 'Presensi Pulang';
+            document.getElementById('modalTitle').textContent = label;
+            document.getElementById('modalNama').textContent = nama;
+            document.getElementById('modalWaktu').textContent = formatWaktuDisplay(waktu);
+            document.getElementById('modalLokasi').textContent =
+                (lat && lon) ? `${lat}, ${lon}` : 'Data lokasi tidak tersedia';
+
+            const img = document.getElementById('fotoImg');
+            const loading = document.getElementById('fotoLoading');
+            img.style.display = 'none';
+            loading.style.display = 'flex';
+            img.src = fotoUrl;
+
+            document.getElementById('fotoModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function fotoLoaded() {
+            document.getElementById('fotoImg').style.display = 'block';
+            document.getElementById('fotoLoading').style.display = 'none';
+        }
+
+        function fotoError() {
+            document.getElementById('fotoLoading').innerHTML =
+                '<i class="fas fa-image" style="color:#94a3b8;"></i><span style="color:#94a3b8;">Foto tidak dapat dimuat</span>';
+        }
+
+        function tutupFoto() {
+            document.getElementById('fotoModal').classList.remove('show');
+            document.body.style.overflow = '';
+            setTimeout(() => { document.getElementById('fotoImg').src = ''; }, 300);
+        }
+
+        // Tutup modal klik backdrop
+        document.getElementById('fotoModal').addEventListener('click', function(e) {
+            if (e.target === this) tutupFoto();
+        });
+
+        // ─────────────────────────────────────────────
+        //  UTILS
+        // ─────────────────────────────────────────────
+        function esc(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        function formatWaktuDisplay(waktu) {
+            if (!waktu) return '–';
+            // Coba parse ISO / timestamp / string jam
+            const d = new Date(waktu);
+            if (!isNaN(d)) {
+                const wib = new Date(d.getTime() + (d.getTimezoneOffset() * 60000) + (3600000 * 7));
+                return formatJamSingkat(wib);
+            }
+            return waktu;
+        }
+
+        function formatTanggalShort(str) {
+            // str: YYYY-MM-DD
+            const p = str.split('-');
+            if (p.length === 3) return `${parseInt(p[2])} ${BULAN_NAME[parseInt(p[1])-1]} ${p[0]}`;
+            return str;
+        }
+
+        /* ─── DEMO / FALLBACK ──────────────────────────────────────────────────
+         * Karena halaman ini dijalankan terpisah dari Google Apps Script,
+         * jika endpoint belum tersedia, Anda bisa mengganti fungsi cariPresensi()
+         * di atas dengan panggilan langsung ke Apps Script URL, contoh:
+         *
+         *   const PROXY_URL = 'https://script.google.com/macros/s/XXXX/exec';
+         *   fetch(`${PROXY_URL}?action=getPresensiHariIni`, { ... })
+         *
+         * Pastikan Apps Script Anda memiliki handler untuk action:
+         *   - getPegawaiByNip   → { nama, namaLembaga, nip }
+         *   - getPresensiHariIni → { datang: {waktu, latitude, longitude, fotoUrl}, pulang: {...} }
+         * ─────────────────────────────────────────────────────────────────── */
+    </script>
+</body>
+</html>
