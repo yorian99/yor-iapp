@@ -56,7 +56,7 @@
 <script type="text/babel">
 const { useState, useEffect, useMemo, useRef } = React;
 
-// ── DATA ────────────────────────────────────────────────────────
+
 const lembagaList = [
   "SDN GENDOL 1","SDN GIRIKERTO 1","SDN GIRIKERTO 2","SDN HARGOSARI 1","SDN HARGOSARI 2",
   "SDN JAGIR 1","SDN TULAKAN 4","SDN JAGIR 2","SDN KUNIRAN 3","SDN JAGIR 3","SDN JAGIR 4",
@@ -66,8 +66,7 @@ const lembagaList = [
   "SDN WONOSARI 1","SDN WONOSARI 2"
 ];
 
-// ── UTILS ───────────────────────────────────────────────────────
-// Vercel /api/gas proxy → Google Apps Script backend
+
 const runGoogleScript = async (fn, ...args) => {
   const res = await fetch('/api/gas', {
     method: 'POST',
@@ -142,7 +141,7 @@ const enrichPresensiWithIjin = (prs, ijin) => {
   });
 };
 
-// FIX: robust timestamp formatter untuk Activity Log
+
 const fmtTs = ts => {
   if (!ts) return '-';
   try {
@@ -152,12 +151,12 @@ const fmtTs = ts => {
   } catch { return String(ts); }
 };
 
-// ── PAGINATION ──────────────────────────────────────────────────
+
 const TablePagination = ({ currentPage, totalItems, rowsPerPage, onPageChange, onRowsPerPageChange }) => {
   const total = Math.ceil(totalItems/rowsPerPage)||1;
   const [jump, setJump] = useState('');
   const doJump = () => {
-    let p = parseInt(jump,10); if(isNaN(p)) p=1;
+    let p = parseInt(jump,15); if(isNaN(p)) p=1;
     p = Math.min(Math.max(1,p),total);
     onPageChange(p); setJump('');
   };
@@ -190,7 +189,7 @@ const TablePagination = ({ currentPage, totalItems, rowsPerPage, onPageChange, o
   );
 };
 
-// ── LOGIN ───────────────────────────────────────────────────────
+
 const Login = ({ onLogin }) => {
   const [un,setUn]=useState(''), [pw,setPw]=useState(''), [load,setLoad]=useState(false), [show,setShow]=useState(false);
   const submit = async e => {
@@ -257,7 +256,7 @@ const Login = ({ onLogin }) => {
   );
 };
 
-// ── DASHBOARD ───────────────────────────────────────────────────
+
 const Dashboard = ({ presensiData, ijinData, pegawaiData }) => {
   const chartRef = useRef(null), chartInst = useRef(null);
   const tot  = lembagaList.length;
@@ -337,7 +336,7 @@ const Dashboard = ({ presensiData, ijinData, pegawaiData }) => {
   );
 };
 
-// ── MONITORING PRESENSI ─────────────────────────────────────────
+
 const MonitoringPresensi = ({ data, refreshData, userRole, userLembaga }) => {
   const [flLem,setFlLem]=useState(''), [flNama,setFlNama]=useState('');
   const [editingRow,setEditingRow]=useState(null), [editVal,setEditVal]=useState('');
@@ -509,12 +508,12 @@ const MonitoringPresensi = ({ data, refreshData, userRole, userLembaga }) => {
   );
 };
 
-// ── DOKUMEN IJIN (Auto-save inline, tanpa tombol Simpan terpisah) ──
+
 const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
   const [modalPdf,setModalPdf]=useState(null);
   const [flLem,setFlLem]=useState(''), [flNama,setFlNama]=useState('');
   const [page,setPage]=useState(1), [rpp,setRpp]=useState(10);
-  // Auto-save states
+
   const [statOver,setStatOver]=useState({}); // {rowIndex: newStatus}
   const [savingStat,setSavingStat]=useState(null);
   const [ketEdit,setKetEdit]=useState(null);
@@ -542,7 +541,7 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
   };
   const getDisplayStat = item => statOver[item._rowIndex]!==undefined ? statOver[item._rowIndex] : normStat(item.Status);
 
-  // ★ Auto-save status saat klik pill
+
   const handleStatClick = async (rowIndex, newStat, currentKet) => {
     setStatOver(p=>({...p,[rowIndex]:newStat})); // optimistic
     setSavingStat(rowIndex);
@@ -559,7 +558,7 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
     setSavingStat(null);
   };
 
-  // ★ Auto-save keterangan saat blur/Enter
+
   const handleKetSave = async (rowIndex, currentStat) => {
     const newKet = ketVals[rowIndex]!==undefined ? ketVals[rowIndex] : '';
     setSavingKet(rowIndex);
@@ -698,7 +697,7 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
   );
 };
 
-// ── DATABASE PEGAWAI ────────────────────────────────────────────
+
 const DatabasePegawai = ({ refreshParent, userRole }) => {
   const [data,setData]=useState([]), [load,setLoad]=useState(false);
   const [flLem,setFlLem]=useState(''), [flNama,setFlNama]=useState('');
@@ -779,7 +778,7 @@ const DatabasePegawai = ({ refreshParent, userRole }) => {
   );
 };
 
-// ── MONITORING EXPORT ───────────────────────────────────────────
+
 const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, userRole }) => {
   const [flLem,setFlLem]=useState(''), [dStart,setDStart]=useState(''), [dEnd,setDEnd]=useState('');
   const isAdmin  = userRole==='Admin';
@@ -926,7 +925,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
     const n=new Date(); doc.save(`Rekapitulasi_${(flLem||'Semua').replace(/\s/g,'_')}_${n.toISOString().slice(0,10)}.pdf`);
   };
 
-  // ── HELPER: hitung menit terlambat ──────────────────────────
+ 
   const calcLateMins = w => {
     if(!w) return 0;
     try{
@@ -937,12 +936,9 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
     }catch{return 0;}
   };
 
-  // ── Klasifikasi TH sesuai UU ASN / PP 94/2021 ───────────────
-  // Ketidakhadiran: Alpa (tanpa keterangan), PSW Ijin, PSW Sakit dgn surat,
-  // PSW Sakit tanpa surat, PSW Dinas Luar, Cuti, Libur.
-  // Dari data yg ada: kita deteksi via ijinData (Jenis Ijin) dan radius.
+
   const classifyAbsence = (nm, allDatesAbsent) => {
-    // allDatesAbsent: array tanggal string dd/mm/yyyy yg TH
+   
     const appIjin=(ijinData||[]).filter(ij=>ij.Status&&ij.Status.toLowerCase()==='disetujui');
     const nn=normalizeName(nm);
     let alpa=0,sakitDgSurat=0,sakitTanpaSurat=0,ijinRes=0,dinasLuar=0,cutiRes=0;
@@ -973,10 +969,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
       const fmtMins=m=>{const j=Math.floor(m/60),mn=m%60;return m===0?'-':(j>0?`${j}j ${mn}m`:`${mn}m`);};
       const tglCetak=new Date().toLocaleString('id-ID');
 
-      // ── Kumpulkan data semua lembaga ────────────────────────────
-      // Build gpMap global (sama persis seperti daftar hadir) agar TH
-      // terdeteksi identik: hari kerja tanpa record = TH, bukan hanya
-      // record eksplisit "Tidak Hadir".
+     
       const rekapGpMap=new Map();
       getFiltered(null).forEach(p=>{
         const dt=parsePresensiDate(p['Waktu']); if(!dt) return;
@@ -988,7 +981,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
           rec={time:exTime(p['Waktu']),radius:rad,isLibur:lib,late:j==='datang'?checkLateStatus(p['Waktu'],'datang'):false};
         if(j==='datang') ent.datang=rec; else if(j==='pulang') ent.pulang=rec;
       });
-      // Daftar hari kerja (Senin–Jumat) dalam rentang periode yg dipilih
+      
       const rekapWorkDates=[];
       if(dStart&&dEnd){
         let cur=new Date(dStart); const eD=new Date(dEnd);
@@ -1001,7 +994,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
           cur.setDate(cur.getDate()+1);
         }
       }
-      // Helper isTH identik dengan daftar hadir
+      
       const isTHrek=r=>!r||(r.radius&&isTidakHadir(r.radius));
 
       const lemaReks=[];
@@ -1013,15 +1006,14 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
           const nm=e['Name Pegawai']||'', nip=e['Username (MP/ID)']||'-';
           const nn=normalizeName(nm);
           const myDatang=datangRows.filter(x=>normalizeName(x['Nama Pegawai']||'')===nn);
-          // Keterlambatan
+          
           const lateRows=myDatang.filter(x=>checkLateStatus(x['Waktu'],'datang')&&!isTidakHadir(x.displayRadius||x['Keterangan Radius']));
           const totalMins=lateRows.reduce((s,x)=>s+calcLateMins(x['Waktu']),0);
-          // Hadir normal
+          
           const hadirCount=myDatang.filter(x=>!isTidakHadir(x.displayRadius||x['Keterangan Radius'])).length;
-          // Luar radius
+          
           const luarRadius=myDatang.filter(x=>isOutsideRadius(x.displayRadius||x['Keterangan Radius'])).length;
-          // TH — deteksi via gpMap identik dengan daftar hadir:
-          //   hari kerja tanpa record datang = TH (bukan hanya record "Tidak Hadir")
+          
           let thDates;
           if(rekapWorkDates.length>0){
             thDates=rekapWorkDates.filter(dt=>{
@@ -1031,7 +1023,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
               return isTHrek(ent?ent.datang:null);
             });
           } else {
-            // Fallback jika periode tidak dipilih: gunakan record eksplisit saja
+           
             thDates=myDatang.filter(x=>isTidakHadir(x.displayRadius||x['Keterangan Radius'])).map(x=>parsePresensiDate(x['Waktu'])).filter(Boolean);
           }
           const abs=classifyAbsence(nm,thDates);
@@ -1048,12 +1040,10 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
       }
       if(!lemaReks.length){Swal.fire('Data Kosong','Tidak ada data pegawai untuk diekspor.','info');return;}
 
-      // ── Kategori Sanksi PP 94/2021 & PP 53/2010 ─────────────────
-      // 7.5 jam akumulasi terlambat = 1 hari tidak masuk kerja
+     
       const getKategori=r=>{
         const hariTL=Math.floor(r.totalMins/450);
-        // total: semua TH (alpa+sakit+ijin+dinas luar+cuti) + hari setara terlambat
-        // Jika ada TH >= 1, keterlambatan ikut dihitung; konsisten dgn PP 94/2021
+        
         const total=r.totalTH+hariTL;
         if(total===0&&r.lateCount===0)            return{t:'✓ Normal',            bg:[220,252,231],tc:[21,128,61]};
         if(total===0&&r.totalMins<450)            return{t:'Peringatan\nLisan',    bg:[254,249,195],tc:[133,77,14]};
@@ -1065,9 +1055,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
         return                                         {t:'HUKDIS BERAT II\n(PTDH)',bg:[127,29,29], tc:[255,255,255]};
       };
 
-      // ════════════════════════════════════════════════════════════
-      // Langsung per lembaga — tanpa halaman cover
-      // ════════════════════════════════════════════════════════════
+     
       const doc=new jsPDF('l','mm','a4');
       const PW=doc.internal.pageSize.getWidth(), PH=doc.internal.pageSize.getHeight();
       const fmtM=m=>{const j=Math.floor(m/60),mn=m%60;return m===0?'-':(j>0?`${j}j ${mn}m`:`${mn}m`);};
@@ -1075,13 +1063,13 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
 
       const drawFooter=y=>{
         if(y>PH-22) return;
-        // baris 1: warna kolom
+        
         const k1=[
           {c:[254,249,195],t:'Kuning=Terlambat'},{c:[252,165,165],t:'Merah=Alpa'},
           {c:[255,237,213],t:'Oranye=Sakit Tanpa Surat'},{c:[220,252,231],t:'Hijau=Sakit Dgn Surat'},
           {c:[219,234,254],t:'Biru=Ijin Resmi'},{c:[243,232,255],t:'Ungu=Dinas Luar'},{c:[241,245,249],t:'Abu=Cuti'},
         ];
-        // baris 2: kategori sanksi
+       
         const k2=[
           {c:[220,252,231],t:'Normal'},{c:[254,249,195],t:'Pering.Lisan'},
           {c:[255,237,213],t:'Hukdis Ringan I (1-3 hr)'},{c:[254,215,170],t:'Hukdis Ringan II (4-6 hr)'},
@@ -1118,14 +1106,14 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
         if(!firstPage) doc.addPage('a4','l');
         firstPage=false;
 
-        // Header
+        
         drawHdr(
           'REKAP KETERLAMBATAN & KETIDAKHADIRAN PEGAWAI',
           `Unit Kerja: ${lr.lem}   |   Periode: ${bulan}`,
           `Dasar: PP No.94/2021, PP No.53/2010 & UU ASN No.5/2014   |   Dicetak: ${tglCetak}`
         );
 
-        // Stat boxes
+     
         const stats=[
           {l:'Total\nPegawai',v:lr.rows.length,c:[219,234,254],tc:[30,64,175]},
           {l:'Terlambat\n(kali)',v:lr.sumTL,c:[254,249,195],tc:[133,77,14]},
@@ -1259,7 +1247,7 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
   );
 };
 
-// ── ACTIVITY LOG (fix tanggal invalid) ─────────────────────────
+
 const ActivityLog = ({ userRole }) => {
   const [logs,setLogs]=useState([]), [load,setLoad]=useState(false);
   const [flUser,setFlUser]=useState(''), [flAct,setFlAct]=useState('');
@@ -1325,7 +1313,7 @@ const ActivityLog = ({ userRole }) => {
   );
 };
 
-// ── PENGAJUAN PSW ───────────────────────────────────────────────
+
 const PengajuanPSW = ({ user }) => {
   const [pegList,setPegList]=useState([]);
   const [fd,setFd]=useState({nip:'',jenis:'',tglAwal:'',tglAkhir:''});
@@ -1389,7 +1377,7 @@ const PengajuanPSW = ({ user }) => {
   );
 };
 
-// ── APP SHELL ───────────────────────────────────────────────────
+
 const App = () => {
   const [user,setUser]=useState(()=>{ try{ const s=sessionStorage.getItem('korwil_user'); return s?JSON.parse(s):null; }catch{return null;} });
   const [tab,setTab]=useState('dashboard');
