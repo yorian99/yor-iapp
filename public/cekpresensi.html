@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cek Presensi Hari Ini - Korwil</title>
+    <link rel="icon" href="https://github.com/YorianP22/CP22/blob/main/Logo.png?raw=true" type="image/png">
     <base target="_top">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -94,11 +95,24 @@
         }
         .search-group { display: flex; gap: 10px; align-items: stretch; }
         .input-wrap { flex: 1; position: relative; }
+        .input-wrap i.field-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray); font-size: 0.95rem;
+        }
         .input-wrap i {
             position: absolute; left: 14px; top: 50%;
             transform: translateY(-50%);
             color: var(--gray); font-size: 0.95rem;
         }
+        .btn-toggle-pw {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--gray); font-size: 0.9rem; padding: 4px;
+            line-height: 1;
+        }
+        .btn-toggle-pw:hover { color: var(--primary); }
         .input-wrap input {
             width: 100%;
             padding: 13px 14px 13px 40px;
@@ -322,12 +336,24 @@
         <!-- CARI NIP -->
         <div class="card">
             <div class="card-label"><i class="fas fa-search"></i> Cari Presensi Pegawai</div>
+            <div class="search-group" style="margin-bottom:10px;">
+                <div class="input-wrap">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="nipInput"
+                           placeholder="Username..."
+                           autocomplete="off" autocorrect="off" spellcheck="false">
+                </div>
+            </div>
             <div class="search-group">
                 <div class="input-wrap">
-                    <i class="fas fa-id-badge"></i>
-                    <input type="text" id="nipInput"
-                           placeholder="Masukkan Username / NIP..."
-                           autocomplete="off" autocorrect="off" spellcheck="false">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="passwordInput"
+                           placeholder="Password..."
+                           autocomplete="off"
+                           style="padding-right:42px;">
+                    <button type="button" class="btn-toggle-pw" onclick="togglePassword()" title="Tampilkan/sembunyikan password">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
                 </div>
                 <button class="btn-cari" id="btnCari" onclick="cariPresensi()">
                     <i class="fas fa-search"></i> Cari
@@ -335,7 +361,7 @@
             </div>
             <div class="info-box">
                 <i class="fas fa-info-circle"></i>
-                <span>Masukkan <strong>username</strong> pegawai untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini beserta foto selfie.</span>
+                <span>Masukkan <strong>username</strong> dan <strong>password</strong> akun Anda untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
             </div>
         </div>
 
@@ -394,6 +420,8 @@
         const SPREADSHEET_ID = '1ACaOKCizDDsrVqKPPrr2gNBpddWl9XPjJvNs8JqUEMc';
         // Nama sheet rekap presensi (sama dengan PRESENSI_SHEET_NAME di code.gs)
         const SHEET_REKAP = 'RekapPresensi';
+        // Nama sheet data pegawai (berisi username & password)
+        const SHEET_PEGAWAI = 'DataPegawai';
         // ───────────────────────────────────────────────────────────────────
 
         const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -425,6 +453,9 @@
 
         // Enter key
         document.getElementById('nipInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+        });
+        document.getElementById('passwordInput').addEventListener('keydown', e => {
             if (e.key === 'Enter') cariPresensi();
         });
 
@@ -527,20 +558,74 @@
             };
         }
 
+        function togglePassword() {
+            const inp = document.getElementById('passwordInput');
+            const ico = document.getElementById('eyeIcon');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                ico.className = 'fas fa-eye-slash';
+            } else {
+                inp.type = 'password';
+                ico.className = 'fas fa-eye';
+            }
+        }
+
         // ── CARI PRESENSI ────────────────────────────────────────────────────
         async function cariPresensi() {
             const username = document.getElementById('nipInput').value.trim();
-            if (!username) { alert('Masukkan username pegawai terlebih dahulu.'); return; }
+            const password = document.getElementById('passwordInput').value;
+
+            if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
+            if (!password) { alert('Masukkan password terlebih dahulu.'); return; }
 
             setLoading(true);
             document.getElementById('resultArea').style.display = 'none';
 
             try {
+                // ── Langkah 1: Validasi username & password dari sheet DataPegawai ──
+                // Struktur sheet DataPegawai yang diharapkan:
+                //   Kolom 0: Username
+                //   Kolom 1: Password
+                //   Kolom 2: Nama Pegawai  (opsional, fallback jika tidak ada di RekapPresensi)
+                //   Kolom 3: NIP / info tambahan (opsional)
+                let pegawaiValid = null;
+                try {
+                    const tablePegawai = await fetchSheetTable(SHEET_PEGAWAI);
+                    const rowsPegawai  = tablePegawai.rows || [];
+                    for (const row of rowsPegawai) {
+                        const rowUser = String(cellVal(row, 0)).trim();
+                        const rowPass = String(cellVal(row, 1)).trim();
+                        if (rowUser.toLowerCase() === username.toLowerCase() && rowPass === password) {
+                            pegawaiValid = row;
+                            break;
+                        }
+                    }
+                    if (!pegawaiValid) {
+                        // Cek apakah username ada tapi password salah
+                        const usernameAda = rowsPegawai.some(r =>
+                            String(cellVal(r, 0)).trim().toLowerCase() === username.toLowerCase()
+                        );
+                        renderAuthError(usernameAda ? 'password' : 'username', username);
+                        setLoading(false);
+                        return;
+                    }
+                } catch (errAuth) {
+                    // Jika sheet DataPegawai tidak ada / tidak bisa diakses,
+                    // fallback: validasi lewat Apps Script (action=login)
+                    const loginOk = await loginViaAppsScript(username, password);
+                    if (!loginOk) {
+                        renderAuthError('credential', username);
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                // ── Langkah 2: Ambil data presensi dari RekapPresensi ──────────────
                 const table = await fetchSheetTable(SHEET_REKAP);
                 const today = tanggalHariIni();
                 const rows = (table.rows || []);
 
-                let lastKnown = null;   // baris terakhir milik user ini (untuk identitas)
+                let lastKnown = null;
                 let datang = null, pulang = null;
 
                 for (const row of rows) {
@@ -559,21 +644,57 @@
                     else if (tipe === 'pulang') pulang = buildRecord(row, tgl);
                 }
 
-                if (!lastKnown) {
-                    renderNotFound(username);
-                } else {
-                    renderResult({
-                        username: username,
-                        namaPegawai: cellVal(lastKnown, 3) || username,
-                        namaLembaga: cellVal(lastKnown, 2) || '–',
-                        datang: datang,
-                        pulang: pulang
-                    });
-                }
+                // Nama pegawai: utamakan dari RekapPresensi, fallback dari DataPegawai
+                const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') ||
+                                    (pegawaiValid ? cellVal(pegawaiValid, 2) : '') ||
+                                    username;
+                const namaLembaga = lastKnown ? cellVal(lastKnown, 2) : '–';
+
+                renderResult({
+                    username,
+                    namaPegawai,
+                    namaLembaga,
+                    datang,
+                    pulang
+                });
+
             } catch (err) {
                 renderError(err.message);
             }
             setLoading(false);
+        }
+
+        // Fallback login via Apps Script jika sheet DataPegawai tidak tersedia
+        async function loginViaAppsScript(username, password) {
+            try {
+                const params = new URLSearchParams({ action: 'login', username, password });
+                const res = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+                const json = await res.json();
+                return json && json.status === 'success';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // ── RENDER ERROR AUTENTIKASI ─────────────────────────────────────────
+        function renderAuthError(tipe, username) {
+            let pesan = '';
+            if (tipe === 'username') {
+                pesan = `Username <strong>${esc(username)}</strong> tidak ditemukan di sistem. Periksa kembali.`;
+            } else if (tipe === 'password') {
+                pesan = `Password salah untuk username <strong>${esc(username)}</strong>. Silakan coba lagi.`;
+            } else {
+                pesan = `Username atau password salah. Silakan coba lagi.`;
+            }
+            document.getElementById('cardPegawai').innerHTML = `
+                <div style="text-align:center;padding:30px 10px;">
+                    <i class="fas fa-lock" style="font-size:3rem;color:var(--danger);display:block;margin-bottom:12px;"></i>
+                    <strong style="font-size:1rem;">Akses Ditolak</strong>
+                    <p style="color:var(--text-secondary);font-size:.9rem;margin-top:8px;">${pesan}</p>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
         }
 
         // ── RENDER HASIL ─────────────────────────────────────────────────────
@@ -712,10 +833,10 @@
         function renderNotFound(username) {
             document.getElementById('cardPegawai').innerHTML = `
                 <div style="text-align:center;padding:30px 10px;">
-                    <i class="fas fa-user-slash" style="font-size:3rem;color:var(--gray);display:block;margin-bottom:12px;"></i>
-                    <strong style="font-size:1rem;">Username Tidak Ditemukan</strong>
+                    <i class="fas fa-calendar-times" style="font-size:3rem;color:var(--gray);display:block;margin-bottom:12px;"></i>
+                    <strong style="font-size:1rem;">Belum Ada Data Presensi</strong>
                     <p style="color:var(--text-secondary);font-size:.9rem;margin-top:6px;">
-                        Username <strong>${esc(username)}</strong> tidak ada di sistem. Periksa kembali.
+                        Akun <strong>${esc(username)}</strong> terautentikasi, namun belum ada riwayat presensi sama sekali.
                     </p>
                 </div>`;
             document.getElementById('cardStatus').style.display = 'none';
