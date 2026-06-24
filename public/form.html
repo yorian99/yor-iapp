@@ -2410,22 +2410,151 @@
             startCamera();
         });
 
-        // ==================== FAKE GPS DETECTION ====================
+        // ==================== FAKE GPS DETECTION — MULTI-LAYER ====================
+        const GPS_HISTORY = [];
+        const GPS_HISTORY_MAX = 10;
+        let fakeGPSBlocked = false;
+        let ipGeoCheckDone = false;
+        let consecutiveSuspiciousCount = 0;
+        const SUSPICIOUS_THRESHOLD = 2; // block after N consecutive suspicious readings
+
+        // --- Layer 0: IP Geolocation cross-check (runs once on first GPS fix) ---
+        async function checkIPvsGPS(gpsLat, gpsLon) {
+            if (ipGeoCheckDone) return;
+            ipGeoCheckDone = true;
+            try {
+                const controller = new AbortController();
+                setTimeout(() => controller.abort(), 6000);
+                const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+                const data = await res.json();
+                if (data && data.latitude && data.longitude) {
+                    const dist = calculateDistance(gpsLat, gpsLon, data.latitude, data.longitude);
+                    // GPS vs IP lebih dari 150 km = sangat mencurigakan
+                    if (dist > 150000) {
+                        triggerFakeGPSBlock(`Lokasi GPS (${gpsLat.toFixed(4)}, ${gpsLon.toFixed(4)}) berbeda ${(dist/1000).toFixed(0)} km dari lokasi jaringan. Indikasi lokasi palsu.`);
+                    }
+                }
+            } catch (e) {
+                // API gagal → beri manfaat ragu, jangan blokir
+            }
+        }
+
+        // --- Main detection function ---
         function detectFakeGPS(position) {
-            if (typeof position.mocked !== 'undefined' && position.mocked) return true;
-            if (position.coords.accuracy < 1 || position.coords.accuracy > 10000) return true;
-            const currentTime = Date.now();
-            const lastPosition = window.lastPosition || { timestamp: 0, coords: { latitude: 0, longitude: 0 } };
-            const distance = calculateDistance(
-                lastPosition.coords.latitude, lastPosition.coords.longitude,
-                position.coords.latitude, position.coords.longitude
-            );
-            const timeDiff = (currentTime - lastPosition.timestamp) / 1000;
-            window.lastPosition = { timestamp: currentTime, coords: position.coords };
-            if (timeDiff > 0 && timeDiff < 5 && distance > 500) return true;
-            if (position.coords.altitude !== null && position.coords.altitude < -100) return true;
-            if (position.coords.speed !== null && position.coords.speed * 3.6 > 200) return true;
-            return false;
+            if (fakeGPSBlocked) return true;
+            const coords = position.coords;
+            const now = Date.now();
+
+            // Layer 1: Native mocked flag (Android Chrome / beberapa WebView)
+            if (position.mocked === true) {
+                return triggerFakeGPSBlock('Flag mock location aktif pada posisi GPS.');
+            }
+
+            // Layer 2: Accuracy fingerprinting
+            // GPS nyata: 3–500 m. Fake GPS sering pakai: 0, 1, 2, atau > 5000
+            const acc = coords.accuracy;
+            if (acc !== null) {
+                if (acc < 3) return triggerFakeGPSBlock(`Akurasi GPS tidak wajar: ${acc.toFixed(1)} m (terlalu sempurna).`);
+                if (acc > 8000) return triggerFakeGPSBlock(`Akurasi GPS tidak valid: ${acc.toFixed(0)} m.`);
+            }
+
+            // Layer 3: Fisika tidak mungkin
+            if (coords.altitude !== null && coords.altitude < -500)
+                return triggerFakeGPSBlock(`Altitude tidak valid: ${coords.altitude} m.`);
+            if (coords.speed !== null && coords.speed > 83) // > 300 km/h
+                return triggerFakeGPSBlock(`Kecepatan tidak wajar: ${(coords.speed * 3.6).toFixed(0)} km/h.`);
+
+            // Layer 4: Presisi koordinat
+            // GPS nyata selalu punya ≥ 5 desimal dari hardware device
+            const latStr = String(coords.latitude);
+            const lonStr = String(coords.longitude);
+            const latDec = (latStr.split('.')[1] || '').length;
+            const lonDec = (lonStr.split('.')[1] || '').length;
+            if (latDec < 4 || lonDec < 4) {
+                return triggerFakeGPSBlock(`Presisi koordinat terlalu rendah (${latDec}/${lonDec} desimal). Koordinat GPS asli minimal 5 desimal.`);
+            }
+
+            // Simpan ke riwayat
+            GPS_HISTORY.push({
+                lat: coords.latitude,
+                lon: coords.longitude,
+                acc: coords.accuracy,
+                t: now
+            });
+            if (GPS_HISTORY.length > GPS_HISTORY_MAX) GPS_HISTORY.shift();
+
+            // Perlu minimal 4 titik untuk analisis lanjutan
+            if (GPS_HISTORY.length >= 4) {
+                const lats = GPS_HISTORY.map(p => p.lat);
+                const lons = GPS_HISTORY.map(p => p.lon);
+                const latRange = Math.max(...lats) - Math.min(...lats);
+                const lonRange = Math.max(...lons) - Math.min(...lons);
+
+                // Layer 5: Zero-jitter (koordinat identik sempurna)
+                // GPS nyata selalu punya noise kecil, bahkan saat diam
+                if (GPS_HISTORY.length >= 6 && latRange === 0 && lonRange === 0) {
+                    return triggerFakeGPSBlock('Koordinat GPS tidak berubah sama sekali. GPS nyata selalu memiliki noise alami.');
+                }
+
+                // Layer 6: Jitter terlalu sedikit (Fake GPS sering lock ke titik persis)
+                // GPS nyata saat diam: range ≥ 0.00002 derajat (~2m)
+                if (GPS_HISTORY.length >= 8 && latRange < 0.000005 && lonRange < 0.000005) {
+                    consecutiveSuspiciousCount++;
+                    if (consecutiveSuspiciousCount >= SUSPICIOUS_THRESHOLD) {
+                        return triggerFakeGPSBlock('Koordinat GPS terlalu stabil (jitter sangat rendah). Indikasi mock location.');
+                    }
+                } else {
+                    consecutiveSuspiciousCount = Math.max(0, consecutiveSuspiciousCount - 1);
+                }
+
+                // Layer 7: Interval update terlalu teratur
+                // Fake GPS sering update setiap persis 1000ms ± 5ms
+                const deltas = [];
+                for (let i = 1; i < GPS_HISTORY.length; i++) {
+                    deltas.push(GPS_HISTORY[i].t - GPS_HISTORY[i - 1].t);
+                }
+                if (deltas.length >= 4) {
+                    const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+                    const stdDev = Math.sqrt(deltas.reduce((s, d) => s + (d - avg) ** 2, 0) / deltas.length);
+                    // Jika interval rata-rata ~1 detik dan stddev < 20ms → terlalu teratur
+                    if (avg > 800 && avg < 1200 && stdDev < 20) {
+                        return triggerFakeGPSBlock(`Interval pembaruan GPS terlalu teratur (${avg.toFixed(0)}ms ± ${stdDev.toFixed(0)}ms). Indikasi mock location.`);
+                    }
+                }
+
+                // Layer 8: Teleportasi (lompat jauh dalam waktu singkat)
+                for (let i = 1; i < GPS_HISTORY.length; i++) {
+                    const d = calculateDistance(
+                        GPS_HISTORY[i - 1].lat, GPS_HISTORY[i - 1].lon,
+                        GPS_HISTORY[i].lat, GPS_HISTORY[i].lon
+                    );
+                    const dt = (GPS_HISTORY[i].t - GPS_HISTORY[i - 1].t) / 1000;
+                    if (dt > 0 && dt < 8 && d > 250) {
+                        return triggerFakeGPSBlock(`Lompatan lokasi: ${d.toFixed(0)} m dalam ${dt.toFixed(1)} detik.`);
+                    }
+                }
+            }
+
+            // Layer 0 IP check (async, tidak blokir sinkron)
+            checkIPvsGPS(coords.latitude, coords.longitude);
+
+            return false; // Lolos semua lapisan → aman
+        }
+
+        function triggerFakeGPSBlock(reason) {
+            if (fakeGPSBlocked) return true;
+            fakeGPSBlocked = true;
+            console.warn('[FAKE GPS DETECTED]', reason);
+            // Tampilkan alasan di blocker jika ada elemen-nya
+            const msgEl = document.getElementById('fakeGPSReason');
+            if (msgEl) msgEl.textContent = reason;
+            showFakeGPSBlocker();
+            // Hentikan tracking GPS
+            if (watchID) {
+                navigator.geolocation.clearWatch(watchID);
+                watchID = null;
+            }
+            return true;
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
