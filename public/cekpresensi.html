@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cek Presensi Hari Ini - Korwil</title>
-    <link rel="icon" href="https://github.com/YorianP22/CP22/blob/main/Logo.png?raw=true" type="image/png">
     <base target="_top">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -421,7 +420,7 @@
         // Nama sheet rekap presensi (sama dengan PRESENSI_SHEET_NAME di code.gs)
         const SHEET_REKAP = 'RekapPresensi';
         // Nama sheet data pegawai (berisi username & password)
-        const SHEET_PEGAWAI = 'DataPegawai';
+        const SHEET_AKUN = 'idakun';
         // ───────────────────────────────────────────────────────────────────
 
         const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -573,7 +572,7 @@
         // ── CARI PRESENSI ────────────────────────────────────────────────────
         async function cariPresensi() {
             const username = document.getElementById('nipInput').value.trim();
-            const password = document.getElementById('passwordInput').value;
+            const password = document.getElementById('passwordInput').value.trim();
 
             if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
             if (!password) { alert('Masukkan password terlebih dahulu.'); return; }
@@ -582,48 +581,55 @@
             document.getElementById('resultArea').style.display = 'none';
 
             try {
-                // ── Langkah 1: Validasi username & password dari sheet DataPegawai ──
-                // Struktur sheet DataPegawai yang diharapkan:
-                //   Kolom 0: Username
-                //   Kolom 1: Password
-                //   Kolom 2: Nama Pegawai  (opsional, fallback jika tidak ada di RekapPresensi)
-                //   Kolom 3: NIP / info tambahan (opsional)
-                let pegawaiValid = null;
-                try {
-                    const tablePegawai = await fetchSheetTable(SHEET_PEGAWAI);
-                    const rowsPegawai  = tablePegawai.rows || [];
-                    for (const row of rowsPegawai) {
-                        const rowUser = String(cellVal(row, 0)).trim();
-                        const rowPass = String(cellVal(row, 1)).trim();
-                        if (rowUser.toLowerCase() === username.toLowerCase() && rowPass === password) {
-                            pegawaiValid = row;
+                // ── Langkah 1: Validasi username & password dari sheet idakun ─────
+                // Sheet idakun: cari kolom yang cocok untuk username & password.
+                // Sistem akan mencoba SEMUA kombinasi kolom (0-5) sehingga tidak
+                // tergantung urutan kolom di spreadsheet.
+                let akunValid = null;
+                let colUser = -1, colPass = -1;
+
+                const tableAkun = await fetchSheetTable(SHEET_AKUN);
+                const rowsAkun  = tableAkun.rows || [];
+                const colCount  = tableAkun.cols ? tableAkun.cols.length : 6;
+
+                // Deteksi kolom: cari baris pertama yang mengandung username yang dicari,
+                // lalu tentukan kolom password-nya dari sisa kolom.
+                // Strategi: coba semua pasangan kolom (i, j) dimana i != j.
+                outer:
+                for (let ci = 0; ci < colCount; ci++) {
+                    for (let cj = 0; cj < colCount; cj++) {
+                        if (ci === cj) continue;
+                        for (const row of rowsAkun) {
+                            const u = String(cellVal(row, ci)).trim();
+                            const p = String(cellVal(row, cj)).trim();
+                            if (u.toLowerCase() === username.toLowerCase() && p === password) {
+                                akunValid = row;
+                                colUser = ci;
+                                colPass = cj;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+
+                if (!akunValid) {
+                    // Cek apakah username memang ada (untuk pesan error yang lebih tepat)
+                    let usernameAda = false;
+                    for (let ci = 0; ci < colCount; ci++) {
+                        if (rowsAkun.some(r => String(cellVal(r, ci)).trim().toLowerCase() === username.toLowerCase())) {
+                            usernameAda = true;
                             break;
                         }
                     }
-                    if (!pegawaiValid) {
-                        // Cek apakah username ada tapi password salah
-                        const usernameAda = rowsPegawai.some(r =>
-                            String(cellVal(r, 0)).trim().toLowerCase() === username.toLowerCase()
-                        );
-                        renderAuthError(usernameAda ? 'password' : 'username', username);
-                        setLoading(false);
-                        return;
-                    }
-                } catch (errAuth) {
-                    // Jika sheet DataPegawai tidak ada / tidak bisa diakses,
-                    // fallback: validasi lewat Apps Script (action=login)
-                    const loginOk = await loginViaAppsScript(username, password);
-                    if (!loginOk) {
-                        renderAuthError('credential', username);
-                        setLoading(false);
-                        return;
-                    }
+                    renderAuthError(usernameAda ? 'password' : 'username', username);
+                    setLoading(false);
+                    return;
                 }
 
                 // ── Langkah 2: Ambil data presensi dari RekapPresensi ──────────────
                 const table = await fetchSheetTable(SHEET_REKAP);
                 const today = tanggalHariIni();
-                const rows = (table.rows || []);
+                const rows  = (table.rows || []);
 
                 let lastKnown = null;
                 let datang = null, pulang = null;
@@ -644,36 +650,16 @@
                     else if (tipe === 'pulang') pulang = buildRecord(row, tgl);
                 }
 
-                // Nama pegawai: utamakan dari RekapPresensi, fallback dari DataPegawai
-                const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') ||
-                                    (pegawaiValid ? cellVal(pegawaiValid, 2) : '') ||
-                                    username;
+                // Nama pegawai: utamakan dari RekapPresensi, fallback dari idakun
+                const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') || username;
                 const namaLembaga = lastKnown ? cellVal(lastKnown, 2) : '–';
 
-                renderResult({
-                    username,
-                    namaPegawai,
-                    namaLembaga,
-                    datang,
-                    pulang
-                });
+                renderResult({ username, namaPegawai, namaLembaga, datang, pulang });
 
             } catch (err) {
                 renderError(err.message);
             }
             setLoading(false);
-        }
-
-        // Fallback login via Apps Script jika sheet DataPegawai tidak tersedia
-        async function loginViaAppsScript(username, password) {
-            try {
-                const params = new URLSearchParams({ action: 'login', username, password });
-                const res = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
-                const json = await res.json();
-                return json && json.status === 'success';
-            } catch (_) {
-                return false;
-            }
         }
 
         // ── RENDER ERROR AUTENTIKASI ─────────────────────────────────────────
