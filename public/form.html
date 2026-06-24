@@ -1384,14 +1384,38 @@
         }
 
         .success-body {
-            padding: 22px 24px 20px;
+            padding: 16px 20px 20px;
+        }
+
+        /* Foto selfie di popup sukses */
+        .success-photo-frame {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #28a745;
+            overflow: hidden;
+            margin: 0 auto 12px;
+            box-shadow: 0 4px 16px rgba(40,167,69,0.3);
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .success-photo-frame .no-photo-icon {
+            font-size: 2.5rem;
+            color: #adb5bd;
         }
 
         .success-message {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             color: #555;
-            line-height: 1.6;
-            margin-bottom: 16px;
+            line-height: 1.5;
+            margin-bottom: 12px;
         }
 
         .success-timestamp {
@@ -1463,6 +1487,69 @@
             max-height: 300px;
             border-radius: var(--border-radius);
             border: 1px solid #e0e0e0;
+        }
+
+        /* ==================== CAMERA LOCATION OVERLAY ==================== */
+        .camera-location-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.82));
+            padding: 18px 12px 10px;
+            z-index: 15;
+            pointer-events: none;
+        }
+        .cam-loc-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .cam-loc-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            flex-shrink: 0;
+            animation: pulseDot 1.5s infinite;
+        }
+        .cam-loc-dot.active { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .cam-loc-dot.fake   { background: #f44336; box-shadow: 0 0 6px #f44336; }
+        .cam-loc-coords {
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.92);
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cam-loc-status {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.65);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .cam-loc-status.ok   { color: #86efac; }
+        .cam-loc-status.err  { color: #fca5a5; }
+        .cam-loc-status.warn { color: #fde68a; }
+        .cam-time-overlay {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.72rem;
+            color: #00ffcc;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 15;
+            pointer-events: none;
+            font-family: 'SF Mono', 'Courier New', monospace;
         }
 
         /* ==================== LOCATION INFO STYLES ==================== */
@@ -1883,6 +1970,11 @@
                 </div>
             </div>
             <div class="success-body">
+                <!-- Foto selfie -->
+                <div class="success-photo-frame" id="successPhotoFrame">
+                    <i class="fas fa-user-circle no-photo-icon"></i>
+                </div>
+                <!-- Timestamp jam -->
                 <div class="success-timestamp" id="successTimestamp">
                     <i class="fas fa-clock"></i>
                     <span id="successTimeText">--:-- WIB</span>
@@ -2094,6 +2186,18 @@
                                 <polyline class="corner" points="188,190 188,228 150,228"/>
                                 <polyline class="corner" points="50,228 12,228 12,190"/>
                             </svg>
+                        </div>
+                        <!-- Overlay jam di sudut kanan atas kamera -->
+                        <div class="cam-time-overlay" id="camTimeOverlay">00:00:00</div>
+                        <!-- Overlay lokasi di bawah kamera -->
+                        <div class="camera-location-overlay">
+                            <div class="cam-loc-row">
+                                <div class="cam-loc-dot" id="camLocDot"></div>
+                                <div class="cam-loc-coords" id="camLocCoords">Mendeteksi lokasi...</div>
+                            </div>
+                            <div class="cam-loc-status" id="camLocStatus">
+                                <i class="fas fa-satellite-dish"></i> Menunggu sinyal GPS...
+                            </div>
                         </div>
                         <div class="face-detection-status" id="faceStatus">🔄 Memuat deteksi wajah...</div>
                     </div>
@@ -2410,22 +2514,95 @@
             startCamera();
         });
 
-        // ==================== FAKE GPS DETECTION ====================
+        // ==================== FAKE GPS DETECTION (DIPERKUAT) ====================
+        // Flag permanen — sekali terdeteksi, tidak bisa di-reset tanpa reload
+        let fakeGPSLocked = false;
+        // Riwayat posisi untuk analisis lompatan & konsistensi
+        window._posHistory = [];
+
         function detectFakeGPS(position) {
-            if (typeof position.mocked !== 'undefined' && position.mocked) return true;
-            if (position.coords.accuracy < 1 || position.coords.accuracy > 10000) return true;
-            const currentTime = Date.now();
-            const lastPosition = window.lastPosition || { timestamp: 0, coords: { latitude: 0, longitude: 0 } };
-            const distance = calculateDistance(
-                lastPosition.coords.latitude, lastPosition.coords.longitude,
-                position.coords.latitude, position.coords.longitude
-            );
-            const timeDiff = (currentTime - lastPosition.timestamp) / 1000;
-            window.lastPosition = { timestamp: currentTime, coords: position.coords };
-            if (timeDiff > 0 && timeDiff < 5 && distance > 500) return true;
-            if (position.coords.altitude !== null && position.coords.altitude < -100) return true;
-            if (position.coords.speed !== null && position.coords.speed * 3.6 > 200) return true;
+            // [1] Flag .mocked (Android >= 7 dengan mock location)
+            if (position.mocked === true) return true;
+
+            const c = position.coords;
+            const now = Date.now();
+
+            // [2] Akurasi tidak masuk akal
+            // GPS palsu sering mengembalikan akurasi persis atau terlalu sempurna
+            if (c.accuracy !== null) {
+                if (c.accuracy < 1)      return true; // terlalu sempurna
+                if (c.accuracy > 15000)  return true; // terlalu buruk / dummy
+                // Akurasi bulat persis (1.0, 5.0, 10.0, dst) → curiga mock
+                if (Number.isInteger(c.accuracy) && c.accuracy <= 20) return true;
+            }
+
+            // [3] Altitude mustahil
+            if (c.altitude !== null && (c.altitude < -500 || c.altitude > 9000)) return true;
+
+            // [4] Kecepatan mustahil (>250 km/h di darat → curiga)
+            if (c.speed !== null && c.speed * 3.6 > 250) return true;
+
+            // [5] Analisis historis — lompatan posisi tidak wajar
+            const hist = window._posHistory;
+            if (hist.length > 0) {
+                const last = hist[hist.length - 1];
+                const dist = calculateDistance(last.lat, last.lon, c.latitude, c.longitude);
+                const dt   = (now - last.ts) / 1000; // detik
+
+                // Berpindah > 300 m dalam < 3 detik (tanpa kecepatan masuk akal)
+                if (dt > 0 && dt < 3 && dist > 300) return true;
+
+                // Koordinat identik sempurna untuk > 3 update berturut-turut
+                // (GPS asli selalu sedikit bergetar; GPS palsu sering static persis)
+                if (hist.length >= 3) {
+                    const allSame = hist.slice(-3).every(p =>
+                        p.lat === c.latitude && p.lon === c.longitude
+                    );
+                    // Hanya curigai jika akurasi sangat kecil (GPS asli tetap bergetar)
+                    if (allSame && c.accuracy !== null && c.accuracy < 5) return true;
+                }
+
+                // Heading/bearing berubah ekstrem (> 170°) dalam 1 detik tanpa kecepatan
+                if (dt < 1 && last.heading !== null && c.heading !== null) {
+                    const dHeading = Math.abs(c.heading - last.heading);
+                    if (dHeading > 170 && dHeading < 190 && (c.speed || 0) < 0.5) return true;
+                }
+            }
+
+            // Simpan ke histori (max 10)
+            hist.push({ lat: c.latitude, lon: c.longitude, ts: now,
+                        heading: c.heading, accuracy: c.accuracy });
+            if (hist.length > 10) hist.shift();
+
             return false;
+        }
+
+        function showFakeGPSBlocker() {
+            if (fakeGPSLocked) return; // sudah terkunci sebelumnya
+            fakeGPSLocked = true;
+
+            // Hapus koordinat agar tidak bisa submit
+            document.getElementById('latitude').value  = '';
+            document.getElementById('longitude').value = '';
+
+            // Hentikan watch GPS
+            if (watchID) { navigator.geolocation.clearWatch(watchID); watchID = null; }
+
+            // Update UI kamera overlay
+            const camDot = document.getElementById('camLocDot');
+            const camStat = document.getElementById('camLocStatus');
+            const camCoord = document.getElementById('camLocCoords');
+            if (camDot)   { camDot.classList.remove('active'); camDot.classList.add('fake'); }
+            if (camStat)  { camStat.className = 'cam-loc-status err'; camStat.innerHTML = '<i class="fas fa-ban"></i> LOKASI PALSU TERDETEKSI'; }
+            if (camCoord) camCoord.textContent = '⛔ GPS Diblokir';
+
+            const cDisp = document.getElementById('currentCoordDisplay');
+            if (cDisp) cDisp.textContent = 'Lokasi palsu terdeteksi!';
+            document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-ban" style="color:#f44336;"></i> Lokasi palsu terdeteksi!';
+            document.getElementById('gpsDot').classList.remove('active');
+
+            // Tampilkan blocker (tidak bisa ditutup kecuali reload + matikan fake GPS)
+            document.getElementById('fakeGPSBlocker').style.display = 'flex';
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -2438,15 +2615,7 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
-        function showFakeGPSBlocker() {
-            document.getElementById('fakeGPSBlocker').style.display = 'flex';
-            document.getElementById('latitude').value = '';
-            document.getElementById('longitude').value = '';
-            const cDisp = document.getElementById('currentCoordDisplay');
-            if (cDisp) cDisp.textContent = 'Lokasi palsu terdeteksi!';
-            document.getElementById('gpsStatus').innerHTML = '<i class="fas fa-ban" style="color:#f44336;"></i> Lokasi palsu terdeteksi!';
-            document.getElementById('gpsDot').classList.remove('active');
-        }
+        // showFakeGPSBlocker sudah didefinisikan di blok FAKE GPS DETECTION di atas
 
         // ==================== DESKTOP BLOCKER ====================
         function checkDevice() {
@@ -2647,7 +2816,22 @@
             return 0;
         }
 
+        function updateCameraLocationOverlay(latStr, lonStr, statusText, statusClass) {
+            const camDot   = document.getElementById('camLocDot');
+            const camCoord = document.getElementById('camLocCoords');
+            const camStat  = document.getElementById('camLocStatus');
+            if (!camDot || !camCoord || !camStat) return;
+            if (latStr && lonStr) {
+                camDot.classList.add('active');
+                camDot.classList.remove('fake');
+                camCoord.textContent = latStr.substring(0,10) + ', ' + lonStr.substring(0,11);
+            }
+            camStat.className = 'cam-loc-status ' + (statusClass || '');
+            camStat.innerHTML = statusText;
+        }
+
         function startLocationTracking() {
+            if (fakeGPSLocked) return; // jika sudah terkunci, tidak mulai tracking baru
             const gpsStatus = document.getElementById('gpsStatus');
             const gpsDot = document.getElementById('gpsDot');
             gpsStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi lokasi...';
@@ -2656,23 +2840,31 @@
             if (navigator.geolocation) {
                 watchID = navigator.geolocation.watchPosition(
                     position => {
+                        if (fakeGPSLocked) return;
                         if (detectFakeGPS(position)) { showFakeGPSBlocker(); return; }
                         let userLat = position.coords.latitude;
                         let userLon = position.coords.longitude;
-                        // Pastikan format titik (bukan koma) pada input display
                         const latStr = String(userLat).replace(/,/g, '.');
                         const lonStr = String(userLon).replace(/,/g, '.');
                         document.getElementById('latitude').value = latStr;
                         document.getElementById('longitude').value = lonStr;
-                        // Update current coord display
+                        // Update card lokasi
                         const cDisp = document.getElementById('currentCoordDisplay');
                         if (cDisp) cDisp.textContent = latStr.substring(0,10) + ', ' + lonStr.substring(0,11);
+                        // Update overlay kamera
+                        updateCameraLocationOverlay(latStr, lonStr,
+                            '<i class="fas fa-check-circle"></i> GPS Terkunci — Lokasi Valid', 'ok');
                         const sessionData = JSON.parse(localStorage.getItem('sessionData'));
                         if (sessionData) {
-                            updateDistanceDisplay(parseFloat(latStr), parseFloat(lonStr),
+                            const dist = updateDistanceDisplay(parseFloat(latStr), parseFloat(lonStr),
                                 parseFloat(sessionData.lembagaLatitude),
                                 parseFloat(sessionData.lembagaLongitude),
                                 parseFloat(sessionData.lembagaRadius));
+                            const radius = parseFloat(sessionData.lembagaRadius);
+                            if (dist > radius) {
+                                updateCameraLocationOverlay(latStr, lonStr,
+                                    `<i class="fas fa-exclamation-triangle"></i> Di luar radius ${radius} m (${dist.toFixed(0)} m)`, 'warn');
+                            }
                         }
                         gpsStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #28a745;"></i> Lokasi berhasil didapatkan';
                         gpsDot.classList.add('active');
@@ -2689,7 +2881,7 @@
                             gpsDot.classList.remove('active');
                         }
                     },
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             } else {
                 gpsStatus.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Geolocation tidak didukung.';
@@ -2699,10 +2891,14 @@
         function updateCurrentTime() {
             const now = new Date();
             const wibTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 7));
-            const hours = wibTime.getHours().toString().padStart(2, '0');
+            const hours   = wibTime.getHours().toString().padStart(2, '0');
             const minutes = wibTime.getMinutes().toString().padStart(2, '0');
             const seconds = wibTime.getSeconds().toString().padStart(2, '0');
-            document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds} WIB`;
+            const timeStr = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('currentTime').textContent = `${timeStr} WIB`;
+            // Update overlay jam di kamera
+            const camTimeEl = document.getElementById('camTimeOverlay');
+            if (camTimeEl) camTimeEl.textContent = timeStr + ' WIB';
         }
 
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
@@ -2790,6 +2986,20 @@
             const yy = wib.getFullYear();
             const timeEl = document.getElementById('successTimeText');
             if (timeEl) timeEl.textContent = `${dd}/${mo}/${yy} — ${hh}:${mm}:${ss} WIB`;
+
+            // Tampilkan foto selfie di popup sukses
+            const photoFrame = document.getElementById('successPhotoFrame');
+            if (photoFrame) {
+                const capturedSrc = document.getElementById('imagePreview') && document.getElementById('imagePreview').src;
+                if (capturedSrc && capturedSrc.startsWith('data:image')) {
+                    photoFrame.innerHTML = `<img src="${capturedSrc}" alt="Foto Presensi" style="width:100%;height:100%;object-fit:cover;">`;
+                } else if (window.capturedFile) {
+                    const objUrl = URL.createObjectURL(window.capturedFile);
+                    photoFrame.innerHTML = `<img src="${objUrl}" alt="Foto Presensi" style="width:100%;height:100%;object-fit:cover;">`;
+                } else {
+                    photoFrame.innerHTML = '<i class="fas fa-user-circle no-photo-icon"></i>';
+                }
+            }
 
             const successPopup = document.getElementById('successPopup');
             successPopup.style.display = 'flex';
