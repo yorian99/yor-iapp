@@ -386,8 +386,14 @@
     </div>
 
     <script>
-        // ── GANTI dengan URL Apps Script Anda ──────────────────────────────
-        const APPS_SCRIPT_URL = 'GANTI_DENGAN_URL_APPS_SCRIPT_ANDA';
+        // ── Koneksi ke Database (Google Spreadsheet) ────────────────────────
+        // URL Web App Apps Script (dipakai untuk login/presensi/dll, bukan untuk cek ini)
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqgwrpj7mMOz2sgB5vfwfArPwU5o1h9MkIXrBh-6Vw5_Bl0yGiGGFN22dJdB8JwC_y/exec';
+
+        // ID Spreadsheet sumber data (sama dengan PRESENSI_SPREADSHEET_ID di code.gs)
+        const SPREADSHEET_ID = '1ACaOKCizDDsrVqKPPrr2gNBpddWl9XPjJvNs8JqUEMc';
+        // Nama sheet rekap presensi (sama dengan PRESENSI_SHEET_NAME di code.gs)
+        const SHEET_REKAP = 'RekapPresensi';
         // ───────────────────────────────────────────────────────────────────
 
         const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -430,21 +436,95 @@
                 : '<i class="fas fa-search"></i> Cari';
         }
 
-        // ── POST ke Apps Script ─────────────────────────────────────────────
-        async function post(action, payload) {
-            const res = await fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, ...payload })
-            });
-            if (!res.ok) throw new Error('HTTP error ' + res.status);
-            return res.json();
-        }
-
-        // ── Ambil tanggal hari ini WIB (yyyy-MM-dd) ─────────────────────────
+        // ── Ambil tanggal hari ini WIB (untuk pencocokan baris RekapPresensi) ─
         function tanggalHariIni() {
             const w = getWIB();
-            return `${w.getFullYear()}-${(w.getMonth()+1).toString().padStart(2,'0')}-${w.getDate().toString().padStart(2,'0')}`;
+            return { day: w.getDate(), month: w.getMonth(), year: w.getFullYear() };
+        }
+
+        // ── Baca sheet langsung dari Google Spreadsheet (Google Visualization API) ─
+        // Catatan: cara ini dipakai karena code.gs belum punya endpoint khusus untuk
+        // mengambil rekap presensi (action "getPresensiHariIni" tidak ada di doPost).
+        // Tanpa mengubah code.gs, halaman ini membaca sheet "RekapPresensi" langsung
+        // via Google Visualization API (gviz) memakai teknik JSONP supaya tidak
+        // terbentur CORS. Sheet "RekapPresensi" WAJIB di-share "Siapa saja yang
+        // memiliki link → Viewer" agar bisa diakses dari halaman ini.
+        let _gvizSeq = 0;
+        function fetchSheetTable(sheetName) {
+            return new Promise((resolve, reject) => {
+                const cbName = '_gvizCb' + (_gvizSeq++);
+                const timeoutId = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('Waktu koneksi ke spreadsheet habis. Periksa koneksi internet atau setting share sheet.'));
+                }, 15000);
+
+                function cleanup() {
+                    clearTimeout(timeoutId);
+                    delete window[cbName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                }
+
+                window[cbName] = function(resp) {
+                    cleanup();
+                    if (!resp || resp.status === 'error') {
+                        const detail = resp && resp.errors && resp.errors[0]
+                            ? (resp.errors[0].detailed_message || resp.errors[0].message)
+                            : 'Sheet tidak ditemukan atau tidak bisa diakses';
+                        reject(new Error(detail));
+                        return;
+                    }
+                    resolve(resp.table);
+                };
+
+                const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq`
+                    + `?tqx=out:json;responseHandler:${cbName}`
+                    + `&sheet=${encodeURIComponent(sheetName)}`
+                    + `&headers=1`;
+
+                const script = document.createElement('script');
+                script.src = url;
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('Gagal memuat data spreadsheet. Pastikan sheet "' + sheetName + '" sudah di-share "Anyone with the link".'));
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        // Ambil nilai sel gviz dengan aman (null-safe)
+        function cellVal(row, idx) {
+            return (row && row.c && row.c[idx] && row.c[idx].v !== null && row.c[idx].v !== undefined)
+                ? row.c[idx].v : '';
+        }
+
+        // Parse "Rabu, 24 Juni 2026 ... 14:35:10" / "...pukul 14.35.10" → {day,month,year,jam}
+        function parseTanggalLengkap(str) {
+            str = String(str || '');
+            const monthIdx = BULAN.findIndex(b => str.includes(b));
+            const dayMatch = str.match(/\b(\d{1,2})\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\b/);
+            const yearMatch = str.match(/\b(\d{4})\b/);
+            const jamMatch = str.match(/(\d{1,2})[.:](\d{2})[.:](\d{2})/);
+            if (monthIdx === -1 || !dayMatch || !yearMatch) return null;
+            return {
+                day: parseInt(dayMatch[1], 10),
+                month: monthIdx,
+                year: parseInt(yearMatch[1], 10),
+                jam: jamMatch ? `${jamMatch[1].padStart(2,'0')}:${jamMatch[2]}:${jamMatch[3]}` : '–'
+            };
+        }
+
+        // Bangun objek rekam (datang/pulang) dari satu baris RekapPresensi
+        function buildRecord(row, tgl) {
+            const jarakRaw = cellVal(row, 8);          // contoh: "12.34 m"
+            const jarakNum = String(jarakRaw).replace(/[^\d.]/g, '');
+            return {
+                jam: tgl.jam,
+                fotoUrl: cellVal(row, 5) || '',
+                latitude: cellVal(row, 6),
+                longitude: cellVal(row, 7),
+                jarak: jarakNum,
+                statusRadius: cellVal(row, 9) || ''
+            };
         }
 
         // ── CARI PRESENSI ────────────────────────────────────────────────────
@@ -456,15 +536,39 @@
             document.getElementById('resultArea').style.display = 'none';
 
             try {
-                const result = await post('getPresensiHariIni', {
-                    username: username,
-                    tanggal: tanggalHariIni()
-                });
+                const table = await fetchSheetTable(SHEET_REKAP);
+                const today = tanggalHariIni();
+                const rows = (table.rows || []);
 
-                if (result.error === 'not_found') {
+                let lastKnown = null;   // baris terakhir milik user ini (untuk identitas)
+                let datang = null, pulang = null;
+
+                for (const row of rows) {
+                    const rowUsername = String(cellVal(row, 4)).trim();
+                    if (!rowUsername || rowUsername.toLowerCase() !== username.toLowerCase()) continue;
+
+                    lastKnown = row;
+
+                    const tgl = parseTanggalLengkap(cellVal(row, 0));
+                    if (!tgl) continue;
+                    const isToday = tgl.day === today.day && tgl.month === today.month && tgl.year === today.year;
+                    if (!isToday) continue;
+
+                    const tipe = String(cellVal(row, 1)).trim().toLowerCase();
+                    if (tipe === 'datang') datang = buildRecord(row, tgl);
+                    else if (tipe === 'pulang') pulang = buildRecord(row, tgl);
+                }
+
+                if (!lastKnown) {
                     renderNotFound(username);
                 } else {
-                    renderResult(result);
+                    renderResult({
+                        username: username,
+                        namaPegawai: cellVal(lastKnown, 3) || username,
+                        namaLembaga: cellVal(lastKnown, 2) || '–',
+                        datang: datang,
+                        pulang: pulang
+                    });
                 }
             } catch (err) {
                 renderError(err.message);
