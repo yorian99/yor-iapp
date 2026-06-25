@@ -485,7 +485,7 @@
                 const cbName = '_gvizCb' + (_gvizSeq++);
                 const timeoutId = setTimeout(() => {
                     cleanup();
-                    reject(new Error('Waktu koneksi ke spreadsheet habis. Periksa koneksi internet atau setting share sheet.'));
+                    reject(new Error('Waktu koneksi habis. '));
                 }, 15000);
 
                 function cleanup() {
