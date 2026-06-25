@@ -1,896 +1,897 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cek Presensi – Korwil Sine</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    /* ===== RESET & BASE ===== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --primary: #4F46E5;
-      --primary-light: #EEF2FF;
-      --primary-dark: #3730A3;
-      --success: #16A34A;
-      --success-bg: #DCFCE7;
-      --warning: #D97706;
-      --warning-bg: #FEF3C7;
-      --danger: #DC2626;
-      --gray-50: #F8FAFC;
-      --gray-100: #F1F5F9;
-      --gray-200: #E2E8F0;
-      --gray-400: #94A3B8;
-      --gray-500: #64748B;
-      --gray-700: #334155;
-      --gray-900: #0F172A;
-      --purple-light: #EDE9FE;
-      --purple: #7C3AED;
-      --radius: 14px;
-      --shadow: 0 2px 12px rgba(0,0,0,.07);
-      --shadow-md: 0 4px 20px rgba(0,0,0,.10);
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #EEF2FF 0%, #F0FDF4 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 16px 48px;
-      color: var(--gray-900);
-    }
-
-    /* ===== HEADER ===== */
-    .app-header {
-      text-align: center;
-      margin-bottom: 24px;
-      width: 100%;
-      max-width: 480px;
-    }
-    .app-header .logo-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 4px;
-    }
-    .app-header .logo-icon {
-      width: 40px; height: 40px;
-      background: var(--primary);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .app-header .logo-icon svg { width: 22px; height: 22px; color: #fff; }
-    .app-header h1 { font-size: 1.25rem; font-weight: 700; color: var(--primary-dark); }
-    .app-header p { font-size: .8rem; color: var(--gray-500); }
-
-    /* ===== CARD ===== */
-    .card {
-      background: #fff;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px;
-      width: 100%;
-      max-width: 480px;
-      margin-bottom: 16px;
-    }
-
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin-bottom: 16px;
-    }
-    .card-title svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-    /* ===== FORM ===== */
-    .form-group { margin-bottom: 12px; }
-    .input-wrap {
-      display: flex;
-      align-items: center;
-      border: 1.5px solid var(--gray-200);
-      border-radius: 10px;
-      padding: 0 14px;
-      gap: 10px;
-      background: var(--gray-50);
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .input-wrap:focus-within {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
-      background: #fff;
-    }
-    .input-wrap svg { width: 16px; height: 16px; color: var(--gray-400); flex-shrink: 0; }
-    .input-wrap input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      outline: none;
-      padding: 12px 0;
-      font-size: .9rem;
-      color: var(--gray-900);
-      font-family: inherit;
-    }
-    .input-wrap input::placeholder { color: var(--gray-400); }
-    .eye-btn {
-      background: none; border: none; cursor: pointer;
-      padding: 4px; color: var(--gray-400);
-      display: flex; align-items: center;
-    }
-    .eye-btn:hover { color: var(--primary); }
-
-    .btn-search {
-      width: 100%;
-      padding: 13px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: .95rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background .2s, transform .1s;
-      font-family: inherit;
-    }
-    .btn-search:hover { background: var(--primary-dark); }
-    .btn-search:active { transform: scale(.98); }
-    .btn-search:disabled { background: var(--gray-400); cursor: not-allowed; }
-
-    .alert-info {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      background: var(--primary-light);
-      border-left: 3px solid var(--primary);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-top: 14px;
-      font-size: .82rem;
-      color: var(--gray-700);
-      line-height: 1.5;
-    }
-    .alert-info svg { width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; margin-top: 1px; }
-
-    .alert-error {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #FEF2F2;
-      border-left: 3px solid var(--danger);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-top: 14px;
-      font-size: .85rem;
-      color: var(--danger);
-      font-weight: 500;
-    }
-    .alert-error svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-    /* ===== IDENTITAS ===== */
-    .identitas-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: var(--gray-50);
-      border: 1px solid var(--gray-200);
-      border-radius: 10px;
-      padding: 14px;
-    }
-    .avatar {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, var(--primary), var(--purple));
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .avatar svg { width: 24px; height: 24px; color: #fff; }
-    .identitas-info { flex: 1; min-width: 0; }
-    .identitas-nama {
-      font-size: .9rem; font-weight: 700;
-      color: var(--gray-900);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .identitas-lembaga {
-      font-size: .78rem; color: var(--gray-500); margin-top: 2px;
-    }
-    .identitas-nip {
-      font-size: .72rem; color: var(--primary);
-      font-weight: 600; background: var(--primary-light);
-      padding: 3px 8px; border-radius: 6px;
-      white-space: nowrap; flex-shrink: 0;
-    }
-
-    /* ===== PRESENSI STATUS ===== */
-    .tanggal-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--primary-light);
-      color: var(--primary);
-      font-size: .72rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 14px;
-      letter-spacing: .03em;
-      text-transform: uppercase;
-    }
-
-    .presensi-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .presensi-box {
-      border: 2px solid var(--gray-200);
-      border-radius: 12px;
-      padding: 14px;
-      background: #fff;
-      transition: border-color .2s;
-    }
-    .presensi-box.terekam { border-color: var(--success); background: #F0FDF4; }
-    .presensi-box.belum { border-color: var(--gray-200); }
-    .presensi-box.luar { border-color: var(--warning); background: #FFFBEB; }
-
-    .presensi-box-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: .78rem;
-      font-weight: 700;
-      color: var(--gray-700);
-      margin-bottom: 10px;
-    }
-    .presensi-box-header svg { width: 15px; height: 15px; }
-    .presensi-box-header.datang { color: var(--primary); }
-    .presensi-box-header.pulang { color: var(--purple); }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: .75rem;
-      font-weight: 600;
-    }
-    .badge.terekam { background: var(--success-bg); color: var(--success); }
-    .badge.belum { background: var(--gray-100); color: var(--gray-500); }
-    .badge.luar { background: var(--warning-bg); color: var(--warning); }
-    .badge svg { width: 12px; height: 12px; }
-
-    .presensi-time {
-      font-size: 1.05rem; font-weight: 700;
-      color: var(--gray-900);
-      margin: 8px 0 4px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .presensi-time svg { width: 14px; height: 14px; color: var(--success); }
-
-    .presensi-loc {
-      font-size: .7rem; color: var(--gray-500);
-      margin-bottom: 6px;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .presensi-loc svg { width: 12px; height: 12px; }
-
-    .presensi-radius-tag {
-      font-size: .7rem; font-weight: 600;
-      color: var(--success);
-    }
-    .presensi-radius-tag.luar { color: var(--warning); }
-
-    .btn-foto {
-      width: 100%;
-      margin-top: 10px;
-      padding: 8px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: .78rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      font-family: inherit;
-      transition: background .2s;
-    }
-    .btn-foto:hover { background: var(--primary-dark); }
-
-    .presensi-jam-window {
-      font-size: .74rem;
-      color: var(--gray-500);
-      margin-top: 6px;
-    }
-
-    /* ===== RINGKASAN ===== */
-    .ringkasan-alert {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      background: var(--warning-bg);
-      border-left: 3px solid var(--warning);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      font-size: .84rem;
-      color: var(--gray-700);
-      line-height: 1.5;
-    }
-    .ringkasan-alert.lengkap {
-      background: var(--success-bg);
-      border-color: var(--success);
-    }
-    .ringkasan-alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
-
-    .rekap-list { display: flex; flex-direction: column; gap: 0; }
-    .rekap-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--gray-100);
-      font-size: .85rem;
-    }
-    .rekap-item:last-child { border-bottom: none; }
-    .rekap-label {
-      display: flex; align-items: center; gap: 8px;
-      color: var(--gray-700);
-    }
-    .rekap-label svg { width: 15px; height: 15px; color: var(--gray-400); }
-    .rekap-value { font-weight: 600; color: var(--gray-900); }
-    .rekap-value.success { color: var(--success); }
-    .rekap-value.warning { color: var(--warning); }
-    .rekap-value.muted { color: var(--gray-400); font-weight: 400; }
-
-    .timestamp-footer {
-      text-align: center;
-      font-size: .72rem;
-      color: var(--gray-400);
-      margin-top: 6px;
-      display: flex; align-items: center; justify-content: center; gap: 5px;
-    }
-
-    /* ===== HIDDEN ===== */
-    .hidden { display: none !important; }
-
-    /* ===== SPINNER ===== */
-    .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(255,255,255,.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 400px) {
-      .presensi-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cek Presensi Hari Ini - Korwil</title>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray: #94a3b8;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f4ff;
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 18px 20px 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: white;
+        }
+        .app-header .logo {
+            width: 46px; height: 46px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+        }
+        .app-header-text h1 { font-size: 1.1rem; font-weight: 700; line-height: 1.2; }
+        .app-header-text p  { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
+        .header-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .date-strip {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .live-dot {
+            width: 8px; height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1.2s infinite;
+            margin-right: 6px;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .search-group { display: flex; gap: 10px; align-items: stretch; }
+        .input-wrap { flex: 1; position: relative; }
+        .input-wrap i.field-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray); font-size: 0.95rem;
+        }
+        .input-wrap i {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray); font-size: 0.95rem;
+        }
+        .btn-toggle-pw {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--gray); font-size: 0.9rem; padding: 4px;
+            line-height: 1;
+        }
+        .btn-toggle-pw:hover { color: var(--primary); }
+        .input-wrap input {
+            width: 100%;
+            padding: 13px 14px 13px 40px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text);
+            transition: border-color 0.2s;
+            background: var(--light);
+            -webkit-appearance: none;
+        }
+        .input-wrap input:focus { outline: none; border-color: var(--primary); background: white; }
+        .input-wrap input::placeholder { color: var(--gray); }
+        .btn-cari {
+            padding: 13px 20px;
+            background: var(--primary);
+            color: white; border: none;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem; font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 7px;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-cari:hover { background: var(--primary-dark); }
+        .btn-cari:active { transform: scale(0.97); }
+        .btn-cari.loading { opacity: 0.7; pointer-events: none; }
+        #resultArea { display: none; }
+        .pegawai-info {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px;
+            background: var(--light);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .pegawai-avatar {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.3rem; flex-shrink: 0;
+        }
+        .pegawai-detail { flex: 1; min-width: 0; }
+        .pegawai-nama { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pegawai-sub  { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+        .pegawai-nip  {
+            font-size: 0.7rem; color: var(--primary); font-weight: 600;
+            background: #eff2ff; padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+        }
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+        .status-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; transition: border-color 0.2s; }
+        .status-card.has-record { border-color: var(--success); }
+        .status-card.no-record  { border-color: var(--border); }
+        .status-card-header {
+            padding: 12px 14px 10px;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .status-card.datang .status-card-header { background: linear-gradient(135deg, #dbeafe, #eff6ff); color: #1d4ed8; }
+        .status-card.pulang .status-card-header { background: linear-gradient(135deg, #f3e8ff, #faf5ff); color: #7e22ce; }
+        .status-card-body { padding: 12px 14px; background: white; }
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .status-badge.recorded     { background: #dcfce7; color: #15803d; }
+        .status-badge.not-recorded { background: #f1f5f9; color: #64748b; }
+        .record-time  { margin-top: 8px; font-size: 0.82rem; color: var(--text); font-weight: 600; }
+        .record-time span { color: var(--success); }
+        .record-location {
+            margin-top: 4px; font-size: 0.7rem; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 4px; line-height: 1.4;
+        }
+        .btn-lihat-foto {
+            margin-top: 10px; width: 100%; padding: 8px;
+            background: var(--primary); color: white; border: none;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-lihat-foto:hover { background: var(--primary-dark); }
+        .btn-lihat-foto.pulang-btn { background: #7e22ce; }
+        .btn-lihat-foto.pulang-btn:hover { background: #6d28d9; }
+        .summary-strip {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-radius: 12px;
+            font-size: 0.82rem; font-weight: 500;
+        }
+        .summary-strip.complete { background: #dcfce7; color: #15803d; }
+        .summary-strip.partial  { background: #fef9c3; color: #92400e; }
+        .summary-strip.none     { background: #fee2e2; color: #991b1b; }
+        .summary-strip i { font-size: 1.2rem; }
+        .not-found { text-align: center; padding: 30px 20px; }
+        .not-found i { font-size: 3rem; color: var(--gray); margin-bottom: 12px; display: block; }
+        .not-found p { color: var(--text-secondary); font-size: 0.9rem; }
+        .not-found strong { display: block; font-size: 1rem; color: var(--text); margin-bottom: 6px; }
+        .rekap-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px dashed var(--border);
+            font-size: 0.82rem;
+        }
+        .rekap-row:last-child { border-bottom: none; }
+        .rekap-label { color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
+        .rekap-val { font-weight: 600; }
+        .rekap-val.ok   { color: var(--success); }
+        .rekap-val.warn { color: var(--warning); }
+        .rekap-val.miss { color: var(--danger); }
+        .alert-error {
+            background: #fee2e2; border-left: 4px solid var(--danger);
+            padding: 12px 16px; border-radius: 0 10px 10px 0;
+            font-size: 0.85rem; color: #991b1b;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .info-box {
+            background: #eff6ff; border-left: 4px solid var(--primary);
+            padding: 12px 16px; border-radius: 0 10px 10px 0;
+            font-size: 0.8rem; color: #1e40af;
+            display: flex; align-items: flex-start; gap: 10px; line-height: 1.5;
+            margin-top: 12px;
+        }
+        .info-box i { flex-shrink: 0; margin-top: 2px; }
+        #fotoModal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 1000; display: none;
+            align-items: center; justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(6px);
+        }
+        #fotoModal.show { display: flex; }
+        .foto-modal-inner {
+            background: white; border-radius: 20px;
+            width: 100%; max-width: 400px; overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
+        }
+        @keyframes slideUp {
+            from { opacity:0; transform: translateY(30px) scale(0.95); }
+            to   { opacity:1; transform: translateY(0) scale(1); }
+        }
+        .foto-modal-header {
+            padding: 16px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .foto-modal-header h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .foto-modal-header h3 i { color: var(--primary); }
+        .btn-close-modal {
+            background: var(--light); border: none;
+            width: 34px; height: 34px; border-radius: 50%;
+            cursor: pointer; font-size: 1rem; color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-close-modal:hover { background: var(--border); }
+        .foto-modal-body { padding: 16px; }
+        .foto-meta {
+            display: flex; justify-content: space-between;
+            margin-bottom: 12px; font-size: 0.78rem; color: var(--text-secondary);
+        }
+        .foto-meta strong { color: var(--text); }
+        .foto-container {
+            border-radius: 14px; overflow: hidden;
+            background: #0f172a; position: relative; min-height: 120px;
+        }
+        .foto-container img { width: 100%; display: block; max-height: 380px; object-fit: cover; }
+        .foto-loading {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: #0f172a; color: white; font-size: 0.85rem;
+            flex-direction: column; gap: 10px;
+        }
+        .foto-loading i { font-size: 2rem; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .foto-modal-footer {
+            padding: 14px 16px; border-top: 1px solid var(--border);
+        }
+        .btn-tutup {
+            width: 100%; padding: 11px;
+            background: var(--light); color: var(--text);
+            border: none; border-radius: 10px;
+            font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-tutup:hover { background: var(--border); }
+        .bottom-note { text-align: center; font-size: 0.7rem; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+        .status-radius {
+            margin-top: 4px; font-size: 0.7rem;
+            padding: 2px 8px; border-radius: 10px; display: inline-block;
+        }
+        .status-radius.dalam { background: #dcfce7; color: #15803d; }
+        .status-radius.luar  { background: #fee2e2; color: #991b1b; }
+    </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <div class="app-header">
-    <div class="logo-row">
-      <div class="logo-icon">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-        </svg>
-      </div>
-      <h1>Monitoring Presensi</h1>
-    </div>
-    <p>Korwil Sine – Dinas Pendidikan Kabupaten Ngawi</p>
-  </div>
-
-  <!-- CARD: FORM LOGIN -->
-  <div class="card" id="cardForm">
-    <div class="card-title">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
-      </svg>
-      Cari Presensi Pegawai
-    </div>
-
-    <div class="form-group">
-      <div class="input-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-        <input type="text" id="inputUsername" placeholder="Username / NIP / MP ID"
-               autocomplete="username" inputmode="numeric" />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="input-wrap">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-        </svg>
-        <input type="password" id="inputPassword" placeholder="Password" autocomplete="current-password" />
-        <button class="eye-btn" id="btnTogglePass" onclick="togglePassword()" title="Tampilkan/sembunyikan password">
-          <svg id="eyeIcon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <button class="btn-search" id="btnCari" onclick="cariPresensi()">
-      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="17" height="17">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
-      </svg>
-      Cari
-    </button>
-
-    <div class="alert-info" id="alertInfo">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      <span>Masukkan <strong>username</strong> dan <strong>password</strong> akun Anda untuk
-      melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
-    </div>
-
-    <div class="alert-error hidden" id="alertError">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      <span id="errorMsg">Username atau password salah.</span>
-    </div>
-  </div>
-
-  <!-- CARD: IDENTITAS PEGAWAI -->
-  <div class="card hidden" id="cardIdentitas">
-    <div class="card-title">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"/>
-      </svg>
-      Identitas Pegawai
-    </div>
-    <div class="identitas-row">
-      <div class="avatar">
-        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-      </div>
-      <div class="identitas-info">
-        <div class="identitas-nama" id="infoNama">–</div>
-        <div class="identitas-lembaga" id="infoLembaga">–</div>
-      </div>
-      <div class="identitas-nip" id="infoNip">–</div>
-    </div>
-  </div>
-
-  <!-- CARD: STATUS PRESENSI -->
-  <div class="card hidden" id="cardStatus">
-    <div class="card-title">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-      </svg>
-      Status Presensi – <span id="tanggalHari">–</span>
-    </div>
-
-    <div class="presensi-grid">
-      <!-- DATANG -->
-      <div class="presensi-box" id="boxDatang">
-        <div class="presensi-box-header datang">
-          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-          </svg>
-          Datang
+    <div class="app-header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png"
+             alt="Logo" class="logo">
+        <div class="app-header-text">
+            <h1>Cek Presensi Hari Ini</h1>
+            <p>Korwil Kecamatan &middot; Tahun 2026</p>
         </div>
-        <div id="datangContent">
-          <div class="badge belum">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/>
-            </svg>
-            Belum
-          </div>
+        <div class="header-badge">
+            <i class="fas fa-calendar-check" style="margin-right:5px;"></i>
+            <span id="headerTanggal">–</span>
         </div>
-      </div>
-
-      <!-- PULANG -->
-      <div class="presensi-box" id="boxPulang">
-        <div class="presensi-box-header pulang">
-          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
-          Pulang
-        </div>
-        <div id="pulangContent">
-          <div class="badge belum">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/>
-            </svg>
-            Belum
-          </div>
-          <div class="presensi-jam-window">🕒 15:00 – 16:30</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CARD: RINGKASAN -->
-  <div class="card hidden" id="cardRingkasan">
-    <div class="card-title">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-      Ringkasan Hari Ini
     </div>
 
-    <div class="ringkasan-alert" id="ringkasanAlert">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" id="ringkasanAlertIcon">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-      </svg>
-      <span id="ringkasanMsg">Memuat...</span>
+    <div class="date-strip">
+        <span><span class="live-dot"></span><span id="stripHari">–</span></span>
+        <span id="stripJam" style="font-weight:600; color:var(--primary);">00:00:00 WIB</span>
     </div>
 
-    <div class="rekap-list">
-      <div class="rekap-item">
-        <div class="rekap-label">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-          </svg>
-          Jam Datang
+    <div class="container">
+
+        <!-- CARI NIP -->
+        <div class="card">
+            <div class="card-label"><i class="fas fa-search"></i> Cari Presensi Pegawai</div>
+            <div class="search-group" style="margin-bottom:10px;">
+                <div class="input-wrap">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="nipInput"
+                           placeholder="Username..."
+                           autocomplete="off" autocorrect="off" spellcheck="false">
+                </div>
+            </div>
+            <div class="search-group">
+                <div class="input-wrap">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="passwordInput"
+                           placeholder="Password..."
+                           autocomplete="off"
+                           style="padding-right:42px;">
+                    <button type="button" class="btn-toggle-pw" onclick="togglePassword()" title="Tampilkan/sembunyikan password">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+                <button class="btn-cari" id="btnCari" onclick="cariPresensi()">
+                    <i class="fas fa-search"></i> Cari
+                </button>
+            </div>
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <span>Masukkan <strong>username</strong> dan <strong>password</strong> akun Anda untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
+            </div>
         </div>
-        <div class="rekap-value" id="rekapJamDatang"><span class="muted">–</span></div>
-      </div>
-      <div class="rekap-item">
-        <div class="rekap-label">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
-          Jam Pulang
+
+        <!-- HASIL -->
+        <div id="resultArea">
+            <div class="card" id="cardPegawai"></div>
+            <div class="card" id="cardStatus" style="display:none;"></div>
+            <div class="card" id="cardRekap"  style="display:none;"></div>
         </div>
-        <div class="rekap-value" id="rekapJamPulang"><span class="muted">–</span></div>
-      </div>
-      <div class="rekap-item">
-        <div class="rekap-label">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Jarak Datang
-        </div>
-        <div class="rekap-value" id="rekapJarakDatang"><span class="muted">–</span></div>
-      </div>
-      <div class="rekap-item">
-        <div class="rekap-label">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Jarak Pulang
-        </div>
-        <div class="rekap-value" id="rekapJarakPulang"><span class="muted">–</span></div>
-      </div>
-      <div class="rekap-item">
-        <div class="rekap-label">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Foto Selfie
-        </div>
-        <div class="rekap-value" id="rekapFoto"><span class="muted">–</span></div>
-      </div>
+
     </div>
 
-    <div class="timestamp-footer" id="timestampFooter">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" height="12">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-      </svg>
-      Dicek pada: <span id="waktuCek">–</span> WIB
+    <!-- MODAL FOTO -->
+    <div id="fotoModal">
+        <div class="foto-modal-inner">
+            <div class="foto-modal-header">
+                <h3><i class="fas fa-camera"></i> <span id="modalTitle">Foto Presensi</span></h3>
+                <button class="btn-close-modal" onclick="tutupFoto()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="foto-modal-body">
+                <div class="foto-meta">
+                    <strong id="modalNama">–</strong>
+                    <span id="modalWaktu">–</span>
+                </div>
+                <div class="foto-container" id="fotoContainer">
+                    <div class="foto-loading" id="fotoLoading">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Memuat foto...</span>
+                    </div>
+                    <img id="fotoImg" src="" alt="Foto Presensi"
+                         style="display:none;"
+                         onload="fotoLoaded()" onerror="fotoError()">
+                </div>
+                <div style="margin-top:10px; font-size:0.75rem; color:var(--text-secondary); line-height:1.5;">
+                    <i class="fas fa-map-marker-alt" style="color:var(--primary);"></i>
+                    <span id="modalLokasi">–</span>
+                    &nbsp;|&nbsp;
+                    <i class="fas fa-ruler-combined" style="color:var(--primary);"></i>
+                    <span id="modalJarak">–</span>
+                </div>
+            </div>
+            <div class="foto-modal-footer">
+                <button class="btn-tutup" onclick="tutupFoto()">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // ============================================================
-    // KONFIGURASI – Ganti dengan URL Web App GAS Anda
-    // ============================================================
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxPMGnLI9FFZ-mYZaZyWzLE0jcjb8GYvp72SnI9MGoqzRQG4tuzeLhpSMsCTIWFx40ptQ/exec';
+    <script>
+        // ── Koneksi ke Database (Google Spreadsheet) ────────────────────────
+        // URL Web App Apps Script (dipakai untuk login/presensi/dll, bukan untuk cek ini)
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqgwrpj7mMOz2sgB5vfwfArPwU5o1h9MkIXrBh-6Vw5_Bl0yGiGGFN22dJdB8JwC_y/exec';
 
-    // ============================================================
-    // UTILITY
-    // ============================================================
-    function el(id) { return document.getElementById(id); }
+        // ID Spreadsheet sumber data (sama dengan PRESENSI_SPREADSHEET_ID di code.gs)
+        const SPREADSHEET_ID = '1ACaOKCizDDsrVqKPPrr2gNBpddWl9XPjJvNs8JqUEMc';
+        // Nama sheet rekap presensi (sama dengan PRESENSI_SHEET_NAME di code.gs)
+        const SHEET_REKAP = 'RekapPresensi';
+        // Nama sheet data pegawai (berisi username & password)
+        const SHEET_AKUN = 'db';
+        // ───────────────────────────────────────────────────────────────────
 
-    function togglePassword() {
-      const inp = el('inputPassword');
-      const icon = el('eyeIcon');
-      const isPass = inp.type === 'password';
-      inp.type = isPass ? 'text' : 'password';
-      icon.innerHTML = isPass
-        ? `<path stroke-linecap="round" stroke-linejoin="round"
-            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`
-        : `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-           <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
-    }
+        const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
 
-    function formatJarak(jarak) {
-      if (jarak === null || jarak === undefined || jarak === '') return null;
-      const num = parseFloat(jarak);
-      if (isNaN(num)) return null;
-      return num.toFixed(2) + ' m';
-    }
-
-    function nowWIB() {
-      const now = new Date();
-      const wib = new Date(now.getTime() + 7 * 3600000);
-      return wib.toISOString().substring(11, 19);
-    }
-
-    function showError(msg) {
-      el('alertInfo').classList.add('hidden');
-      el('alertError').classList.remove('hidden');
-      el('errorMsg').textContent = msg;
-    }
-
-    function hideError() {
-      el('alertError').classList.add('hidden');
-      el('alertInfo').classList.remove('hidden');
-    }
-
-    // ============================================================
-    // RENDER PRESENSI BOX
-    // ============================================================
-    function renderDatang(data) {
-      const box = el('boxDatang');
-      if (!data) {
-        box.className = 'presensi-box belum';
-        el('datangContent').innerHTML = `
-          <div class="badge belum">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" height="12">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/>
-            </svg>Belum
-          </div>`;
-        return;
-      }
-      const isLuar = (data.ketRadius || '').toUpperCase().includes('LUAR');
-      box.className = 'presensi-box ' + (isLuar ? 'luar' : 'terekam');
-
-      const jarakStr = formatJarak(data.jarak);
-      const ketRadius = isLuar ? 'Di Luar Radius' : 'Dalam Radius';
-
-      el('datangContent').innerHTML = `
-        <div class="badge ${isLuar ? 'luar' : 'terekam'}">
-          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="12" height="12">
-            <path stroke-linecap="round" stroke-linejoin="round" d="${isLuar ? 'M12 9v2m0 4h.01' : 'M5 13l4 4L19 7'}"/>
-          </svg>${isLuar ? 'Di Luar Radius' : 'Terekam'}
-        </div>
-        <div class="presensi-time">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          ${data.waktu}
-        </div>
-        ${data.lat ? `<div class="presensi-loc">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-          </svg>
-          ${parseFloat(data.lat).toFixed(6)}, ${parseFloat(data.lon).toFixed(6)}
-        </div>` : ''}
-        <div class="presensi-radius-tag ${isLuar ? 'luar' : ''}">✓ ${ketRadius}</div>
-        ${data.bukti ? `<button class="btn-foto" onclick="window.open('${data.bukti}','_blank')">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>Lihat Foto
-        </button>` : ''}`;
-    }
-
-    function renderPulang(data) {
-      const box = el('boxPulang');
-      if (!data) {
-        box.className = 'presensi-box belum';
-        el('pulangContent').innerHTML = `
-          <div class="badge belum">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="12" height="12">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/>
-            </svg>Belum
-          </div>
-          <div class="presensi-jam-window">🕒 15:00 – 16:30</div>`;
-        return;
-      }
-      const isLuar = (data.ketRadius || '').toUpperCase().includes('LUAR');
-      box.className = 'presensi-box ' + (isLuar ? 'luar' : 'terekam');
-      const ketRadius = isLuar ? 'Di Luar Radius' : 'Dalam Radius';
-
-      el('pulangContent').innerHTML = `
-        <div class="badge ${isLuar ? 'luar' : 'terekam'}">
-          <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="12" height="12">
-            <path stroke-linecap="round" stroke-linejoin="round" d="${isLuar ? 'M12 9v2m0 4h.01' : 'M5 13l4 4L19 7'}"/>
-          </svg>${isLuar ? 'Di Luar Radius' : 'Terekam'}
-        </div>
-        <div class="presensi-time">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          ${data.waktu}
-        </div>
-        ${data.lat ? `<div class="presensi-loc">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-          </svg>
-          ${parseFloat(data.lat).toFixed(6)}, ${parseFloat(data.lon).toFixed(6)}
-        </div>` : ''}
-        <div class="presensi-radius-tag ${isLuar ? 'luar' : ''}">✓ ${ketRadius}</div>
-        ${data.bukti ? `<button class="btn-foto" onclick="window.open('${data.bukti}','_blank')">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>Lihat Foto
-        </button>` : ''}`;
-    }
-
-    // ============================================================
-    // RENDER RINGKASAN
-    // ============================================================
-    function renderRingkasan(datang, pulang) {
-      const hasDatang = !!datang;
-      const hasPulang = !!pulang;
-
-      // Alert message
-      let msg = '', alertClass = 'ringkasan-alert', iconPath = '';
-      if (hasDatang && hasPulang) {
-        msg = 'Presensi <strong>datang</strong> dan <strong>pulang</strong> sudah terekam lengkap. ✅';
-        alertClass += ' lengkap';
-        iconPath = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
-      } else if (hasDatang && !hasPulang) {
-        msg = 'Presensi <strong>datang</strong> sudah terekam. Presensi <strong>pulang</strong> belum.';
-        iconPath = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
-      } else {
-        msg = 'Presensi <strong>datang</strong> dan <strong>pulang</strong> belum terekam hari ini.';
-        iconPath = 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z';
-      }
-
-      el('ringkasanAlert').className = alertClass;
-      el('ringkasanAlertIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="${iconPath}"/>`;
-      el('ringkasanMsg').innerHTML = msg;
-
-      // Jam datang
-      if (hasDatang) {
-        el('rekapJamDatang').innerHTML = `<span class="success">${datang.waktu}</span>`;
-      } else {
-        el('rekapJamDatang').innerHTML = `<span class="muted">–</span>`;
-      }
-
-      // Jam pulang
-      if (hasPulang) {
-        el('rekapJamPulang').innerHTML = `<span class="success">${pulang.waktu}</span>`;
-      } else {
-        el('rekapJamPulang').innerHTML = `<span class="muted">–</span>`;
-      }
-
-      // Jarak datang
-      const jarakD = hasDatang ? formatJarak(datang.jarak) : null;
-      const isLuarD = hasDatang && (datang.ketRadius || '').toUpperCase().includes('LUAR');
-      if (jarakD) {
-        el('rekapJarakDatang').innerHTML = `<span class="${isLuarD ? 'warning' : 'success'}">${jarakD}</span>`;
-      } else {
-        el('rekapJarakDatang').innerHTML = `<span class="muted">–</span>`;
-      }
-
-      // Jarak pulang
-      const jarakP = hasPulang ? formatJarak(pulang.jarak) : null;
-      const isLuarP = hasPulang && (pulang.ketRadius || '').toUpperCase().includes('LUAR');
-      if (jarakP) {
-        el('rekapJarakPulang').innerHTML = `<span class="${isLuarP ? 'warning' : 'success'}">${jarakP}</span>`;
-      } else {
-        el('rekapJarakPulang').innerHTML = `<span class="muted">–</span>`;
-      }
-
-      // Foto selfie
-      let fotoHtml = '';
-      if (hasDatang && datang.bukti) {
-        fotoHtml += `<span class="success">✓ Datang</span>`;
-      }
-      if (hasPulang && pulang.bukti) {
-        fotoHtml += (fotoHtml ? ' · ' : '') + `<span class="success">✓ Pulang</span>`;
-      }
-      if (!fotoHtml) fotoHtml = `<span class="muted">–</span>`;
-      el('rekapFoto').innerHTML = fotoHtml;
-
-      // Timestamp
-      el('waktuCek').textContent = nowWIB();
-    }
-
-    // ============================================================
-    // MAIN SEARCH
-    // ============================================================
-    async function cariPresensi() {
-      const username = el('inputUsername').value.trim();
-      const password = el('inputPassword').value.trim();
-
-      if (!username || !password) {
-        showError('Username dan password wajib diisi.');
-        return;
-      }
-
-      // Loading state
-      const btn = el('btnCari');
-      btn.disabled = true;
-      btn.innerHTML = `<div class="spinner"></div> Mencari...`;
-      hideError();
-
-      // Sembunyikan hasil sebelumnya
-      ['cardIdentitas', 'cardStatus', 'cardRingkasan'].forEach(id => el(id).classList.add('hidden'));
-
-      try {
-        const url = `${GAS_URL}?action=cekPresensi&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-        const resp = await fetch(url, { redirect: 'follow' });
-
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-
-        if (!data.success) {
-          showError(data.message || 'Gagal memuat data.');
-          return;
+        function getWIB() {
+            const n = new Date();
+            return new Date(n.getTime() + n.getTimezoneOffset()*60000 + 25200000);
+        }
+        function fmtJam(d) {
+            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')} WIB`;
+        }
+        function fmtTgl(d) {
+            return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
+        }
+        function fmtTglShort(d) {
+            return `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
         }
 
-        // === RENDER IDENTITAS ===
-        el('infoNama').textContent = data.pegawai.nama || '–';
-        el('infoLembaga').textContent = data.pegawai.lembaga || '–';
-        el('infoNip').textContent = data.pegawai.nip || '–';
-        el('cardIdentitas').classList.remove('hidden');
+        function updateClock() {
+            const w = getWIB();
+            document.getElementById('headerTanggal').textContent = `${w.getDate()} ${BULAN[w.getMonth()]}`;
+            document.getElementById('stripHari').textContent = fmtTgl(w);
+            document.getElementById('stripJam').textContent  = fmtJam(w);
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
 
-        // === RENDER STATUS ===
-        el('tanggalHari').textContent = (data.tanggal || '').toUpperCase();
-        renderDatang(data.datang);
-        renderPulang(data.pulang);
-        el('cardStatus').classList.remove('hidden');
+        // Enter key
+        document.getElementById('nipInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+        });
+        document.getElementById('passwordInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') cariPresensi();
+        });
 
-        // === RENDER RINGKASAN ===
-        renderRingkasan(data.datang, data.pulang);
-        el('cardRingkasan').classList.remove('hidden');
+        function setLoading(on) {
+            const b = document.getElementById('btnCari');
+            b.classList.toggle('loading', on);
+            b.innerHTML = on
+                ? '<i class="fas fa-circle-notch fa-spin"></i> Mencari...'
+                : '<i class="fas fa-search"></i> Cari';
+        }
 
-        // Scroll ke hasil
-        el('cardIdentitas').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // ── Ambil tanggal hari ini WIB (untuk pencocokan baris RekapPresensi) ─
+        function tanggalHariIni() {
+            const w = getWIB();
+            return { day: w.getDate(), month: w.getMonth(), year: w.getFullYear() };
+        }
 
-      } catch (err) {
-        showError('Koneksi gagal. Periksa jaringan Anda dan coba lagi. (' + err.message + ')');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="17" height="17">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
-        </svg>Cari`;
-      }
-    }
+        // ── Baca sheet langsung dari Google Spreadsheet (Google Visualization API) ─
+        // Catatan: cara ini dipakai karena code.gs belum punya endpoint khusus untuk
+        // mengambil rekap presensi (action "getPresensiHariIni" tidak ada di doPost).
+        // Tanpa mengubah code.gs, halaman ini membaca sheet "RekapPresensi" langsung
+        // via Google Visualization API (gviz) memakai teknik JSONP supaya tidak
+        // terbentur CORS. Sheet "RekapPresensi" WAJIB di-share "Siapa saja yang
+        // memiliki link → Viewer" agar bisa diakses dari halaman ini.
+        let _gvizSeq = 0;
+        function fetchSheetTable(sheetName) {
+            return new Promise((resolve, reject) => {
+                const cbName = '_gvizCb' + (_gvizSeq++);
+                const timeoutId = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('Waktu koneksi habis. '));
+                }, 15000);
 
-    // Enter key support
-    ['inputUsername', 'inputPassword'].forEach(id => {
-      el(id).addEventListener('keydown', e => { if (e.key === 'Enter') cariPresensi(); });
-    });
-  </script>
+                function cleanup() {
+                    clearTimeout(timeoutId);
+                    delete window[cbName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                }
+
+                window[cbName] = function(resp) {
+                    cleanup();
+                    if (!resp || resp.status === 'error') {
+                        const detail = resp && resp.errors && resp.errors[0]
+                            ? (resp.errors[0].detailed_message || resp.errors[0].message)
+                            : 'Sheet tidak ditemukan atau tidak bisa diakses';
+                        reject(new Error(detail));
+                        return;
+                    }
+                    resolve(resp.table);
+                };
+
+                const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq`
+                    + `?tqx=out:json;responseHandler:${cbName}`
+                    + `&sheet=${encodeURIComponent(sheetName)}`
+                    + `&headers=1`;
+
+                const script = document.createElement('script');
+                script.src = url;
+                script.onerror = () => {
+                    cleanup();
+                    reject(new Error('Gagal memuat data spreadsheet. Pastikan sheet "' + sheetName + '" sudah di-share "Anyone with the link".'));
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        // Ambil nilai sel gviz dengan aman (null-safe)
+        function cellVal(row, idx) {
+            return (row && row.c && row.c[idx] && row.c[idx].v !== null && row.c[idx].v !== undefined)
+                ? row.c[idx].v : '';
+        }
+
+        // Parse "Rabu, 24 Juni 2026 ... 14:35:10" / "...pukul 14.35.10" → {day,month,year,jam}
+        function parseTanggalLengkap(str) {
+            str = String(str || '');
+            const monthIdx = BULAN.findIndex(b => str.includes(b));
+            const dayMatch = str.match(/\b(\d{1,2})\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\b/);
+            const yearMatch = str.match(/\b(\d{4})\b/);
+            const jamMatch = str.match(/(\d{1,2})[.:](\d{2})[.:](\d{2})/);
+            if (monthIdx === -1 || !dayMatch || !yearMatch) return null;
+            return {
+                day: parseInt(dayMatch[1], 10),
+                month: monthIdx,
+                year: parseInt(yearMatch[1], 10),
+                jam: jamMatch ? `${jamMatch[1].padStart(2,'0')}:${jamMatch[2]}:${jamMatch[3]}` : '–'
+            };
+        }
+
+        // Bangun objek rekam (datang/pulang) dari satu baris RekapPresensi
+        function buildRecord(row, tgl) {
+            const jarakRaw = cellVal(row, 8);          // contoh: "12.34 m"
+            const jarakNum = String(jarakRaw).replace(/[^\d.]/g, '');
+            return {
+                jam: tgl.jam,
+                fotoUrl: cellVal(row, 5) || '',
+                latitude: cellVal(row, 6),
+                longitude: cellVal(row, 7),
+                jarak: jarakNum,
+                statusRadius: cellVal(row, 9) || ''
+            };
+        }
+
+        function togglePassword() {
+            const inp = document.getElementById('passwordInput');
+            const ico = document.getElementById('eyeIcon');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                ico.className = 'fas fa-eye-slash';
+            } else {
+                inp.type = 'password';
+                ico.className = 'fas fa-eye';
+            }
+        }
+
+        // ── CARI PRESENSI ────────────────────────────────────────────────────
+        async function cariPresensi() {
+            const username = document.getElementById('nipInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+
+            if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
+            if (!password) { alert('Masukkan password terlebih dahulu.'); return; }
+
+            setLoading(true);
+            document.getElementById('resultArea').style.display = 'none';
+
+            try {
+                // ── Langkah 1: Validasi username & password dari sheet idakun ─────
+                // Sheet idakun: cari kolom yang cocok untuk username & password.
+                // Sistem akan mencoba SEMUA kombinasi kolom (0-5) sehingga tidak
+                // tergantung urutan kolom di spreadsheet.
+                let akunValid = null;
+                let colUser = -1, colPass = -1;
+
+                const tableAkun = await fetchSheetTable(SHEET_AKUN);
+                const rowsAkun  = tableAkun.rows || [];
+                const colCount  = tableAkun.cols ? tableAkun.cols.length : 6;
+
+                // Deteksi kolom: cari baris pertama yang mengandung username yang dicari,
+                // lalu tentukan kolom password-nya dari sisa kolom.
+                // Strategi: coba semua pasangan kolom (i, j) dimana i != j.
+                outer:
+                for (let ci = 0; ci < colCount; ci++) {
+                    for (let cj = 0; cj < colCount; cj++) {
+                        if (ci === cj) continue;
+                        for (const row of rowsAkun) {
+                            const u = String(cellVal(row, ci)).trim();
+                            const p = String(cellVal(row, cj)).trim();
+                            if (u.toLowerCase() === username.toLowerCase() && p === password) {
+                                akunValid = row;
+                                colUser = ci;
+                                colPass = cj;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+
+                if (!akunValid) {
+                    // Cek apakah username memang ada (untuk pesan error yang lebih tepat)
+                    let usernameAda = false;
+                    for (let ci = 0; ci < colCount; ci++) {
+                        if (rowsAkun.some(r => String(cellVal(r, ci)).trim().toLowerCase() === username.toLowerCase())) {
+                            usernameAda = true;
+                            break;
+                        }
+                    }
+                    renderAuthError(usernameAda ? 'password' : 'username', username);
+                    setLoading(false);
+                    return;
+                }
+
+                // ── Langkah 2: Ambil data presensi dari RekapPresensi ──────────────
+                const table = await fetchSheetTable(SHEET_REKAP);
+                const today = tanggalHariIni();
+                const rows  = (table.rows || []);
+
+                let lastKnown = null;
+                let datang = null, pulang = null;
+
+                for (const row of rows) {
+                    const rowUsername = String(cellVal(row, 4)).trim();
+                    if (!rowUsername || rowUsername.toLowerCase() !== username.toLowerCase()) continue;
+
+                    lastKnown = row;
+
+                    const tgl = parseTanggalLengkap(cellVal(row, 0));
+                    if (!tgl) continue;
+                    const isToday = tgl.day === today.day && tgl.month === today.month && tgl.year === today.year;
+                    if (!isToday) continue;
+
+                    const tipe = String(cellVal(row, 1)).trim().toLowerCase();
+                    if (tipe === 'datang') datang = buildRecord(row, tgl);
+                    else if (tipe === 'pulang') pulang = buildRecord(row, tgl);
+                }
+
+                // Nama pegawai: utamakan dari RekapPresensi, fallback dari idakun
+                const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') || username;
+                const namaLembaga = lastKnown ? cellVal(lastKnown, 2) : '–';
+
+                renderResult({ username, namaPegawai, namaLembaga, datang, pulang });
+
+            } catch (err) {
+                renderError(err.message);
+            }
+            setLoading(false);
+        }
+
+        // ── RENDER ERROR AUTENTIKASI ─────────────────────────────────────────
+        function renderAuthError(tipe, username) {
+            let pesan = '';
+            if (tipe === 'username') {
+                pesan = `Username <strong>${esc(username)}</strong> tidak ditemukan di sistem. Periksa kembali.`;
+            } else if (tipe === 'password') {
+                pesan = `Password salah untuk username <strong>${esc(username)}</strong>. Silakan coba lagi.`;
+            } else {
+                pesan = `Username atau password salah. Silakan coba lagi.`;
+            }
+            document.getElementById('cardPegawai').innerHTML = `
+                <div style="text-align:center;padding:30px 10px;">
+                    <i class="fas fa-lock" style="font-size:3rem;color:var(--danger);display:block;margin-bottom:12px;"></i>
+                    <strong style="font-size:1rem;">Akses Ditolak</strong>
+                    <p style="color:var(--text-secondary);font-size:.9rem;margin-top:8px;">${pesan}</p>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        // ── RENDER HASIL ─────────────────────────────────────────────────────
+        function renderResult(data) {
+            const wib = getWIB();
+
+            // --- Card: Identitas pegawai ---
+            const cp = document.getElementById('cardPegawai');
+            cp.innerHTML = `
+                <div class="card-label"><i class="fas fa-id-card"></i> Identitas Pegawai</div>
+                <div class="pegawai-info">
+                    <div class="pegawai-avatar"><i class="fas fa-user-tie"></i></div>
+                    <div class="pegawai-detail">
+                        <div class="pegawai-nama">${esc(data.namaPegawai)}</div>
+                        <div class="pegawai-sub">${esc(data.namaLembaga)}</div>
+                    </div>
+                    <div class="pegawai-nip">${esc(data.username)}</div>
+                </div>`;
+
+            // --- Card: Status datang & pulang ---
+            const isFri = getWIB().getDay() === 5;
+            const cs = document.getElementById('cardStatus');
+            cs.innerHTML = `
+                <div class="card-label"><i class="fas fa-clipboard-check"></i> Status Presensi – ${fmtTglShort(wib)}</div>
+                <div class="status-grid">
+                    ${buildStatusCard('datang', data.datang, '06:00 – 07:00', data.namaPegawai)}
+                    ${buildStatusCard('pulang', data.pulang, isFri ? '14:30 – 16:30' : '15:00 – 16:30', data.namaPegawai)}
+                </div>`;
+            cs.style.display = 'block';
+
+            // --- Card: Ringkasan ---
+            const d = data.datang, p = data.pulang;
+            let sc, si, st;
+            if (d && p) {
+                sc='complete'; si='fas fa-check-circle';
+                st='Presensi hari ini <strong>lengkap</strong>. Datang dan pulang sudah terekam.';
+            } else if (d || p) {
+                sc='partial'; si='fas fa-exclamation-circle';
+                st = d
+                    ? 'Presensi <strong>datang</strong> sudah terekam. Presensi <strong>pulang</strong> belum.'
+                    : 'Presensi <strong>pulang</strong> terekam, namun <strong>datang</strong> belum.';
+            } else {
+                sc='none'; si='fas fa-times-circle';
+                st='Presensi hari ini <strong>belum ada</strong>. Datang dan pulang belum terekam.';
+            }
+
+            const cr = document.getElementById('cardRekap');
+            cr.innerHTML = `
+                <div class="card-label"><i class="fas fa-chart-bar"></i> Ringkasan Hari Ini</div>
+                <div class="summary-strip ${sc}" style="margin-bottom:14px;">
+                    <i class="${si}"></i><span>${st}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-sign-in-alt" style="color:#3b82f6;"></i> Jam Datang</span>
+                    <span class="rekap-val ${d ? 'ok' : 'miss'}">${d ? esc(d.jam) : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-sign-out-alt" style="color:#7c3aed;"></i> Jam Pulang</span>
+                    <span class="rekap-val ${p ? 'ok' : 'miss'}">${p ? esc(p.jam) : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Datang</span>
+                    <span class="rekap-val ${d ? (parseFloat(d.jarak) > 0 ? 'warn' : 'ok') : 'miss'}">${d ? esc(d.jarak) + ' m' : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Pulang</span>
+                    <span class="rekap-val ${p ? (parseFloat(p.jarak) > 0 ? 'warn' : 'ok') : 'miss'}">${p ? esc(p.jarak) + ' m' : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-label"><i class="fas fa-camera" style="color:#0891b2;"></i> Foto Selfie</span>
+                    <span class="rekap-val">
+                        ${d?.fotoUrl ? '<span style="color:var(--success);">✓ Datang</span>' : ''}
+                        ${d?.fotoUrl && p?.fotoUrl ? ' &amp; ' : ''}
+                        ${p?.fotoUrl ? '<span style="color:var(--success);">✓ Pulang</span>' : ''}
+                        ${!d?.fotoUrl && !p?.fotoUrl ? '<span style="color:var(--gray);">–</span>' : ''}
+                    </span>
+                </div>
+                <p class="bottom-note" style="margin-top:12px;">
+                    <i class="fas fa-sync-alt"></i> Dicek pada: ${fmtJam(wib)}
+                </p>`;
+            cr.style.display = 'block';
+
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function buildStatusCard(tipe, rec, jamSlot, nama) {
+            const isDatang = tipe === 'datang';
+            const label = isDatang ? 'Datang' : 'Pulang';
+            const icon  = isDatang ? 'fas fa-sign-in-alt' : 'fas fa-sign-out-alt';
+
+            if (rec) {
+                const lokasiStr = (rec.latitude && rec.longitude)
+                    ? `${String(rec.latitude).substring(0,9)}, ${String(rec.longitude).substring(0,10)}`
+                    : '–';
+                const fotoBtn = rec.fotoUrl
+                    ? `<button class="btn-lihat-foto ${isDatang ? '' : 'pulang-btn'}"
+                              onclick="lihatFoto('${esc(tipe)}','${esc(rec.fotoUrl)}','${esc(nama)}','${esc(rec.jam)}','${esc(lokasiStr)}','${esc(rec.jarak)}')">
+                           <i class="fas fa-image"></i> Lihat Foto
+                       </button>`
+                    : `<div style="margin-top:10px;font-size:0.72rem;color:var(--gray);"><i class="fas fa-image"></i> Foto tidak tersedia</div>`;
+
+                const radiusClass = rec.statusRadius === 'DI DALAM RADIUS' ? 'dalam' : 'luar';
+                const radiusLabel = rec.statusRadius === 'DI DALAM RADIUS' ? '✓ Dalam Radius' : '⚠ Luar Radius';
+
+                return `
+                    <div class="status-card ${tipe} has-record">
+                        <div class="status-card-header"><i class="${icon}"></i> ${label}</div>
+                        <div class="status-card-body">
+                            <div class="status-badge recorded"><i class="fas fa-check-circle"></i> Terekam</div>
+                            <div class="record-time">
+                                <i class="fas fa-clock" style="font-size:.75rem;color:var(--success);margin-right:3px;"></i>
+                                <span>${esc(rec.jam)}</span>
+                            </div>
+                            <div class="record-location">
+                                <i class="fas fa-map-marker-alt" style="color:var(--primary);flex-shrink:0;"></i>
+                                ${esc(lokasiStr)}
+                            </div>
+                            <div><span class="status-radius ${radiusClass}">${radiusLabel}</span></div>
+                            ${fotoBtn}
+                        </div>
+                    </div>`;
+            } else {
+                return `
+                    <div class="status-card ${tipe} no-record">
+                        <div class="status-card-header"><i class="${icon}"></i> ${label}</div>
+                        <div class="status-card-body">
+                            <div class="status-badge not-recorded"><i class="fas fa-minus-circle"></i> Belum</div>
+                            <div style="margin-top:8px;font-size:.75rem;color:var(--text-secondary);line-height:1.4;">
+                                <i class="fas fa-clock" style="margin-right:3px;"></i>${jamSlot}
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function renderNotFound(username) {
+            document.getElementById('cardPegawai').innerHTML = `
+                <div style="text-align:center;padding:30px 10px;">
+                    <i class="fas fa-calendar-times" style="font-size:3rem;color:var(--gray);display:block;margin-bottom:12px;"></i>
+                    <strong style="font-size:1rem;">Belum Ada Data Presensi</strong>
+                    <p style="color:var(--text-secondary);font-size:.9rem;margin-top:6px;">
+                        Akun <strong>${esc(username)}</strong> terautentikasi, namun belum ada riwayat presensi sama sekali.
+                    </p>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function renderError(msg) {
+            document.getElementById('cardPegawai').innerHTML = `
+                <div class="alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Gagal mengambil data: <strong>${esc(msg)}</strong>. Coba beberapa saat lagi.</span>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        // ── MODAL FOTO ───────────────────────────────────────────────────────
+        function lihatFoto(tipe, fotoUrl, nama, jam, lokasi, jarak) {
+            document.getElementById('modalTitle').textContent = tipe === 'datang' ? 'Foto Presensi Datang' : 'Foto Presensi Pulang';
+            document.getElementById('modalNama').textContent  = nama;
+            document.getElementById('modalWaktu').textContent = jam;
+            document.getElementById('modalLokasi').textContent = lokasi;
+            document.getElementById('modalJarak').textContent  = jarak ? jarak + ' m dari lembaga' : '–';
+
+            const img = document.getElementById('fotoImg');
+            document.getElementById('fotoLoading').style.display = 'flex';
+            img.style.display = 'none';
+
+            // Konversi Google Drive URL ke thumbnail langsung
+            img.src = driveThumbnailUrl(fotoUrl);
+
+            document.getElementById('fotoModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Google Drive: ubah ke format thumbnail/preview yang bisa ditampilkan di <img>
+        function driveThumbnailUrl(url) {
+            if (!url) return '';
+            // Format: https://drive.google.com/file/d/FILE_ID/view
+            const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
+            // Format: https://drive.google.com/open?id=FILE_ID
+            const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w600`;
+            return url;
+        }
+
+        function fotoLoaded() {
+            document.getElementById('fotoImg').style.display = 'block';
+            document.getElementById('fotoLoading').style.display = 'none';
+        }
+        function fotoError() {
+            document.getElementById('fotoLoading').innerHTML =
+                '<i class="fas fa-image" style="color:#94a3b8;"></i><span style="color:#94a3b8;font-size:.8rem;">Foto tidak dapat dimuat</span>';
+        }
+        function tutupFoto() {
+            document.getElementById('fotoModal').classList.remove('show');
+            document.body.style.overflow = '';
+            setTimeout(() => { document.getElementById('fotoImg').src = ''; }, 300);
+        }
+        document.getElementById('fotoModal').addEventListener('click', function(e) {
+            if (e.target === this) tutupFoto();
+        });
+
+        function esc(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+    </script>
 </body>
 </html>
