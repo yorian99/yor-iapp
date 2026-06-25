@@ -302,6 +302,116 @@
         }
         .btn-tutup:hover { background: var(--border); }
         .bottom-note { text-align: center; font-size: 0.7rem; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+
+        /* ── CAPTCHA ── */
+        .captcha-box {
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .captcha-question {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+            background: white;
+            border-radius: 10px;
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            min-width: 120px;
+            text-align: center;
+            letter-spacing: 1px;
+            user-select: none;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .captcha-question::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(67,97,238,0.04),
+                rgba(67,97,238,0.04) 2px,
+                transparent 2px,
+                transparent 10px
+            );
+            pointer-events: none;
+        }
+        .captcha-noise {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .captcha-label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            flex: 1;
+        }
+        .captcha-input-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }
+        .captcha-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            background: white;
+            text-align: center;
+            -webkit-appearance: none;
+            transition: border-color 0.2s;
+        }
+        .captcha-input:focus { outline: none; border-color: var(--primary); }
+        .captcha-input.error { border-color: var(--danger); animation: shake 0.4s; }
+        .captcha-input.ok    { border-color: var(--success); }
+        @keyframes shake {
+            0%,100%{transform:translateX(0)}
+            25%{transform:translateX(-6px)}
+            75%{transform:translateX(6px)}
+        }
+        .btn-refresh-captcha {
+            background: none; border: none; cursor: pointer;
+            color: var(--primary); font-size: 1rem; padding: 6px;
+            border-radius: 8px; transition: background 0.15s, transform 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-refresh-captcha:hover { background: #eff2ff; }
+        .btn-refresh-captcha.spin { transform: rotate(360deg); transition: transform 0.4s ease; }
+        .captcha-err {
+            font-size: 0.72rem;
+            color: var(--danger);
+            margin-top: 4px;
+            display: none;
+        }
+
+        /* ── RATE LIMIT / LOCKOUT UI ── */
+        .lockout-bar {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.78rem;
+            color: #991b1b;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
         .status-radius {
             margin-top: 4px; font-size: 0.7rem;
             padding: 2px 8px; border-radius: 10px; display: inline-block;
@@ -358,6 +468,32 @@
                     <i class="fas fa-search"></i> Cari
                 </button>
             </div>
+            <!-- CAPTCHA -->
+            <div class="captcha-box" id="captchaBox">
+                <div style="width:100%;display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-shield-alt" style="color:var(--primary);font-size:1.1rem;flex-shrink:0;"></i>
+                    <span class="captcha-label">Selesaikan verifikasi sebelum mencari:</span>
+                </div>
+                <div class="captcha-input-wrap">
+                    <div class="captcha-question" id="captchaQuestion" aria-label="Soal captcha">
+                        <canvas class="captcha-noise" id="captchaCanvas"></canvas>
+                        <span id="captchaText">–</span>
+                    </div>
+                    <span style="font-size:1rem;color:var(--text-secondary);">=</span>
+                    <input type="number" id="captchaInput" class="captcha-input"
+                           placeholder="?" inputmode="numeric" autocomplete="off"
+                           onkeydown="if(event.key==='Enter')cariPresensi()">
+                    <button type="button" class="btn-refresh-captcha" onclick="renewCaptcha(true)" title="Ganti soal">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="captcha-err" id="captchaErr"><i class="fas fa-times-circle"></i> Jawaban salah, coba lagi.</div>
+            </div>
+            <!-- LOCKOUT BAR -->
+            <div class="lockout-bar" id="lockoutBar">
+                <i class="fas fa-clock"></i>
+                <span id="lockoutMsg">Terlalu banyak percobaan. Tunggu <strong id="lockoutSec">30</strong> detik.</span>
+            </div>
             <div class="info-box">
                 <i class="fas fa-info-circle"></i>
                 <span>Masukkan <strong>username</strong> dan <strong>password</strong> akun Anda untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
@@ -411,6 +547,115 @@
     </div>
 
     <script>
+        // ══════════════════════════════════════════════════════════════════════
+        // ── CAPTCHA ──────────────────────────────────────────────────────────
+        // ══════════════════════════════════════════════════════════════════════
+        let _captchaAnswer = 0;
+        let _captchaFailCount = 0;
+        const CAPTCHA_MAX_FAIL = 3;   // lockout setelah N gagal
+        const CAPTCHA_LOCKOUT  = 30;  // detik
+        let _lockoutTimer = null;
+
+        function renewCaptcha(spin = false) {
+            // Soal: operasi acak (penjumlahan, pengurangan, perkalian kecil)
+            const ops = ['+', '-', '×'];
+            const op  = ops[Math.floor(Math.random() * ops.length)];
+            let a, b, ans;
+            if (op === '+') {
+                a = rnd(1,20); b = rnd(1,20); ans = a + b;
+            } else if (op === '-') {
+                a = rnd(5,20); b = rnd(1, a); ans = a - b;
+            } else {
+                a = rnd(2,9);  b = rnd(2,9);  ans = a * b;
+            }
+            _captchaAnswer = ans;
+            document.getElementById('captchaText').textContent = `${a} ${op} ${b}`;
+            document.getElementById('captchaInput').value = '';
+            document.getElementById('captchaInput').className = 'captcha-input';
+            document.getElementById('captchaErr').style.display = 'none';
+            drawNoise();
+
+            if (spin) {
+                const btn = document.querySelector('.btn-refresh-captcha');
+                btn.classList.add('spin');
+                setTimeout(() => btn.classList.remove('spin'), 450);
+            }
+        }
+        function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function drawNoise() {
+            const canvas = document.getElementById('captchaCanvas');
+            const q      = document.getElementById('captchaQuestion');
+            canvas.width  = q.offsetWidth  || 130;
+            canvas.height = q.offsetHeight || 42;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Garis-garis acak tipis (noise visual anti-bot sederhana)
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo(rnd(0, canvas.width), rnd(0, canvas.height));
+                ctx.lineTo(rnd(0, canvas.width), rnd(0, canvas.height));
+                ctx.strokeStyle = `rgba(67,97,238,${(Math.random() * 0.25 + 0.1).toFixed(2)})`;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+            // Titik-titik acak
+            for (let i = 0; i < 18; i++) {
+                ctx.beginPath();
+                ctx.arc(rnd(0, canvas.width), rnd(0, canvas.height), 1.2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(67,97,238,${(Math.random() * 0.3 + 0.1).toFixed(2)})`;
+                ctx.fill();
+            }
+        }
+
+        function verifyCaptcha() {
+            const val = parseInt(document.getElementById('captchaInput').value.trim(), 10);
+            if (isNaN(val) || val !== _captchaAnswer) {
+                _captchaFailCount++;
+                document.getElementById('captchaInput').className = 'captcha-input error';
+                document.getElementById('captchaErr').style.display = 'block';
+
+                if (_captchaFailCount >= CAPTCHA_MAX_FAIL) {
+                    startLockout();
+                } else {
+                    renewCaptcha(false);
+                }
+                return false;
+            }
+            document.getElementById('captchaInput').className = 'captcha-input ok';
+            document.getElementById('captchaErr').style.display = 'none';
+            return true;
+        }
+
+        function startLockout() {
+            let sisa = CAPTCHA_LOCKOUT;
+            const bar = document.getElementById('lockoutBar');
+            const sec = document.getElementById('lockoutSec');
+            bar.style.display = 'flex';
+            document.getElementById('btnCari').classList.add('loading');
+            sec.textContent = sisa;
+
+            clearInterval(_lockoutTimer);
+            _lockoutTimer = setInterval(() => {
+                sisa--;
+                sec.textContent = sisa;
+                if (sisa <= 0) {
+                    clearInterval(_lockoutTimer);
+                    bar.style.display = 'none';
+                    _captchaFailCount = 0;
+                    document.getElementById('btnCari').classList.remove('loading');
+                    renewCaptcha(false);
+                }
+            }, 1000);
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // ── CACHE & OPTIMASI ─────────────────────────────────────────────────
+        // ══════════════════════════════════════════════════════════════════════
+        // Cache data sheet agar tidak re-fetch tiap pencarian (berlaku 3 menit)
+        const CACHE_TTL = 3 * 60 * 1000;  // 3 menit dalam ms
+        const _sheetCache = {};  // { sheetName: { data, ts } }
+
         // ── Koneksi ke Database (Google Spreadsheet) ────────────────────────
         // URL Web App Apps Script (dipakai untuk login/presensi/dll, bukan untuk cek ini)
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqgwrpj7mMOz2sgB5vfwfArPwU5o1h9MkIXrBh-6Vw5_Bl0yGiGGFN22dJdB8JwC_y/exec';
@@ -473,14 +718,16 @@
         }
 
         // ── Baca sheet langsung dari Google Spreadsheet (Google Visualization API) ─
-        // Catatan: cara ini dipakai karena code.gs belum punya endpoint khusus untuk
-        // mengambil rekap presensi (action "getPresensiHariIni" tidak ada di doPost).
-        // Tanpa mengubah code.gs, halaman ini membaca sheet "RekapPresensi" langsung
-        // via Google Visualization API (gviz) memakai teknik JSONP supaya tidak
-        // terbentur CORS. Sheet "RekapPresensi" WAJIB di-share "Siapa saja yang
-        // memiliki link → Viewer" agar bisa diakses dari halaman ini.
+        // Menggunakan cache in-memory (TTL 3 menit) agar sheet tidak di-fetch ulang
+        // setiap kali pencarian dilakukan — mengurangi beban jaringan & waktu tunggu.
         let _gvizSeq = 0;
         function fetchSheetTable(sheetName) {
+            // Kembalikan cache jika masih segar
+            const cached = _sheetCache[sheetName];
+            if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
+                return Promise.resolve(cached.data);
+            }
+
             return new Promise((resolve, reject) => {
                 const cbName = '_gvizCb' + (_gvizSeq++);
                 const timeoutId = setTimeout(() => {
@@ -503,6 +750,8 @@
                         reject(new Error(detail));
                         return;
                     }
+                    // Simpan ke cache
+                    _sheetCache[sheetName] = { data: resp.table, ts: Date.now() };
                     resolve(resp.table);
                 };
 
@@ -571,90 +820,106 @@
 
         // ── CARI PRESENSI ────────────────────────────────────────────────────
         async function cariPresensi() {
+            // Blok jika sedang lockout
+            if (_lockoutTimer && document.getElementById('lockoutBar').style.display === 'flex') return;
+
             const username = document.getElementById('nipInput').value.trim();
             const password = document.getElementById('passwordInput').value.trim();
 
             if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
             if (!password) { alert('Masukkan password terlebih dahulu.'); return; }
 
+            // ── Verifikasi CAPTCHA ─────────────────────────────────────────
+            if (!verifyCaptcha()) return;
+
             setLoading(true);
             document.getElementById('resultArea').style.display = 'none';
 
             try {
                 // ── Langkah 1: Validasi username & password dari sheet idakun ─────
-                // Sheet idakun: cari kolom yang cocok untuk username & password.
-                // Sistem akan mencoba SEMUA kombinasi kolom (0-5) sehingga tidak
-                // tergantung urutan kolom di spreadsheet.
+                // Optimasi: fetch kedua sheet secara PARALEL (Promise.all),
+                // sehingga waktu tunggu total = max(t_akun, t_rekap) bukan t_akun + t_rekap.
+                const [tableAkun, tableRekap] = await Promise.all([
+                    fetchSheetTable(SHEET_AKUN),
+                    fetchSheetTable(SHEET_REKAP)
+                ]);
+
+                const rowsAkun = tableAkun.rows || [];
+                const colCount = tableAkun.cols ? tableAkun.cols.length : 6;
+
+                // Cari akun dengan early-exit (hentikan segera setelah ditemukan)
                 let akunValid = null;
                 let colUser = -1, colPass = -1;
+                const userLower = username.toLowerCase();
 
-                const tableAkun = await fetchSheetTable(SHEET_AKUN);
-                const rowsAkun  = tableAkun.rows || [];
-                const colCount  = tableAkun.cols ? tableAkun.cols.length : 6;
-
-                // Deteksi kolom: cari baris pertama yang mengandung username yang dicari,
-                // lalu tentukan kolom password-nya dari sisa kolom.
-                // Strategi: coba semua pasangan kolom (i, j) dimana i != j.
-                outer:
+                outerSearch:
                 for (let ci = 0; ci < colCount; ci++) {
                     for (let cj = 0; cj < colCount; cj++) {
                         if (ci === cj) continue;
                         for (const row of rowsAkun) {
                             const u = String(cellVal(row, ci)).trim();
                             const p = String(cellVal(row, cj)).trim();
-                            if (u.toLowerCase() === username.toLowerCase() && p === password) {
+                            if (u.toLowerCase() === userLower && p === password) {
                                 akunValid = row;
                                 colUser = ci;
                                 colPass = cj;
-                                break outer;
+                                break outerSearch;
                             }
                         }
                     }
                 }
 
                 if (!akunValid) {
-                    // Cek apakah username memang ada (untuk pesan error yang lebih tepat)
+                    // Cek apakah username ada (pesan error lebih tepat)
                     let usernameAda = false;
-                    for (let ci = 0; ci < colCount; ci++) {
-                        if (rowsAkun.some(r => String(cellVal(r, ci)).trim().toLowerCase() === username.toLowerCase())) {
+                    for (let ci = 0; ci < colCount && !usernameAda; ci++) {
+                        if (rowsAkun.some(r => String(cellVal(r, ci)).trim().toLowerCase() === userLower)) {
                             usernameAda = true;
-                            break;
                         }
                     }
                     renderAuthError(usernameAda ? 'password' : 'username', username);
+                    // Reset captcha setelah gagal login agar tidak bisa brute-force
+                    renewCaptcha(true);
                     setLoading(false);
                     return;
                 }
 
-                // ── Langkah 2: Ambil data presensi dari RekapPresensi ──────────────
-                const table = await fetchSheetTable(SHEET_REKAP);
+                // ── Langkah 2: Cari data presensi dari cache (sudah di-fetch paralel) ──
                 const today = tanggalHariIni();
-                const rows  = (table.rows || []);
+                const rows  = (tableRekap.rows || []);
 
                 let lastKnown = null;
                 let datang = null, pulang = null;
+                let doneSearching = false;
 
+                // Optimasi: iterasi sekali — hentikan early jika datang & pulang sudah temu
                 for (const row of rows) {
                     const rowUsername = String(cellVal(row, 4)).trim();
-                    if (!rowUsername || rowUsername.toLowerCase() !== username.toLowerCase()) continue;
+                    if (!rowUsername || rowUsername.toLowerCase() !== userLower) continue;
 
-                    lastKnown = row;
+                    lastKnown = row;  // selalu update ke baris terakhir milik user
 
                     const tgl = parseTanggalLengkap(cellVal(row, 0));
                     if (!tgl) continue;
+
                     const isToday = tgl.day === today.day && tgl.month === today.month && tgl.year === today.year;
                     if (!isToday) continue;
 
                     const tipe = String(cellVal(row, 1)).trim().toLowerCase();
-                    if (tipe === 'datang') datang = buildRecord(row, tgl);
-                    else if (tipe === 'pulang') pulang = buildRecord(row, tgl);
+                    if (tipe === 'datang' && !datang) datang = buildRecord(row, tgl);
+                    else if (tipe === 'pulang' && !pulang) pulang = buildRecord(row, tgl);
+
+                    // Early exit: jika keduanya sudah ditemukan tidak perlu lanjut
+                    if (datang && pulang) break;
                 }
 
-                // Nama pegawai: utamakan dari RekapPresensi, fallback dari idakun
                 const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') || username;
                 const namaLembaga = lastKnown ? cellVal(lastKnown, 2) : '–';
 
                 renderResult({ username, namaPegawai, namaLembaga, datang, pulang });
+                // Reset captcha setelah berhasil → siap pencarian berikutnya
+                _captchaFailCount = 0;
+                renewCaptcha(false);
 
             } catch (err) {
                 renderError(err.message);
@@ -892,6 +1157,11 @@
         function esc(s) {
             return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         }
+
+        // ── INIT ─────────────────────────────────────────────────────────────
+        renewCaptcha(false);
+        // Gambar ulang noise saat window resize (agar canvas sesuai ukuran)
+        window.addEventListener('resize', () => drawNoise());
     </script>
 </body>
 </html>
