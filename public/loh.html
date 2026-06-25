@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cek Presensi – Korwil Ngawi 2026</title>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --blue:       #2563eb;
+            --blue-dark:  #1d4ed8;
+            --blue-light: #dbeafe;
+            --green:      #16a34a;
+            --green-bg:   #dcfce7;
+            --amber:      #d97706;
+            --amber-bg:   #fef3c7;
+            --red:        #dc2626;
+            --red-bg:     #fee2e2;
+            --purple:     #7c3aed;
+            --purple-bg:  #f3e8ff;
+            --gray-50:    #f8fafc;
+            --gray-100:   #f1f5f9;
+            --gray-200:   #e2e8f0;
+            --gray-400:   #94a3b8;
+            --gray-600:   #475569;
+            --gray-900:   #0f172a;
+            --text:       #1e293b;
+            --radius-sm:  8px;
+            --radius:     14px;
+            --radius-lg:  20px;
+            --shadow-sm:  0 1px 4px rgba(0,0,0,.06);
+            --shadow:     0 4px 24px rgba(0,0,0,.09);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #eef2fb;
+            color: var(--text);
+            min-height: 100vh;
+            font-size: 15px;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%);
+            color: white;
+            padding: 18px 20px 56px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0;
+            height: 36px;
+            background: #eef2fb;
+            border-radius: 24px 24px 0 0;
+        }
+        .header-inner { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+        .header-logo {
+            width: 48px; height: 48px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,.3));
+            flex-shrink: 0;
+        }
+        .header-titles h1 { font-size: 1.05rem; font-weight: 800; line-height: 1.2; letter-spacing: -.3px; }
+        .header-titles p  { font-size: 0.72rem; opacity: .8; margin-top: 3px; }
+        .header-clock {
+            margin-left: auto;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .header-clock .date-lbl { font-size: 0.7rem; opacity: .75; }
+        .header-clock .time-lbl { font-size: 0.95rem; font-weight: 700; letter-spacing: -.3px; }
+
+        /* ── TICKER ── */
+        .ticker {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 9px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.75rem; color: var(--gray-600);
+            position: sticky; top: 0; z-index: 10;
+            box-shadow: var(--shadow-sm);
+        }
+        .live-pulse {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .dot {
+            width: 7px; height: 7px;
+            background: var(--green); border-radius: 50%;
+            animation: blink 1.4s ease-in-out infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.8)} }
+
+        /* ── CONTENT ── */
+        .content {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 18px 14px 48px;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+        .card-eyebrow {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--blue);
+            display: flex; align-items: center; gap: 6px;
+            margin-bottom: 16px;
+        }
+        .card-eyebrow i { opacity: .8; }
+
+        /* ── LOGIN FORM ── */
+        .field { margin-bottom: 12px; }
+        .field-label {
+            display: block;
+            font-size: 0.72rem; font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 5px;
+            letter-spacing: .3px;
+        }
+        .field-wrap { position: relative; }
+        .field-icon {
+            position: absolute; left: 13px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400); font-size: 0.85rem; pointer-events: none;
+        }
+        .field-input {
+            width: 100%;
+            padding: 12px 13px 12px 38px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 0.9rem;
+            color: var(--text);
+            background: var(--gray-50);
+            transition: border-color .18s, background .18s, box-shadow .18s;
+            -webkit-appearance: none;
+        }
+        .field-input:focus {
+            outline: none;
+            border-color: var(--blue);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+        }
+        .field-input::placeholder { color: var(--gray-400); }
+        .field-input.has-pw-toggle { padding-right: 44px; }
+        .pw-toggle {
+            position: absolute; right: 11px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--gray-400); padding: 4px; line-height: 1;
+            font-size: 0.88rem;
+            transition: color .15s;
+        }
+        .pw-toggle:hover { color: var(--blue); }
+
+        .btn-cari {
+            width: 100%; padding: 13px;
+            background: var(--blue);
+            color: white; border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; letter-spacing: .2px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: background .18s, transform .1s, box-shadow .18s;
+            box-shadow: 0 2px 12px rgba(37,99,235,.35);
+            margin-top: 4px;
+        }
+        .btn-cari:hover { background: var(--blue-dark); box-shadow: 0 4px 18px rgba(37,99,235,.45); }
+        .btn-cari:active { transform: scale(.98); }
+        .btn-cari.loading { opacity: .7; pointer-events: none; }
+
+        .info-hint {
+            margin-top: 14px;
+            background: #eff6ff;
+            border-left: 3px solid var(--blue);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 10px 14px;
+            font-size: 0.77rem; color: #1e40af; line-height: 1.55;
+            display: flex; gap: 9px; align-items: flex-start;
+        }
+        .info-hint i { flex-shrink: 0; margin-top: 1px; }
+
+        /* ── RESULT AREA ── */
+        #resultArea { display: none; }
+
+        /* ── PEGAWAI CARD ── */
+        .pegawai-row {
+            display: flex; align-items: center; gap: 14px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+        }
+        .avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.25rem; flex-shrink: 0;
+        }
+        .peg-detail { flex: 1; min-width: 0; }
+        .peg-nama { font-weight: 700; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .peg-lembaga { font-size: 0.73rem; color: var(--gray-600); margin-top: 2px; }
+        .peg-nip {
+            font-size: 0.68rem; font-weight: 700; color: var(--blue);
+            background: var(--blue-light); padding: 3px 10px;
+            border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+        }
+
+        /* ── STATUS GRID ── */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        @media (max-width: 340px) { .status-grid { grid-template-columns: 1fr; } }
+
+        .scard {
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1.5px solid var(--gray-200);
+            transition: border-color .2s;
+        }
+        .scard.recorded { border-color: #86efac; }
+        .scard.absent   { border-color: var(--gray-200); }
+
+        .scard-head {
+            padding: 10px 12px 8px;
+            font-size: 0.75rem; font-weight: 700;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .scard.datang .scard-head { background: linear-gradient(135deg,#dbeafe,#eff6ff); color: #1d4ed8; }
+        .scard.pulang .scard-head { background: linear-gradient(135deg,#f3e8ff,#faf5ff); color: #6d28d9; }
+
+        .scard-body { padding: 12px; background: white; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 0.7rem; font-weight: 700;
+        }
+        .badge.ok   { background: var(--green-bg); color: var(--green); }
+        .badge.miss { background: var(--gray-100); color: var(--gray-600); }
+
+        .scard-time {
+            margin-top: 8px; font-size: 0.8rem; font-weight: 700;
+            color: var(--green); display: flex; align-items: center; gap: 5px;
+        }
+        .scard-loc {
+            margin-top: 4px; font-size: 0.67rem; color: var(--gray-600);
+            display: flex; align-items: flex-start; gap: 4px; line-height: 1.4;
+        }
+        .scard-loc i { flex-shrink: 0; margin-top: 1px; }
+        .scard-slot {
+            margin-top: 8px; font-size: 0.7rem; color: var(--gray-400);
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        .radius-tag {
+            display: inline-block; margin-top: 5px;
+            font-size: 0.67rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 10px;
+        }
+        .radius-tag.dalam { background: var(--green-bg); color: var(--green); }
+        .radius-tag.luar  { background: var(--red-bg); color: var(--red); }
+
+        .btn-foto {
+            margin-top: 10px; width: 100%;
+            padding: 8px; border: none; border-radius: 6px;
+            font-family: inherit; font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: opacity .15s;
+        }
+        .btn-foto:hover { opacity: .85; }
+        .btn-foto.datang-btn { background: var(--blue); color: white; }
+        .btn-foto.pulang-btn { background: var(--purple); color: white; }
+
+        /* ── SUMMARY STRIP ── */
+        .summary {
+            display: flex; align-items: center; gap: 10px;
+            padding: 13px 15px; border-radius: var(--radius-sm);
+            font-size: 0.82rem; font-weight: 500; line-height: 1.45;
+            margin-bottom: 16px;
+        }
+        .summary i { font-size: 1.15rem; flex-shrink: 0; }
+        .summary.complete { background: var(--green-bg); color: #15803d; }
+        .summary.partial  { background: var(--amber-bg);  color: #92400e; }
+        .summary.none     { background: var(--red-bg);    color: #991b1b; }
+
+        /* ── REKAP ROWS ── */
+        .rekap-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--gray-200);
+            font-size: 0.8rem;
+        }
+        .rekap-row:last-child { border-bottom: none; }
+        .rekap-lbl { color: var(--gray-600); display: flex; align-items: center; gap: 7px; }
+        .rekap-val { font-weight: 700; }
+        .rekap-val.ok   { color: var(--green); }
+        .rekap-val.warn { color: var(--amber); }
+        .rekap-val.miss { color: var(--red); }
+
+        /* ── ALERTS ── */
+        .alert {
+            border-radius: var(--radius-sm);
+            padding: 14px 16px; font-size: 0.82rem; line-height: 1.55;
+            display: flex; gap: 10px; align-items: flex-start;
+        }
+        .alert i { flex-shrink: 0; font-size: 1.1rem; }
+        .alert.error   { background: var(--red-bg);   color: #991b1b;  border-left: 3px solid var(--red); }
+        .alert.warning { background: var(--amber-bg); color: #92400e; border-left: 3px solid var(--amber); }
+
+        .not-found-state { text-align: center; padding: 28px 10px 16px; }
+        .not-found-state i { font-size: 2.8rem; color: var(--gray-400); margin-bottom: 12px; display: block; }
+        .not-found-state strong { font-size: 0.95rem; }
+        .not-found-state p { color: var(--gray-600); font-size: 0.82rem; margin-top: 6px; }
+
+        .bottom-note { text-align: center; font-size: 0.68rem; color: var(--gray-400); margin-top: 10px; }
+
+        /* ── MODAL FOTO ── */
+        #fotoModal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.87);
+            backdrop-filter: blur(6px);
+            z-index: 100; display: none;
+            align-items: flex-end; justify-content: center;
+            padding: 0;
+        }
+        #fotoModal.show { display: flex; }
+        .modal-inner {
+            background: white;
+            border-radius: 22px 22px 0 0;
+            width: 100%; max-width: 480px;
+            max-height: 92vh;
+            overflow-y: auto;
+            animation: slideUp .28s cubic-bezier(.2,.9,.4,1.05);
+        }
+        @keyframes slideUp {
+            from { opacity:0; transform:translateY(40px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .modal-handle {
+            width: 40px; height: 4px;
+            background: var(--gray-200);
+            border-radius: 2px;
+            margin: 12px auto 0;
+        }
+        .modal-header {
+            padding: 12px 18px 14px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .modal-header h3 { font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .modal-header h3 i { color: var(--blue); }
+        .btn-close {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--gray-100); border: none; cursor: pointer;
+            font-size: 0.9rem; color: var(--gray-600);
+            display: flex; align-items: center; justify-content: center;
+            transition: background .15s;
+        }
+        .btn-close:hover { background: var(--gray-200); }
+        .modal-body { padding: 16px 18px; }
+        .modal-meta {
+            display: flex; justify-content: space-between;
+            font-size: 0.76rem; color: var(--gray-600);
+            margin-bottom: 12px;
+        }
+        .modal-meta strong { color: var(--text); font-weight: 700; }
+        .foto-box {
+            border-radius: var(--radius); overflow: hidden;
+            background: #0f172a; min-height: 120px; position: relative;
+        }
+        .foto-box img { width: 100%; display: block; max-height: 400px; object-fit: cover; }
+        .foto-loading {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 10px;
+            background: #0f172a; color: white; font-size: 0.82rem;
+        }
+        .foto-loading i { font-size: 1.8rem; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .foto-info {
+            margin-top: 10px; font-size: 0.73rem; color: var(--gray-600); line-height: 1.5;
+            display: flex; flex-wrap: wrap; gap: 6px 14px;
+        }
+        .foto-info span { display: flex; align-items: center; gap: 4px; }
+        .foto-info i { color: var(--blue); }
+        .modal-footer { padding: 12px 18px 20px; }
+        .btn-tutup {
+            width: 100%; padding: 12px;
+            background: var(--gray-100); color: var(--text);
+            border: none; border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; transition: background .15s;
+        }
+        .btn-tutup:hover { background: var(--gray-200); }
+
+        /* ── RESPONSIVE ── */
+        @media (min-width: 521px) {
+            #fotoModal { align-items: center; padding: 20px; }
+            .modal-inner { border-radius: var(--radius-lg); max-height: 88vh; }
+            .modal-handle { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-inner">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png"
+                 alt="Logo Ngawi" class="header-logo">
+            <div class="header-titles">
+                <h1>Cek Presensi Hari Ini</h1>
+                <p>Korwil Kecamatan &middot; Kabupaten Ngawi 2026</p>
+            </div>
+            <div class="header-clock">
+                <div class="date-lbl" id="hdrTgl">–</div>
+                <div class="time-lbl" id="hdrJam">–</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- TICKER -->
+    <div class="ticker">
+        <div class="live-pulse">
+            <div class="dot"></div>
+            <span id="tickerHari">–</span>
+        </div>
+        <span id="tickerWib" style="font-weight:600;color:var(--blue);">00:00:00 WIB</span>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+
+        <!-- LOGIN CARD -->
+        <div class="card">
+            <div class="card-eyebrow"><i class="fas fa-search"></i> Cari Presensi</div>
+
+            <div class="field">
+                <label class="field-label" for="usernameInput">Username</label>
+                <div class="field-wrap">
+                    <i class="fas fa-user field-icon"></i>
+                    <input id="usernameInput" class="field-input"
+                           type="text" placeholder="Masukkan username..."
+                           autocomplete="off" autocorrect="off" spellcheck="false">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="passwordInput">Password</label>
+                <div class="field-wrap">
+                    <i class="fas fa-lock field-icon"></i>
+                    <input id="passwordInput" class="field-input has-pw-toggle"
+                           type="password" placeholder="Masukkan password..."
+                           autocomplete="off">
+                    <button type="button" class="pw-toggle" onclick="togglePw()" title="Tampilkan/sembunyikan">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-cari" id="btnCari" onclick="cariPresensi()">
+                <i class="fas fa-search"></i> Cek Presensi
+            </button>
+
+            <div class="info-hint">
+                <i class="fas fa-info-circle"></i>
+                <span>Masukkan <strong>username</strong> dan <strong>password</strong> akun Anda untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
+            </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="resultArea">
+            <div class="card" id="cardPegawai"></div>
+            <div class="card" id="cardStatus"  style="display:none;"></div>
+            <div class="card" id="cardRekap"   style="display:none;"></div>
+        </div>
+
+    </main>
+
+    <!-- MODAL FOTO -->
+    <div id="fotoModal">
+        <div class="modal-inner">
+            <div class="modal-handle"></div>
+            <div class="modal-header">
+                <h3><i class="fas fa-camera"></i> <span id="modalTitle">Foto Presensi</span></h3>
+                <button class="btn-close" onclick="tutupFoto()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-meta">
+                    <strong id="modalNama">–</strong>
+                    <span id="modalWaktu">–</span>
+                </div>
+                <div class="foto-box" id="fotoBox">
+                    <div class="foto-loading" id="fotoLoading">
+                        <i class="fas fa-circle-notch"></i>
+                        <span>Memuat foto...</span>
+                    </div>
+                    <img id="fotoImg" src="" alt="Foto Presensi"
+                         style="display:none;"
+                         onload="fotoLoaded()" onerror="fotoError()">
+                </div>
+                <div class="foto-info">
+                    <span><i class="fas fa-map-marker-alt"></i> <span id="modalLokasi">–</span></span>
+                    <span><i class="fas fa-ruler-combined"></i> <span id="modalJarak">–</span></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-tutup" onclick="tutupFoto()">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── CONFIG ────────────────────────────────────────────────────────────
+        const SPREADSHEET_ID = '1ACaOKCizDDsrVqKPPrr2gNBpddWl9XPjJvNs8JqUEMc';
+        const SHEET_REKAP    = 'RekapPresensi';
+        const SHEET_AKUN     = 'db';
+        // ─────────────────────────────────────────────────────────────────────
+
+        const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
+
+        // ── WAKTU ─────────────────────────────────────────────────────────────
+        function getWIB() {
+            const n = new Date();
+            return new Date(n.getTime() + n.getTimezoneOffset()*60000 + 25200000);
+        }
+        function pad(v) { return String(v).padStart(2,'0'); }
+        function fmtJam(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} WIB`; }
+        function fmtTgl(d) { return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`; }
+        function fmtTglShort(d) { return `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`; }
+
+        function updateClock() {
+            const w = getWIB();
+            document.getElementById('hdrTgl').textContent    = `${d.getDate()} ${BULAN[d.getMonth()]}`.replace('d', '');
+            document.getElementById('hdrJam').textContent    = fmtJam(w);
+            document.getElementById('tickerHari').textContent = fmtTgl(w);
+            document.getElementById('tickerWib').textContent  = fmtJam(w);
+            document.getElementById('hdrTgl').textContent    = `${w.getDate()} ${BULAN[w.getMonth()]}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ── KEYBOARD ──────────────────────────────────────────────────────────
+        document.getElementById('usernameInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+        });
+        document.getElementById('passwordInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') cariPresensi();
+        });
+
+        // ── PASSWORD TOGGLE ───────────────────────────────────────────────────
+        function togglePw() {
+            const inp = document.getElementById('passwordInput');
+            const ico = document.getElementById('eyeIcon');
+            const show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            ico.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+
+        // ── LOADING STATE ─────────────────────────────────────────────────────
+        function setLoading(on) {
+            const b = document.getElementById('btnCari');
+            b.classList.toggle('loading', on);
+            b.innerHTML = on
+                ? '<i class="fas fa-circle-notch fa-spin"></i> Mencari...'
+                : '<i class="fas fa-search"></i> Cek Presensi';
+        }
+
+        // ── GVIZ FETCH ────────────────────────────────────────────────────────
+        let _seq = 0;
+        function fetchSheet(sheetName) {
+            return new Promise((resolve, reject) => {
+                const cb = '_cb' + (_seq++);
+                const tid = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('Waktu koneksi habis.'));
+                }, 15000);
+                function cleanup() {
+                    clearTimeout(tid);
+                    delete window[cb];
+                    if (sc.parentNode) sc.parentNode.removeChild(sc);
+                }
+                window[cb] = resp => {
+                    cleanup();
+                    if (!resp || resp.status === 'error') {
+                        const msg = resp?.errors?.[0]?.detailed_message
+                            || resp?.errors?.[0]?.message
+                            || 'Sheet tidak ditemukan atau tidak bisa diakses';
+                        reject(new Error(msg));
+                    } else {
+                        resolve(resp.table);
+                    }
+                };
+                const sc = document.createElement('script');
+                sc.src = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq`
+                    + `?tqx=out:json;responseHandler:${cb}`
+                    + `&sheet=${encodeURIComponent(sheetName)}&headers=1`;
+                sc.onerror = () => { cleanup(); reject(new Error('Gagal memuat spreadsheet.')); };
+                document.body.appendChild(sc);
+            });
+        }
+
+        function cellVal(row, idx) {
+            const v = row?.c?.[idx]?.v;
+            return (v !== null && v !== undefined) ? v : '';
+        }
+
+        function parseTgl(str) {
+            str = String(str || '');
+            const mi = BULAN.findIndex(b => str.includes(b));
+            const dm = str.match(/\b(\d{1,2})\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\b/);
+            const ym = str.match(/\b(\d{4})\b/);
+            const jm = str.match(/(\d{1,2})[.:](\d{2})[.:](\d{2})/);
+            if (mi === -1 || !dm || !ym) return null;
+            return {
+                day:   parseInt(dm[1]),
+                month: mi,
+                year:  parseInt(ym[1]),
+                jam:   jm ? `${pad(jm[1])}:${jm[2]}:${jm[3]}` : '–'
+            };
+        }
+
+        function buildRec(row, tgl) {
+            const jr = String(cellVal(row, 8)).replace(/[^\d.]/g, '');
+            return {
+                jam:          tgl.jam,
+                fotoUrl:      cellVal(row, 5) || '',
+                latitude:     cellVal(row, 6),
+                longitude:    cellVal(row, 7),
+                jarak:        jr,
+                statusRadius: cellVal(row, 9) || ''
+            };
+        }
+
+        // ── CARI PRESENSI ─────────────────────────────────────────────────────
+        async function cariPresensi() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+
+            if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
+            if (!password) { alert('Masukkan password terlebih dahulu.');  return; }
+
+            setLoading(true);
+            document.getElementById('resultArea').style.display = 'none';
+
+            try {
+                // ── 1. Validasi akun (sheet db) ──
+                const tblAkun = await fetchSheet(SHEET_AKUN);
+                const rowsAkun = tblAkun.rows || [];
+                const colCount = tblAkun.cols?.length || 6;
+
+                let akunValid = null;
+                outer:
+                for (let ci = 0; ci < colCount; ci++) {
+                    for (let cj = 0; cj < colCount; cj++) {
+                        if (ci === cj) continue;
+                        for (const row of rowsAkun) {
+                            const u = String(cellVal(row, ci)).trim();
+                            const p = String(cellVal(row, cj)).trim();
+                            if (u.toLowerCase() === username.toLowerCase() && p === password) {
+                                akunValid = row;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+
+                if (!akunValid) {
+                    let usernameAda = false;
+                    for (let ci = 0; ci < colCount; ci++) {
+                        if (rowsAkun.some(r => String(cellVal(r, ci)).trim().toLowerCase() === username.toLowerCase())) {
+                            usernameAda = true; break;
+                        }
+                    }
+                    renderAuthError(usernameAda ? 'password' : 'username', username);
+                    setLoading(false);
+                    return;
+                }
+
+                // ── 2. Ambil rekap presensi ──
+                const tbl   = await fetchSheet(SHEET_REKAP);
+                const today = tanggalHariIni();
+                const rows  = tbl.rows || [];
+
+                let lastKnown = null, datang = null, pulang = null;
+
+                for (const row of rows) {
+                    const ru = String(cellVal(row, 4)).trim();
+                    if (!ru || ru.toLowerCase() !== username.toLowerCase()) continue;
+                    lastKnown = row;
+
+                    const tgl = parseTgl(cellVal(row, 0));
+                    if (!tgl) continue;
+                    const isToday = tgl.day === today.day && tgl.month === today.month && tgl.year === today.year;
+                    if (!isToday) continue;
+
+                    const tipe = String(cellVal(row, 1)).trim().toLowerCase();
+                    if (tipe === 'datang') datang = buildRec(row, tgl);
+                    else if (tipe === 'pulang') pulang = buildRec(row, tgl);
+                }
+
+                const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') || username;
+                const namaLembaga = lastKnown ? cellVal(lastKnown, 2) : '–';
+
+                if (!lastKnown) {
+                    renderNotFound(username);
+                } else {
+                    renderResult({ username, namaPegawai, namaLembaga, datang, pulang });
+                }
+
+            } catch (err) {
+                renderError(err.message);
+            }
+            setLoading(false);
+        }
+
+        function tanggalHariIni() {
+            const w = getWIB();
+            return { day: w.getDate(), month: w.getMonth(), year: w.getFullYear() };
+        }
+
+        // ── RENDER HELPERS ────────────────────────────────────────────────────
+        function esc(s) {
+            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        function renderAuthError(tipe, username) {
+            const pesan = tipe === 'username'
+                ? `Username <strong>${esc(username)}</strong> tidak ditemukan di sistem.`
+                : `Password salah untuk username <strong>${esc(username)}</strong>.`;
+
+            document.getElementById('cardPegawai').innerHTML = `
+                <div class="alert error">
+                    <i class="fas fa-lock"></i>
+                    <div><strong>Akses Ditolak</strong><br>${pesan} Periksa kembali dan coba lagi.</div>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function renderNotFound(username) {
+            document.getElementById('cardPegawai').innerHTML = `
+                <div class="not-found-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <strong>Belum Ada Data Presensi</strong>
+                    <p>Akun <strong>${esc(username)}</strong> terautentikasi, namun belum ada riwayat presensi sama sekali.</p>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function renderError(msg) {
+            document.getElementById('cardPegawai').innerHTML = `
+                <div class="alert error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Gagal mengambil data: <strong>${esc(msg)}</strong>. Coba beberapa saat lagi.</span>
+                </div>`;
+            document.getElementById('cardStatus').style.display = 'none';
+            document.getElementById('cardRekap').style.display  = 'none';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function renderResult({ username, namaPegawai, namaLembaga, datang, pulang }) {
+            const wib = getWIB();
+
+            // Identitas
+            document.getElementById('cardPegawai').innerHTML = `
+                <div class="card-eyebrow"><i class="fas fa-id-card"></i> Identitas Pegawai</div>
+                <div class="pegawai-row">
+                    <div class="avatar"><i class="fas fa-user-tie"></i></div>
+                    <div class="peg-detail">
+                        <div class="peg-nama">${esc(namaPegawai)}</div>
+                        <div class="peg-lembaga">${esc(namaLembaga)}</div>
+                    </div>
+                    <div class="peg-nip">${esc(username)}</div>
+                </div>`;
+
+            // Status
+            const isFri = wib.getDay() === 5;
+            const cs = document.getElementById('cardStatus');
+            cs.innerHTML = `
+                <div class="card-eyebrow"><i class="fas fa-clipboard-check"></i> Status Presensi – ${fmtTglShort(wib)}</div>
+                <div class="status-grid">
+                    ${buildScard('datang', datang, '06:00 – 07:00', namaPegawai)}
+                    ${buildScard('pulang', pulang, isFri ? '14:30 – 16:30' : '15:00 – 16:30', namaPegawai)}
+                </div>`;
+            cs.style.display = 'block';
+
+            // Ringkasan
+            const d = datang, p = pulang;
+            let sc, si, st;
+            if (d && p) {
+                sc = 'complete'; si = 'fas fa-check-circle';
+                st = 'Presensi hari ini <strong>lengkap</strong>. Datang dan pulang sudah terekam.';
+            } else if (d || p) {
+                sc = 'partial'; si = 'fas fa-exclamation-circle';
+                st = d
+                    ? 'Presensi <strong>datang</strong> terekam. Presensi <strong>pulang</strong> belum.'
+                    : 'Presensi <strong>pulang</strong> terekam, namun <strong>datang</strong> belum.';
+            } else {
+                sc = 'none'; si = 'fas fa-times-circle';
+                st = 'Presensi hari ini <strong>belum ada</strong>. Datang dan pulang belum terekam.';
+            }
+
+            const cr = document.getElementById('cardRekap');
+            const lokasiStr = rec => {
+                if (!rec) return '–';
+                const lat = String(rec.latitude).substring(0,9);
+                const lon = String(rec.longitude).substring(0,10);
+                return (rec.latitude && rec.longitude) ? `${lat}, ${lon}` : '–';
+            };
+
+            cr.innerHTML = `
+                <div class="card-eyebrow"><i class="fas fa-chart-bar"></i> Ringkasan Hari Ini</div>
+                <div class="summary ${sc}"><i class="${si}"></i><span>${st}</span></div>
+                <div class="rekap-row">
+                    <span class="rekap-lbl"><i class="fas fa-sign-in-alt" style="color:#3b82f6;"></i> Jam Datang</span>
+                    <span class="rekap-val ${d ? 'ok' : 'miss'}">${d ? esc(d.jam) : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-lbl"><i class="fas fa-sign-out-alt" style="color:var(--purple);"></i> Jam Pulang</span>
+                    <span class="rekap-val ${p ? 'ok' : 'miss'}">${p ? esc(p.jam) : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-lbl"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Datang</span>
+                    <span class="rekap-val ${d ? (parseFloat(d.jarak)>0?'warn':'ok') : 'miss'}">${d ? esc(d.jarak)+' m' : '–'}</span>
+                </div>
+                <div class="rekap-row">
+                    <span class="rekap-lbl"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Pulang</span>
+                    <span class="rekap-val ${p ? (parseFloat(p.jarak)>0?'warn':'ok') : 'miss'}">${p ? esc(p.jarak)+' m' : '–'}</span>
+                </div>
+                <div class="rekap-row" style="border:none;">
+                    <span class="rekap-lbl"><i class="fas fa-camera" style="color:#0891b2;"></i> Foto Selfie</span>
+                    <span class="rekap-val">
+                        ${d?.fotoUrl ? '<span style="color:var(--green);">✓ Datang</span>' : ''}
+                        ${d?.fotoUrl && p?.fotoUrl ? ' &amp; ' : ''}
+                        ${p?.fotoUrl ? '<span style="color:var(--green);">✓ Pulang</span>' : ''}
+                        ${!d?.fotoUrl && !p?.fotoUrl ? '<span style="color:var(--gray-400);">–</span>' : ''}
+                    </span>
+                </div>
+                <p class="bottom-note"><i class="fas fa-sync-alt"></i> Dicek pada: ${fmtJam(wib)}</p>`;
+            cr.style.display = 'block';
+            document.getElementById('resultArea').style.display = 'block';
+        }
+
+        function buildScard(tipe, rec, jamSlot, nama) {
+            const isD  = tipe === 'datang';
+            const label = isD ? 'Datang' : 'Pulang';
+            const icon  = isD ? 'fas fa-sign-in-alt' : 'fas fa-sign-out-alt';
+            const btnCls = isD ? 'datang-btn' : 'pulang-btn';
+
+            if (rec) {
+                const lokasiStr = (rec.latitude && rec.longitude)
+                    ? `${String(rec.latitude).substring(0,9)}, ${String(rec.longitude).substring(0,10)}`
+                    : '–';
+                const inRadius = rec.statusRadius === 'DI DALAM RADIUS';
+                const fotoBtn = rec.fotoUrl
+                    ? `<button class="btn-foto ${btnCls}"
+                               onclick="lihatFoto('${esc(tipe)}','${esc(rec.fotoUrl)}','${esc(nama)}','${esc(rec.jam)}','${esc(lokasiStr)}','${esc(rec.jarak)}')">
+                           <i class="fas fa-image"></i> Lihat Foto
+                       </button>`
+                    : `<div style="margin-top:8px;font-size:.7rem;color:var(--gray-400);"><i class="fas fa-image"></i> Foto tidak tersedia</div>`;
+
+                return `
+                <div class="scard ${tipe} recorded">
+                    <div class="scard-head"><i class="${icon}"></i> ${label}</div>
+                    <div class="scard-body">
+                        <span class="badge ok"><i class="fas fa-check-circle"></i> Terekam</span>
+                        <div class="scard-time"><i class="fas fa-clock"></i> ${esc(rec.jam)}</div>
+                        <div class="scard-loc"><i class="fas fa-map-marker-alt" style="color:var(--blue);"></i>${esc(lokasiStr)}</div>
+                        <span class="radius-tag ${inRadius?'dalam':'luar'}">${inRadius?'✓ Dalam Radius':'⚠ Luar Radius'}</span>
+                        ${fotoBtn}
+                    </div>
+                </div>`;
+            } else {
+                return `
+                <div class="scard ${tipe} absent">
+                    <div class="scard-head"><i class="${icon}"></i> ${label}</div>
+                    <div class="scard-body">
+                        <span class="badge miss"><i class="fas fa-minus-circle"></i> Belum</span>
+                        <div class="scard-slot"><i class="fas fa-clock"></i> ${jamSlot}</div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        // ── MODAL FOTO ────────────────────────────────────────────────────────
+        function lihatFoto(tipe, fotoUrl, nama, jam, lokasi, jarak) {
+            document.getElementById('modalTitle').textContent   = tipe === 'datang' ? 'Foto Presensi Datang' : 'Foto Presensi Pulang';
+            document.getElementById('modalNama').textContent    = nama;
+            document.getElementById('modalWaktu').textContent   = jam;
+            document.getElementById('modalLokasi').textContent  = lokasi;
+            document.getElementById('modalJarak').textContent   = jarak ? jarak + ' m dari lembaga' : '–';
+
+            const img = document.getElementById('fotoImg');
+            document.getElementById('fotoLoading').style.display = 'flex';
+            img.style.display = 'none';
+            img.src = driveThumb(fotoUrl);
+
+            document.getElementById('fotoModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function driveThumb(url) {
+            if (!url) return '';
+            const m  = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (m)  return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
+            const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w600`;
+            return url;
+        }
+
+        function fotoLoaded() {
+            document.getElementById('fotoImg').style.display = 'block';
+            document.getElementById('fotoLoading').style.display = 'none';
+        }
+        function fotoError() {
+            document.getElementById('fotoLoading').innerHTML =
+                '<i class="fas fa-image" style="color:#94a3b8;font-size:2rem;"></i><span style="color:#94a3b8;font-size:.78rem;">Foto tidak dapat dimuat</span>';
+        }
+        function tutupFoto() {
+            document.getElementById('fotoModal').classList.remove('show');
+            document.body.style.overflow = '';
+            setTimeout(() => { document.getElementById('fotoImg').src = ''; }, 300);
+        }
+        document.getElementById('fotoModal').addEventListener('click', e => {
+            if (e.target === document.getElementById('fotoModal')) tutupFoto();
+        });
+    </script>
+</body>
+</html>
