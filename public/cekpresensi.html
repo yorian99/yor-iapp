@@ -3,1165 +3,797 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cek Presensi Hari Ini - Korwil</title>
+    <title>Cek Presensi – Korwil Ngawi 2026</title>
     <base target="_top">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --gray: #94a3b8;
-            --light: #f8fafc;
-            --border: #e2e8f0;
+            --blue:      #2563eb;
+            --blue-dk:   #1d4ed8;
+            --blue-lt:   #dbeafe;
+            --green:     #16a34a;
+            --green-bg:  #dcfce7;
+            --amber:     #d97706;
+            --amber-bg:  #fef3c7;
+            --red:       #dc2626;
+            --red-bg:    #fee2e2;
+            --purple:    #7c3aed;
+            --purple-bg: #f3e8ff;
+            --g50:  #f8fafc;
+            --g100: #f1f5f9;
+            --g200: #e2e8f0;
+            --g400: #94a3b8;
+            --g600: #475569;
             --text: #1e293b;
-            --text-secondary: #64748b;
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
-            --radius: 16px;
+            --r:    12px;
+            --rlg:  20px;
+            --sh:   0 4px 24px rgba(0,0,0,.09);
+            --sh-sm:0 1px 4px rgba(0,0,0,.06);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f0f4ff;
-            color: var(--text);
-            min-height: 100vh;
-        }
-        .app-header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            padding: 18px 20px 22px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            color: white;
-        }
-        .app-header .logo {
-            width: 46px; height: 46px;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
-        }
-        .app-header-text h1 { font-size: 1.1rem; font-weight: 700; line-height: 1.2; }
-        .app-header-text p  { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
-        .header-badge {
-            margin-left: auto;
-            background: rgba(255,255,255,0.18);
-            backdrop-filter: blur(8px);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .date-strip {
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-        .live-dot {
-            width: 8px; height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            display: inline-block;
-            animation: blink 1.2s infinite;
-            margin-right: 6px;
-        }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .container { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
-        .card {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-        .card-label {
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--primary);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-        .search-group { display: flex; gap: 10px; align-items: stretch; }
-        .input-wrap { flex: 1; position: relative; }
-        .input-wrap i.field-icon {
-            position: absolute; left: 14px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray); font-size: 0.95rem;
-        }
-        .input-wrap i {
-            position: absolute; left: 14px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray); font-size: 0.95rem;
-        }
-        .btn-toggle-pw {
-            position: absolute; right: 12px; top: 50%;
-            transform: translateY(-50%);
-            background: none; border: none; cursor: pointer;
-            color: var(--gray); font-size: 0.9rem; padding: 4px;
-            line-height: 1;
-        }
-        .btn-toggle-pw:hover { color: var(--primary); }
-        .input-wrap input {
-            width: 100%;
-            padding: 13px 14px 13px 40px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.95rem;
-            color: var(--text);
-            transition: border-color 0.2s;
-            background: var(--light);
-            -webkit-appearance: none;
-        }
-        .input-wrap input:focus { outline: none; border-color: var(--primary); background: white; }
-        .input-wrap input::placeholder { color: var(--gray); }
-        .btn-cari {
-            padding: 13px 20px;
-            background: var(--primary);
-            color: white; border: none;
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.9rem; font-weight: 600;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 7px;
-            transition: background 0.2s, transform 0.1s;
-            white-space: nowrap;
-        }
-        .btn-cari:hover { background: var(--primary-dark); }
-        .btn-cari:active { transform: scale(0.97); }
-        .btn-cari.loading { opacity: 0.7; pointer-events: none; }
-        #resultArea { display: none; }
-        .pegawai-info {
-            display: flex; align-items: center; gap: 14px;
-            padding: 14px 16px;
-            background: var(--light);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-        .pegawai-avatar {
-            width: 46px; height: 46px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 1.3rem; flex-shrink: 0;
-        }
-        .pegawai-detail { flex: 1; min-width: 0; }
-        .pegawai-nama { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pegawai-sub  { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
-        .pegawai-nip  {
-            font-size: 0.7rem; color: var(--primary); font-weight: 600;
-            background: #eff2ff; padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
-        }
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
-        .status-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; transition: border-color 0.2s; }
-        .status-card.has-record { border-color: var(--success); }
-        .status-card.no-record  { border-color: var(--border); }
-        .status-card-header {
-            padding: 12px 14px 10px;
-            display: flex; align-items: center; gap: 8px;
-            font-size: 0.8rem; font-weight: 600;
-        }
-        .status-card.datang .status-card-header { background: linear-gradient(135deg, #dbeafe, #eff6ff); color: #1d4ed8; }
-        .status-card.pulang .status-card-header { background: linear-gradient(135deg, #f3e8ff, #faf5ff); color: #7e22ce; }
-        .status-card-body { padding: 12px 14px; background: white; }
-        .status-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 5px 12px; border-radius: 20px;
-            font-size: 0.75rem; font-weight: 600;
-        }
-        .status-badge.recorded     { background: #dcfce7; color: #15803d; }
-        .status-badge.not-recorded { background: #f1f5f9; color: #64748b; }
-        .record-time  { margin-top: 8px; font-size: 0.82rem; color: var(--text); font-weight: 600; }
-        .record-time span { color: var(--success); }
-        .record-location {
-            margin-top: 4px; font-size: 0.7rem; color: var(--text-secondary);
-            display: flex; align-items: center; gap: 4px; line-height: 1.4;
-        }
-        .btn-lihat-foto {
-            margin-top: 10px; width: 100%; padding: 8px;
-            background: var(--primary); color: white; border: none;
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif; font-size: 0.78rem; font-weight: 600;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            transition: background 0.2s;
-        }
-        .btn-lihat-foto:hover { background: var(--primary-dark); }
-        .btn-lihat-foto.pulang-btn { background: #7e22ce; }
-        .btn-lihat-foto.pulang-btn:hover { background: #6d28d9; }
-        .summary-strip {
-            display: flex; align-items: center; gap: 10px;
-            padding: 12px 16px; border-radius: 12px;
-            font-size: 0.82rem; font-weight: 500;
-        }
-        .summary-strip.complete { background: #dcfce7; color: #15803d; }
-        .summary-strip.partial  { background: #fef9c3; color: #92400e; }
-        .summary-strip.none     { background: #fee2e2; color: #991b1b; }
-        .summary-strip i { font-size: 1.2rem; }
-        .not-found { text-align: center; padding: 30px 20px; }
-        .not-found i { font-size: 3rem; color: var(--gray); margin-bottom: 12px; display: block; }
-        .not-found p { color: var(--text-secondary); font-size: 0.9rem; }
-        .not-found strong { display: block; font-size: 1rem; color: var(--text); margin-bottom: 6px; }
-        .rekap-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 0; border-bottom: 1px dashed var(--border);
-            font-size: 0.82rem;
-        }
-        .rekap-row:last-child { border-bottom: none; }
-        .rekap-label { color: var(--text-secondary); display: flex; align-items: center; gap: 7px; }
-        .rekap-val { font-weight: 600; }
-        .rekap-val.ok   { color: var(--success); }
-        .rekap-val.warn { color: var(--warning); }
-        .rekap-val.miss { color: var(--danger); }
-        .alert-error {
-            background: #fee2e2; border-left: 4px solid var(--danger);
-            padding: 12px 16px; border-radius: 0 10px 10px 0;
-            font-size: 0.85rem; color: #991b1b;
-            display: flex; align-items: flex-start; gap: 10px;
-        }
-        .info-box {
-            background: #eff6ff; border-left: 4px solid var(--primary);
-            padding: 12px 16px; border-radius: 0 10px 10px 0;
-            font-size: 0.8rem; color: #1e40af;
-            display: flex; align-items: flex-start; gap: 10px; line-height: 1.5;
-            margin-top: 12px;
-        }
-        .info-box i { flex-shrink: 0; margin-top: 2px; }
-        #fotoModal {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.88);
-            z-index: 1000; display: none;
-            align-items: center; justify-content: center;
-            padding: 16px;
-            backdrop-filter: blur(6px);
-        }
-        #fotoModal.show { display: flex; }
-        .foto-modal-inner {
-            background: white; border-radius: 20px;
-            width: 100%; max-width: 400px; overflow: hidden;
-            animation: slideUp 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
-        }
-        @keyframes slideUp {
-            from { opacity:0; transform: translateY(30px) scale(0.95); }
-            to   { opacity:1; transform: translateY(0) scale(1); }
-        }
-        .foto-modal-header {
-            padding: 16px 20px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-        .foto-modal-header h3 { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-        .foto-modal-header h3 i { color: var(--primary); }
-        .btn-close-modal {
-            background: var(--light); border: none;
-            width: 34px; height: 34px; border-radius: 50%;
-            cursor: pointer; font-size: 1rem; color: var(--text-secondary);
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.2s;
-        }
-        .btn-close-modal:hover { background: var(--border); }
-        .foto-modal-body { padding: 16px; }
-        .foto-meta {
-            display: flex; justify-content: space-between;
-            margin-bottom: 12px; font-size: 0.78rem; color: var(--text-secondary);
-        }
-        .foto-meta strong { color: var(--text); }
-        .foto-container {
-            border-radius: 14px; overflow: hidden;
-            background: #0f172a; position: relative; min-height: 120px;
-        }
-        .foto-container img { width: 100%; display: block; max-height: 380px; object-fit: cover; }
-        .foto-loading {
-            position: absolute; inset: 0;
-            display: flex; align-items: center; justify-content: center;
-            background: #0f172a; color: white; font-size: 0.85rem;
-            flex-direction: column; gap: 10px;
-        }
-        .foto-loading i { font-size: 2rem; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .foto-modal-footer {
-            padding: 14px 16px; border-top: 1px solid var(--border);
-        }
-        .btn-tutup {
-            width: 100%; padding: 11px;
-            background: var(--light); color: var(--text);
-            border: none; border-radius: 10px;
-            font-family: 'Poppins', sans-serif; font-size: 0.85rem; font-weight: 600;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .btn-tutup:hover { background: var(--border); }
-        .bottom-note { text-align: center; font-size: 0.7rem; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #eef2fb; color: var(--text); min-height: 100vh; font-size: 15px; }
 
-        /* ── CAPTCHA ── */
-        .captcha-box {
-            margin-top: 12px;
-            padding: 12px 14px;
-            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+        /* HEADER */
+        .header { background: linear-gradient(135deg,#1e40af 0%,#2563eb 60%,#3b82f6 100%); color: white; padding: 18px 18px 52px; position: relative; overflow: hidden; }
+        .header::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:32px; background:#eef2fb; border-radius:22px 22px 0 0; }
+        .header-inner { display:flex; align-items:center; gap:13px; position:relative; z-index:1; }
+        .header-logo { width:46px; height:46px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,.3)); flex-shrink:0; }
+        .header-titles h1 { font-size:1rem; font-weight:800; letter-spacing:-.3px; }
+        .header-titles p  { font-size:0.7rem; opacity:.8; margin-top:3px; }
+        .header-clock { margin-left:auto; text-align:right; flex-shrink:0; }
+        .header-clock .hdr-date { font-size:0.68rem; opacity:.75; }
+        .header-clock .hdr-time { font-size:0.9rem; font-weight:700; letter-spacing:-.2px; }
+
+        /* TICKER */
+        .ticker { background:white; border-bottom:1px solid var(--g200); padding:8px 16px; display:flex; align-items:center; justify-content:space-between; font-size:0.73rem; color:var(--g600); position:sticky; top:0; z-index:10; box-shadow:var(--sh-sm); }
+        .dot { width:7px; height:7px; background:var(--green); border-radius:50%; animation:blink 1.4s ease-in-out infinite; display:inline-block; margin-right:6px; }
+        @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.8)} }
+
+        /* CONTENT */
+        .content { max-width:520px; margin:0 auto; padding:16px 13px 48px; }
+
+        /* CARD */
+        .card { background:white; border-radius:var(--r); box-shadow:var(--sh); padding:18px; margin-bottom:13px; }
+        .card-eye { font-size:0.67rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--blue); display:flex; align-items:center; gap:6px; margin-bottom:15px; }
+
+        /* FORM */
+        .field { margin-bottom:11px; }
+        .field-lbl { display:block; font-size:0.7rem; font-weight:600; color:var(--g600); margin-bottom:4px; letter-spacing:.3px; }
+        .fw { position:relative; }
+        .fi { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--g400); font-size:0.82rem; pointer-events:none; }
+        .finput {
+            width:100%; padding:11px 12px 11px 36px;
+            border:1.5px solid var(--g200); border-radius:9px;
+            font-family:inherit; font-size:0.88rem; color:var(--text);
+            background:var(--g50); transition:border-color .18s,background .18s,box-shadow .18s;
+            -webkit-appearance:none;
         }
-        .captcha-question {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--text);
+        .finput:focus { outline:none; border-color:var(--blue); background:white; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+        .finput::placeholder { color:var(--g400); }
+        .finput.pw { padding-right:42px; }
+        .finput.err { border-color:var(--red) !important; box-shadow:0 0 0 3px rgba(220,38,38,.12) !important; }
+        .pw-btn { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--g400); padding:4px; font-size:0.85rem; transition:color .15s; }
+        .pw-btn:hover { color:var(--blue); }
+
+        /* CAPTCHA */
+        .captcha-wrap {
+            background: var(--g50);
+            border: 1.5px solid var(--g200);
+            border-radius: 9px;
+            padding: 12px 14px;
+            margin-bottom: 13px;
+        }
+        .captcha-wrap.verified { border-color:#86efac; background:#f0fdf4; }
+        .captcha-wrap.verified .captcha-label { color:var(--green); }
+        .captcha-label { font-size:0.7rem; font-weight:600; color:var(--g600); margin-bottom:8px; display:flex; align-items:center; gap:5px; letter-spacing:.3px; text-transform:uppercase; }
+        .captcha-row { display:flex; align-items:center; gap:10px; }
+        .captcha-soal {
             background: white;
-            border-radius: 10px;
-            padding: 8px 14px;
-            border: 2px solid var(--border);
-            min-width: 120px;
-            text-align: center;
+            border: 1.5px solid var(--g200);
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size:0.95rem; font-weight:800;
+            color: var(--text);
             letter-spacing: 1px;
+            white-space: nowrap;
             user-select: none;
             flex-shrink: 0;
+            font-family: 'Courier New', monospace;
             position: relative;
             overflow: hidden;
         }
-        .captcha-question::before {
+        .captcha-soal::before {
             content: '';
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             background: repeating-linear-gradient(
                 45deg,
-                rgba(67,97,238,0.04),
-                rgba(67,97,238,0.04) 2px,
-                transparent 2px,
-                transparent 10px
+                transparent, transparent 4px,
+                rgba(37,99,235,.04) 4px, rgba(37,99,235,.04) 8px
             );
-            pointer-events: none;
         }
-        .captcha-noise {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-        }
-        .captcha-label {
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-            flex: 1;
-        }
-        .captcha-input-wrap {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            width: 100%;
-        }
+        .captcha-soal span { position:relative; z-index:1; }
+        .captcha-equals { font-size:1.1rem; font-weight:800; color:var(--g400); flex-shrink:0; }
         .captcha-input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text);
-            background: white;
-            text-align: center;
-            -webkit-appearance: none;
-            transition: border-color 0.2s;
+            flex:1; padding:9px 10px;
+            border:1.5px solid var(--g200); border-radius:8px;
+            font-family:inherit; font-size:1rem; font-weight:700;
+            text-align:center; color:var(--text);
+            background:white; transition:border-color .18s,box-shadow .18s;
+            -webkit-appearance:none;
+            min-width:0;
         }
-        .captcha-input:focus { outline: none; border-color: var(--primary); }
-        .captcha-input.error { border-color: var(--danger); animation: shake 0.4s; }
-        .captcha-input.ok    { border-color: var(--success); }
-        @keyframes shake {
-            0%,100%{transform:translateX(0)}
-            25%{transform:translateX(-6px)}
-            75%{transform:translateX(6px)}
+        .captcha-input:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+        .captcha-input.err { border-color:var(--red); box-shadow:0 0 0 3px rgba(220,38,38,.12); }
+        .captcha-input.ok  { border-color:var(--green); box-shadow:0 0 0 3px rgba(22,163,74,.12); }
+        .captcha-refresh {
+            width:34px; height:34px; border-radius:8px;
+            background:var(--g100); border:1.5px solid var(--g200);
+            cursor:pointer; color:var(--g600); font-size:0.85rem;
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; transition:background .15s, transform .2s;
         }
-        .btn-refresh-captcha {
-            background: none; border: none; cursor: pointer;
-            color: var(--primary); font-size: 1rem; padding: 6px;
-            border-radius: 8px; transition: background 0.15s, transform 0.2s;
-            flex-shrink: 0;
-        }
-        .btn-refresh-captcha:hover { background: #eff2ff; }
-        .btn-refresh-captcha.spin { transform: rotate(360deg); transition: transform 0.4s ease; }
-        .captcha-err {
-            font-size: 0.72rem;
-            color: var(--danger);
-            margin-top: 4px;
-            display: none;
-        }
+        .captcha-refresh:hover { background:var(--g200); }
+        .captcha-refresh.spin i { animation:spin .4s ease; }
+        .captcha-hint { font-size:0.67rem; color:var(--g400); margin-top:6px; }
+        .captcha-hint.err-msg { color:var(--red); font-weight:600; }
+        .captcha-hint.ok-msg  { color:var(--green); font-weight:600; }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
 
-        /* ── RATE LIMIT / LOCKOUT UI ── */
-        .lockout-bar {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 0.78rem;
-            color: #991b1b;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
+        /* TOMBOL KEMBALI */
+        .btn-back {
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            width:100%; padding:11px;
+            background:white; color:var(--blue);
+            border:1.5px solid var(--blue-lt);
+            border-radius:9px;
+            font-family:inherit; font-size:0.86rem; font-weight:700;
+            cursor:pointer; text-decoration:none;
+            transition:background .18s, border-color .18s, box-shadow .18s;
+            box-shadow: 0 1px 6px rgba(37,99,235,.1);
+            margin-bottom:13px;
         }
+        .btn-back:hover { background:var(--blue-lt); border-color:var(--blue); box-shadow:0 2px 12px rgba(37,99,235,.18); }
+        .btn-back i { font-size:0.85rem; }
 
-        .status-radius {
-            margin-top: 4px; font-size: 0.7rem;
-            padding: 2px 8px; border-radius: 10px; display: inline-block;
+        /* CARI */
+        .btn-cari {
+            width:100%; padding:12px;
+            background:var(--blue); color:white; border:none; border-radius:9px;
+            font-family:inherit; font-size:0.88rem; font-weight:700; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            box-shadow:0 2px 12px rgba(37,99,235,.35);
+            transition:background .18s,box-shadow .18s,transform .1s;
+            margin-top:4px;
         }
-        .status-radius.dalam { background: #dcfce7; color: #15803d; }
-        .status-radius.luar  { background: #fee2e2; color: #991b1b; }
+        .btn-cari:hover  { background:var(--blue-dk); box-shadow:0 4px 18px rgba(37,99,235,.42); }
+        .btn-cari:active { transform:scale(.98); }
+        .btn-cari.loading { opacity:.7; pointer-events:none; }
+        .btn-cari:disabled { opacity:.5; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+
+        .hint { margin-top:13px; background:#eff6ff; border-left:3px solid var(--blue); border-radius:0 9px 9px 0; padding:10px 13px; font-size:0.75rem; color:#1e40af; line-height:1.55; display:flex; gap:8px; align-items:flex-start; }
+        .hint i { flex-shrink:0; margin-top:1px; }
+
+        /* RESULTS */
+        #resultArea { display:none; }
+
+        /* PEGAWAI */
+        .peg-row { display:flex; align-items:center; gap:13px; background:var(--g50); border:1px solid var(--g200); border-radius:9px; padding:13px; }
+        .avatar { width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,var(--blue),var(--purple)); display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem; flex-shrink:0; }
+        .peg-detail { flex:1; min-width:0; }
+        .peg-nama    { font-weight:700; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .peg-lembaga { font-size:0.71rem; color:var(--g600); margin-top:2px; }
+        .peg-nip     { font-size:0.66rem; font-weight:700; color:var(--blue); background:var(--blue-lt); padding:3px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0; }
+
+        /* IZIN BADGE */
+        .izin-badge { display:flex; align-items:center; gap:8px; background:var(--amber-bg); border:1px solid #fcd34d; border-radius:9px; padding:9px 13px; margin-top:10px; font-size:0.77rem; color:#92400e; font-weight:500; }
+        .izin-badge i { color:var(--amber); flex-shrink:0; }
+
+        /* STATUS GRID */
+        .status-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+        @media (max-width:340px) { .status-grid { grid-template-columns:1fr; } }
+
+        .scard { border-radius:9px; overflow:hidden; border:1.5px solid var(--g200); }
+        .scard.recorded { border-color:#86efac; }
+
+        .scard-head { padding:9px 11px 8px; font-size:0.73rem; font-weight:700; display:flex; align-items:center; gap:6px; }
+        .scard.datang .scard-head { background:linear-gradient(135deg,#dbeafe,#eff6ff); color:#1d4ed8; }
+        .scard.pulang .scard-head { background:linear-gradient(135deg,#f3e8ff,#faf5ff); color:#6d28d9; }
+
+        .scard-body { padding:11px; background:white; }
+        .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:0.68rem; font-weight:700; }
+        .badge.ok   { background:var(--green-bg); color:var(--green); }
+        .badge.miss { background:var(--g100); color:var(--g600); }
+
+        .scard-time { margin-top:7px; font-size:0.78rem; font-weight:700; color:var(--green); display:flex; align-items:center; gap:5px; }
+        .scard-loc  { margin-top:4px; font-size:0.65rem; color:var(--g600); display:flex; align-items:flex-start; gap:4px; line-height:1.4; }
+        .scard-loc i { flex-shrink:0; margin-top:1px; }
+        .scard-slot { margin-top:7px; font-size:0.68rem; color:var(--g400); display:flex; align-items:center; gap:4px; }
+
+        .rtag { display:inline-block; margin-top:5px; font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:10px; }
+        .rtag.dalam { background:var(--green-bg); color:var(--green); }
+        .rtag.luar  { background:var(--red-bg);   color:var(--red); }
+
+        .btn-foto { margin-top:9px; width:100%; padding:7px; border:none; border-radius:6px; font-family:inherit; font-size:0.72rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; transition:opacity .15s; }
+        .btn-foto:hover { opacity:.85; }
+        .btn-foto.dt { background:var(--blue);   color:white; }
+        .btn-foto.pl { background:var(--purple); color:white; }
+
+        /* RINGKASAN */
+        .summary { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:9px; font-size:0.8rem; font-weight:500; line-height:1.45; margin-bottom:15px; }
+        .summary i { font-size:1.1rem; flex-shrink:0; }
+        .summary.complete { background:var(--green-bg); color:#15803d; }
+        .summary.partial  { background:var(--amber-bg);  color:#92400e; }
+        .summary.none     { background:var(--red-bg);    color:#991b1b; }
+
+        .rekap-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--g200); font-size:0.78rem; }
+        .rekap-row:last-child { border-bottom:none; }
+        .rlbl { color:var(--g600); display:flex; align-items:center; gap:6px; }
+        .rval { font-weight:700; }
+        .rval.ok   { color:var(--green); }
+        .rval.warn { color:var(--amber); }
+        .rval.miss { color:var(--red); }
+
+        /* ALERTS */
+        .alert { border-radius:9px; padding:13px 15px; font-size:0.8rem; line-height:1.55; display:flex; gap:9px; align-items:flex-start; }
+        .alert i { flex-shrink:0; font-size:1.05rem; }
+        .alert.err  { background:var(--red-bg);   color:#991b1b; border-left:3px solid var(--red); }
+        .alert.warn { background:var(--amber-bg); color:#92400e; border-left:3px solid var(--amber); }
+
+        .nf-state { text-align:center; padding:26px 10px 14px; }
+        .nf-state i { font-size:2.6rem; color:var(--g400); margin-bottom:11px; display:block; }
+        .nf-state strong { font-size:0.92rem; }
+        .nf-state p { color:var(--g600); font-size:0.8rem; margin-top:6px; }
+
+        .bottom-note { text-align:center; font-size:0.66rem; color:var(--g400); margin-top:9px; }
+
+        /* MODAL */
+        #fotoModal { position:fixed; inset:0; background:rgba(0,0,0,.87); backdrop-filter:blur(6px); z-index:100; display:none; align-items:flex-end; justify-content:center; }
+        #fotoModal.show { display:flex; }
+        .modal-inner { background:white; border-radius:20px 20px 0 0; width:100%; max-width:480px; max-height:92vh; overflow-y:auto; animation:slideUp .28s cubic-bezier(.2,.9,.4,1.05); }
+        @keyframes slideUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+        .modal-handle { width:38px; height:4px; background:var(--g200); border-radius:2px; margin:11px auto 0; }
+        .modal-hdr { padding:11px 17px 13px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--g200); }
+        .modal-hdr h3 { font-size:0.88rem; font-weight:700; display:flex; align-items:center; gap:7px; }
+        .modal-hdr h3 i { color:var(--blue); }
+        .btn-close { width:30px; height:30px; border-radius:50%; background:var(--g100); border:none; cursor:pointer; font-size:0.85rem; color:var(--g600); display:flex; align-items:center; justify-content:center; }
+        .btn-close:hover { background:var(--g200); }
+        .modal-body { padding:15px 17px; }
+        .modal-meta { display:flex; justify-content:space-between; font-size:0.74rem; color:var(--g600); margin-bottom:11px; }
+        .modal-meta strong { color:var(--text); font-weight:700; }
+        .foto-box { border-radius:var(--r); overflow:hidden; background:#0f172a; min-height:110px; position:relative; }
+        .foto-box img { width:100%; display:block; max-height:380px; object-fit:cover; }
+        .foto-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:9px; background:#0f172a; color:white; font-size:0.8rem; }
+        .foto-loading i { font-size:1.7rem; animation:spin2 1s linear infinite; }
+        @keyframes spin2 { to{transform:rotate(360deg)} }
+        .foto-info { margin-top:9px; font-size:0.71rem; color:var(--g600); line-height:1.5; display:flex; flex-wrap:wrap; gap:5px 13px; }
+        .foto-info span { display:flex; align-items:center; gap:4px; }
+        .foto-info i { color:var(--blue); }
+        .modal-ftr { padding:11px 17px 18px; }
+        .btn-tutup { width:100%; padding:11px; background:var(--g100); color:var(--text); border:none; border-radius:9px; font-family:inherit; font-size:0.85rem; font-weight:700; cursor:pointer; }
+        .btn-tutup:hover { background:var(--g200); }
+
+        @media (min-width:521px) {
+            #fotoModal { align-items:center; padding:20px; }
+            .modal-inner { border-radius:var(--rlg); max-height:88vh; }
+            .modal-handle { display:none; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="app-header">
+<header class="header">
+    <div class="header-inner">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Lambang_Kabupaten_Ngawi_%28svg%29.svg/500px-Lambang_Kabupaten_Ngawi_%28svg%29.svg.png"
-             alt="Logo" class="logo">
-        <div class="app-header-text">
+             alt="Logo Ngawi" class="header-logo">
+        <div class="header-titles">
             <h1>Cek Presensi Hari Ini</h1>
-            <p>Korwil Kecamatan &middot; Tahun 2026</p>
+            <p>Korwil Kecamatan &middot; Kabupaten Ngawi 2026</p>
         </div>
-        <div class="header-badge">
-            <i class="fas fa-calendar-check" style="margin-right:5px;"></i>
-            <span id="headerTanggal">–</span>
+        <div class="header-clock">
+            <div class="hdr-date" id="hdrTgl">–</div>
+            <div class="hdr-time" id="hdrJam">–</div>
         </div>
     </div>
+</header>
 
-    <div class="date-strip">
-        <span><span class="live-dot"></span><span id="stripHari">–</span></span>
-        <span id="stripJam" style="font-weight:600; color:var(--primary);">00:00:00 WIB</span>
-    </div>
+<div class="ticker">
+    <span><span class="dot"></span><span id="tickerHari">–</span></span>
+    <span id="tickerWib" style="font-weight:600;color:var(--blue);">00:00:00 WIB</span>
+</div>
 
-    <div class="container">
+<main class="content">
 
-        <!-- CARI NIP -->
-        <div class="card">
-            <div class="card-label"><i class="fas fa-search"></i> Cari Presensi Pegawai</div>
-            <div class="search-group" style="margin-bottom:10px;">
-                <div class="input-wrap">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="nipInput"
-                           placeholder="Username..."
-                           autocomplete="off" autocorrect="off" spellcheck="false">
-                </div>
-            </div>
-            <div class="search-group">
-                <div class="input-wrap">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="passwordInput"
-                           placeholder="Password..."
-                           autocomplete="off"
-                           style="padding-right:42px;">
-                    <button type="button" class="btn-toggle-pw" onclick="togglePassword()" title="Tampilkan/sembunyikan password">
-                        <i class="fas fa-eye" id="eyeIcon"></i>
-                    </button>
-                </div>
-                <button class="btn-cari" id="btnCari" onclick="cariPresensi()">
-                    <i class="fas fa-search"></i> Cari
-                </button>
-            </div>
-            <!-- CAPTCHA -->
-            <div class="captcha-box" id="captchaBox">
-                <div style="width:100%;display:flex;align-items:center;gap:10px;">
-                    <i class="fas fa-shield-alt" style="color:var(--primary);font-size:1.1rem;flex-shrink:0;"></i>
-                    <span class="captcha-label">Selesaikan verifikasi sebelum mencari:</span>
-                </div>
-                <div class="captcha-input-wrap">
-                    <div class="captcha-question" id="captchaQuestion" aria-label="Soal captcha">
-                        <canvas class="captcha-noise" id="captchaCanvas"></canvas>
-                        <span id="captchaText">–</span>
-                    </div>
-                    <span style="font-size:1rem;color:var(--text-secondary);">=</span>
-                    <input type="number" id="captchaInput" class="captcha-input"
-                           placeholder="?" inputmode="numeric" autocomplete="off"
-                           onkeydown="if(event.key==='Enter')cariPresensi()">
-                    <button type="button" class="btn-refresh-captcha" onclick="renewCaptcha(true)" title="Ganti soal">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-                <div class="captcha-err" id="captchaErr"><i class="fas fa-times-circle"></i> Jawaban salah, coba lagi.</div>
-            </div>
-            <!-- LOCKOUT BAR -->
-            <div class="lockout-bar" id="lockoutBar">
-                <i class="fas fa-clock"></i>
-                <span id="lockoutMsg">Terlalu banyak percobaan. Tunggu <strong id="lockoutSec">30</strong> detik.</span>
-            </div>
-            <div class="info-box">
-                <i class="fas fa-info-circle"></i>
-                <span>Masukkan <strong>username</strong> dan <strong>password</strong> akun Anda untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
+    <!-- TOMBOL KEMBALI -->
+    <a href="https://yoriapp.site/presensi" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Kembali ke Presensi
+    </a>
+
+    <!-- LOGIN CARD -->
+    <div class="card">
+        <div class="card-eye"><i class="fas fa-search"></i> Cari Presensi</div>
+
+        <div class="field">
+            <label class="field-lbl" for="usernameInput">Username</label>
+            <div class="fw">
+                <i class="fas fa-user fi"></i>
+                <input id="usernameInput" class="finput" type="text"
+                       placeholder="Masukkan username..."
+                       autocomplete="off" autocorrect="off" spellcheck="false">
             </div>
         </div>
 
-        <!-- HASIL -->
-        <div id="resultArea">
-            <div class="card" id="cardPegawai"></div>
-            <div class="card" id="cardStatus" style="display:none;"></div>
-            <div class="card" id="cardRekap"  style="display:none;"></div>
-        </div>
-
-    </div>
-
-    <!-- MODAL FOTO -->
-    <div id="fotoModal">
-        <div class="foto-modal-inner">
-            <div class="foto-modal-header">
-                <h3><i class="fas fa-camera"></i> <span id="modalTitle">Foto Presensi</span></h3>
-                <button class="btn-close-modal" onclick="tutupFoto()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="foto-modal-body">
-                <div class="foto-meta">
-                    <strong id="modalNama">–</strong>
-                    <span id="modalWaktu">–</span>
-                </div>
-                <div class="foto-container" id="fotoContainer">
-                    <div class="foto-loading" id="fotoLoading">
-                        <i class="fas fa-circle-notch"></i>
-                        <span>Memuat foto...</span>
-                    </div>
-                    <img id="fotoImg" src="" alt="Foto Presensi"
-                         style="display:none;"
-                         onload="fotoLoaded()" onerror="fotoError()">
-                </div>
-                <div style="margin-top:10px; font-size:0.75rem; color:var(--text-secondary); line-height:1.5;">
-                    <i class="fas fa-map-marker-alt" style="color:var(--primary);"></i>
-                    <span id="modalLokasi">–</span>
-                    &nbsp;|&nbsp;
-                    <i class="fas fa-ruler-combined" style="color:var(--primary);"></i>
-                    <span id="modalJarak">–</span>
-                </div>
-            </div>
-            <div class="foto-modal-footer">
-                <button class="btn-tutup" onclick="tutupFoto()">
-                    <i class="fas fa-times"></i> Tutup
+        <div class="field">
+            <label class="field-lbl" for="passwordInput">Password</label>
+            <div class="fw">
+                <i class="fas fa-lock fi"></i>
+                <input id="passwordInput" class="finput pw" type="password"
+                       placeholder="Masukkan password..." autocomplete="off">
+                <button type="button" class="pw-btn" onclick="togglePw()" title="Tampilkan/sembunyikan">
+                    <i class="fas fa-eye" id="eyeIcon"></i>
                 </button>
             </div>
         </div>
+
+        <!-- CAPTCHA -->
+        <div class="captcha-wrap" id="captchaWrap">
+            <div class="captcha-label">
+                <i class="fas fa-shield-alt"></i> Verifikasi – saya bukan robot
+            </div>
+            <div class="captcha-row">
+                <div class="captcha-soal" id="captchaSoal" aria-label="Soal captcha">
+                    <span id="captchaSoalTeks">? + ? = ?</span>
+                </div>
+                <div class="captcha-equals">=</div>
+                <input id="captchaInput" class="captcha-input" type="number"
+                       placeholder="?" inputmode="numeric"
+                       autocomplete="off" oninput="cekCaptcha()" onkeydown="if(event.key==='Enter') cariPresensi()">
+                <button class="captcha-refresh" id="captchaRefreshBtn" onclick="refreshCaptcha()" title="Ganti soal">
+                    <i class="fas fa-redo-alt"></i>
+                </button>
+            </div>
+            <div class="captcha-hint" id="captchaHint">Ketik jawaban dari soal di atas</div>
+        </div>
+
+        <button class="btn-cari" id="btnCari" onclick="cariPresensi()" disabled>
+            <i class="fas fa-search"></i> Cek Presensi
+        </button>
+
+        <div class="hint">
+            <i class="fas fa-info-circle"></i>
+            <span>Masukkan <strong>username</strong> dan <strong>password</strong> untuk melihat status presensi <strong>Datang</strong> dan <strong>Pulang</strong> hari ini.</span>
+        </div>
     </div>
 
-    <script>
-        // ══════════════════════════════════════════════════════════════════════
-        // ── CAPTCHA ──────────────────────────────────────────────────────────
-        // ══════════════════════════════════════════════════════════════════════
-        let _captchaAnswer = 0;
-        let _captchaFailCount = 0;
-        const CAPTCHA_MAX_FAIL = 3;   // lockout setelah N gagal
-        const CAPTCHA_LOCKOUT  = 30;  // detik
-        let _lockoutTimer = null;
+    <!-- RESULTS -->
+    <div id="resultArea">
+        <div class="card" id="cardPegawai"></div>
+        <div class="card" id="cardStatus" style="display:none;"></div>
+        <div class="card" id="cardRekap"  style="display:none;"></div>
+    </div>
 
-        function renewCaptcha(spin = false) {
-            // Soal: operasi acak (penjumlahan, pengurangan, perkalian kecil)
-            const ops = ['+', '-', '×'];
-            const op  = ops[Math.floor(Math.random() * ops.length)];
-            let a, b, ans;
-            if (op === '+') {
-                a = rnd(1,20); b = rnd(1,20); ans = a + b;
-            } else if (op === '-') {
-                a = rnd(5,20); b = rnd(1, a); ans = a - b;
-            } else {
-                a = rnd(2,9);  b = rnd(2,9);  ans = a * b;
-            }
-            _captchaAnswer = ans;
-            document.getElementById('captchaText').textContent = `${a} ${op} ${b}`;
-            document.getElementById('captchaInput').value = '';
-            document.getElementById('captchaInput').className = 'captcha-input';
-            document.getElementById('captchaErr').style.display = 'none';
-            drawNoise();
+</main>
 
-            if (spin) {
-                const btn = document.querySelector('.btn-refresh-captcha');
-                btn.classList.add('spin');
-                setTimeout(() => btn.classList.remove('spin'), 450);
-            }
-        }
-        function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-        function drawNoise() {
-            const canvas = document.getElementById('captchaCanvas');
-            const q      = document.getElementById('captchaQuestion');
-            canvas.width  = q.offsetWidth  || 130;
-            canvas.height = q.offsetHeight || 42;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Garis-garis acak tipis (noise visual anti-bot sederhana)
-            for (let i = 0; i < 4; i++) {
-                ctx.beginPath();
-                ctx.moveTo(rnd(0, canvas.width), rnd(0, canvas.height));
-                ctx.lineTo(rnd(0, canvas.width), rnd(0, canvas.height));
-                ctx.strokeStyle = `rgba(67,97,238,${(Math.random() * 0.25 + 0.1).toFixed(2)})`;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-            }
-            // Titik-titik acak
-            for (let i = 0; i < 18; i++) {
-                ctx.beginPath();
-                ctx.arc(rnd(0, canvas.width), rnd(0, canvas.height), 1.2, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(67,97,238,${(Math.random() * 0.3 + 0.1).toFixed(2)})`;
-                ctx.fill();
-            }
-        }
-
-        function verifyCaptcha() {
-            const val = parseInt(document.getElementById('captchaInput').value.trim(), 10);
-            if (isNaN(val) || val !== _captchaAnswer) {
-                _captchaFailCount++;
-                document.getElementById('captchaInput').className = 'captcha-input error';
-                document.getElementById('captchaErr').style.display = 'block';
-
-                if (_captchaFailCount >= CAPTCHA_MAX_FAIL) {
-                    startLockout();
-                } else {
-                    renewCaptcha(false);
-                }
-                return false;
-            }
-            document.getElementById('captchaInput').className = 'captcha-input ok';
-            document.getElementById('captchaErr').style.display = 'none';
-            return true;
-        }
-
-        function startLockout() {
-            let sisa = CAPTCHA_LOCKOUT;
-            const bar = document.getElementById('lockoutBar');
-            const sec = document.getElementById('lockoutSec');
-            bar.style.display = 'flex';
-            document.getElementById('btnCari').classList.add('loading');
-            sec.textContent = sisa;
-
-            clearInterval(_lockoutTimer);
-            _lockoutTimer = setInterval(() => {
-                sisa--;
-                sec.textContent = sisa;
-                if (sisa <= 0) {
-                    clearInterval(_lockoutTimer);
-                    bar.style.display = 'none';
-                    _captchaFailCount = 0;
-                    document.getElementById('btnCari').classList.remove('loading');
-                    renewCaptcha(false);
-                }
-            }, 1000);
-        }
-
-        // ══════════════════════════════════════════════════════════════════════
-        // ── CACHE & OPTIMASI ─────────────────────────────────────────────────
-        // ══════════════════════════════════════════════════════════════════════
-        // Cache data sheet agar tidak re-fetch tiap pencarian (berlaku 3 menit)
-        const CACHE_TTL = 3 * 60 * 1000;  // 3 menit dalam ms
-        const _sheetCache = {};  // { sheetName: { data, ts } }
-
-        // ── Koneksi ke Database (Google Spreadsheet) ────────────────────────
-        // URL Web App Apps Script (dipakai untuk login/presensi/dll, bukan untuk cek ini)
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqgwrpj7mMOz2sgB5vfwfArPwU5o1h9MkIXrBh-6Vw5_Bl0yGiGGFN22dJdB8JwC_y/exec';
-
-        // ID Spreadsheet sumber data (sama dengan PRESENSI_SPREADSHEET_ID di code.gs)
-        const SPREADSHEET_ID = '1ACaOKCizDDsrVqKPPrr2gNBpddWl9XPjJvNs8JqUEMc';
-        // Nama sheet rekap presensi (sama dengan PRESENSI_SHEET_NAME di code.gs)
-        const SHEET_REKAP = 'RekapPresensi';
-        // Nama sheet data pegawai (berisi username & password)
-        const SHEET_AKUN = 'db';
-        // ───────────────────────────────────────────────────────────────────
-
-        const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-        const BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
-                       'Juli','Agustus','September','Oktober','November','Desember'];
-
-        function getWIB() {
-            const n = new Date();
-            return new Date(n.getTime() + n.getTimezoneOffset()*60000 + 25200000);
-        }
-        function fmtJam(d) {
-            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')} WIB`;
-        }
-        function fmtTgl(d) {
-            return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
-        }
-        function fmtTglShort(d) {
-            return `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`;
-        }
-
-        function updateClock() {
-            const w = getWIB();
-            document.getElementById('headerTanggal').textContent = `${w.getDate()} ${BULAN[w.getMonth()]}`;
-            document.getElementById('stripHari').textContent = fmtTgl(w);
-            document.getElementById('stripJam').textContent  = fmtJam(w);
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
-
-        // Enter key
-        document.getElementById('nipInput').addEventListener('keydown', e => {
-            if (e.key === 'Enter') document.getElementById('passwordInput').focus();
-        });
-        document.getElementById('passwordInput').addEventListener('keydown', e => {
-            if (e.key === 'Enter') cariPresensi();
-        });
-
-        function setLoading(on) {
-            const b = document.getElementById('btnCari');
-            b.classList.toggle('loading', on);
-            b.innerHTML = on
-                ? '<i class="fas fa-circle-notch fa-spin"></i> Mencari...'
-                : '<i class="fas fa-search"></i> Cari';
-        }
-
-        // ── Ambil tanggal hari ini WIB (untuk pencocokan baris RekapPresensi) ─
-        function tanggalHariIni() {
-            const w = getWIB();
-            return { day: w.getDate(), month: w.getMonth(), year: w.getFullYear() };
-        }
-
-        // ── Baca sheet langsung dari Google Spreadsheet (Google Visualization API) ─
-        // Menggunakan cache in-memory (TTL 3 menit) agar sheet tidak di-fetch ulang
-        // setiap kali pencarian dilakukan — mengurangi beban jaringan & waktu tunggu.
-        let _gvizSeq = 0;
-        function fetchSheetTable(sheetName) {
-            // Kembalikan cache jika masih segar
-            const cached = _sheetCache[sheetName];
-            if (cached && (Date.now() - cached.ts) < CACHE_TTL) {
-                return Promise.resolve(cached.data);
-            }
-
-            return new Promise((resolve, reject) => {
-                const cbName = '_gvizCb' + (_gvizSeq++);
-                const timeoutId = setTimeout(() => {
-                    cleanup();
-                    reject(new Error('Waktu koneksi habis. '));
-                }, 15000);
-
-                function cleanup() {
-                    clearTimeout(timeoutId);
-                    delete window[cbName];
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                }
-
-                window[cbName] = function(resp) {
-                    cleanup();
-                    if (!resp || resp.status === 'error') {
-                        const detail = resp && resp.errors && resp.errors[0]
-                            ? (resp.errors[0].detailed_message || resp.errors[0].message)
-                            : 'Sheet tidak ditemukan atau tidak bisa diakses';
-                        reject(new Error(detail));
-                        return;
-                    }
-                    // Simpan ke cache
-                    _sheetCache[sheetName] = { data: resp.table, ts: Date.now() };
-                    resolve(resp.table);
-                };
-
-                const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq`
-                    + `?tqx=out:json;responseHandler:${cbName}`
-                    + `&sheet=${encodeURIComponent(sheetName)}`
-                    + `&headers=1`;
-
-                const script = document.createElement('script');
-                script.src = url;
-                script.onerror = () => {
-                    cleanup();
-                    reject(new Error('Gagal memuat data spreadsheet. Pastikan sheet "' + sheetName + '" sudah di-share "Anyone with the link".'));
-                };
-                document.body.appendChild(script);
-            });
-        }
-
-        // Ambil nilai sel gviz dengan aman (null-safe)
-        function cellVal(row, idx) {
-            return (row && row.c && row.c[idx] && row.c[idx].v !== null && row.c[idx].v !== undefined)
-                ? row.c[idx].v : '';
-        }
-
-        // Parse "Rabu, 24 Juni 2026 ... 14:35:10" / "...pukul 14.35.10" → {day,month,year,jam}
-        function parseTanggalLengkap(str) {
-            str = String(str || '');
-            const monthIdx = BULAN.findIndex(b => str.includes(b));
-            const dayMatch = str.match(/\b(\d{1,2})\s+(?:Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\b/);
-            const yearMatch = str.match(/\b(\d{4})\b/);
-            const jamMatch = str.match(/(\d{1,2})[.:](\d{2})[.:](\d{2})/);
-            if (monthIdx === -1 || !dayMatch || !yearMatch) return null;
-            return {
-                day: parseInt(dayMatch[1], 10),
-                month: monthIdx,
-                year: parseInt(yearMatch[1], 10),
-                jam: jamMatch ? `${jamMatch[1].padStart(2,'0')}:${jamMatch[2]}:${jamMatch[3]}` : '–'
-            };
-        }
-
-        // Bangun objek rekam (datang/pulang) dari satu baris RekapPresensi
-        function buildRecord(row, tgl) {
-            const jarakRaw = cellVal(row, 8);          // contoh: "12.34 m"
-            const jarakNum = String(jarakRaw).replace(/[^\d.]/g, '');
-            return {
-                jam: tgl.jam,
-                fotoUrl: cellVal(row, 5) || '',
-                latitude: cellVal(row, 6),
-                longitude: cellVal(row, 7),
-                jarak: jarakNum,
-                statusRadius: cellVal(row, 9) || ''
-            };
-        }
-
-        function togglePassword() {
-            const inp = document.getElementById('passwordInput');
-            const ico = document.getElementById('eyeIcon');
-            if (inp.type === 'password') {
-                inp.type = 'text';
-                ico.className = 'fas fa-eye-slash';
-            } else {
-                inp.type = 'password';
-                ico.className = 'fas fa-eye';
-            }
-        }
-
-        // ── CARI PRESENSI ────────────────────────────────────────────────────
-        async function cariPresensi() {
-            // Blok jika sedang lockout
-            if (_lockoutTimer && document.getElementById('lockoutBar').style.display === 'flex') return;
-
-            const username = document.getElementById('nipInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-
-            if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
-            if (!password) { alert('Masukkan password terlebih dahulu.'); return; }
-
-            // ── Verifikasi CAPTCHA ─────────────────────────────────────────
-            if (!verifyCaptcha()) return;
-
-            setLoading(true);
-            document.getElementById('resultArea').style.display = 'none';
-
-            try {
-                // ── Langkah 1: Validasi username & password dari sheet idakun ─────
-                // Optimasi: fetch kedua sheet secara PARALEL (Promise.all),
-                // sehingga waktu tunggu total = max(t_akun, t_rekap) bukan t_akun + t_rekap.
-                const [tableAkun, tableRekap] = await Promise.all([
-                    fetchSheetTable(SHEET_AKUN),
-                    fetchSheetTable(SHEET_REKAP)
-                ]);
-
-                const rowsAkun = tableAkun.rows || [];
-                const colCount = tableAkun.cols ? tableAkun.cols.length : 6;
-
-                // Cari akun dengan early-exit (hentikan segera setelah ditemukan)
-                let akunValid = null;
-                let colUser = -1, colPass = -1;
-                const userLower = username.toLowerCase();
-
-                outerSearch:
-                for (let ci = 0; ci < colCount; ci++) {
-                    for (let cj = 0; cj < colCount; cj++) {
-                        if (ci === cj) continue;
-                        for (const row of rowsAkun) {
-                            const u = String(cellVal(row, ci)).trim();
-                            const p = String(cellVal(row, cj)).trim();
-                            if (u.toLowerCase() === userLower && p === password) {
-                                akunValid = row;
-                                colUser = ci;
-                                colPass = cj;
-                                break outerSearch;
-                            }
-                        }
-                    }
-                }
-
-                if (!akunValid) {
-                    // Cek apakah username ada (pesan error lebih tepat)
-                    let usernameAda = false;
-                    for (let ci = 0; ci < colCount && !usernameAda; ci++) {
-                        if (rowsAkun.some(r => String(cellVal(r, ci)).trim().toLowerCase() === userLower)) {
-                            usernameAda = true;
-                        }
-                    }
-                    renderAuthError(usernameAda ? 'password' : 'username', username);
-                    // Reset captcha setelah gagal login agar tidak bisa brute-force
-                    renewCaptcha(true);
-                    setLoading(false);
-                    return;
-                }
-
-                // ── Langkah 2: Cari data presensi dari cache (sudah di-fetch paralel) ──
-                const today = tanggalHariIni();
-                const rows  = (tableRekap.rows || []);
-
-                let lastKnown = null;
-                let datang = null, pulang = null;
-                let doneSearching = false;
-
-                // Optimasi: iterasi sekali — hentikan early jika datang & pulang sudah temu
-                for (const row of rows) {
-                    const rowUsername = String(cellVal(row, 4)).trim();
-                    if (!rowUsername || rowUsername.toLowerCase() !== userLower) continue;
-
-                    lastKnown = row;  // selalu update ke baris terakhir milik user
-
-                    const tgl = parseTanggalLengkap(cellVal(row, 0));
-                    if (!tgl) continue;
-
-                    const isToday = tgl.day === today.day && tgl.month === today.month && tgl.year === today.year;
-                    if (!isToday) continue;
-
-                    const tipe = String(cellVal(row, 1)).trim().toLowerCase();
-                    if (tipe === 'datang' && !datang) datang = buildRecord(row, tgl);
-                    else if (tipe === 'pulang' && !pulang) pulang = buildRecord(row, tgl);
-
-                    // Early exit: jika keduanya sudah ditemukan tidak perlu lanjut
-                    if (datang && pulang) break;
-                }
-
-                const namaPegawai = (lastKnown ? cellVal(lastKnown, 3) : '') || username;
-                const namaLembaga = lastKnown ? cellVal(lastKnown, 2) : '–';
-
-                renderResult({ username, namaPegawai, namaLembaga, datang, pulang });
-                // Reset captcha setelah berhasil → siap pencarian berikutnya
-                _captchaFailCount = 0;
-                renewCaptcha(false);
-
-            } catch (err) {
-                renderError(err.message);
-            }
-            setLoading(false);
-        }
-
-        // ── RENDER ERROR AUTENTIKASI ─────────────────────────────────────────
-        function renderAuthError(tipe, username) {
-            let pesan = '';
-            if (tipe === 'username') {
-                pesan = `Username <strong>${esc(username)}</strong> tidak ditemukan di sistem. Periksa kembali.`;
-            } else if (tipe === 'password') {
-                pesan = `Password salah untuk username <strong>${esc(username)}</strong>. Silakan coba lagi.`;
-            } else {
-                pesan = `Username atau password salah. Silakan coba lagi.`;
-            }
-            document.getElementById('cardPegawai').innerHTML = `
-                <div style="text-align:center;padding:30px 10px;">
-                    <i class="fas fa-lock" style="font-size:3rem;color:var(--danger);display:block;margin-bottom:12px;"></i>
-                    <strong style="font-size:1rem;">Akses Ditolak</strong>
-                    <p style="color:var(--text-secondary);font-size:.9rem;margin-top:8px;">${pesan}</p>
-                </div>`;
-            document.getElementById('cardStatus').style.display = 'none';
-            document.getElementById('cardRekap').style.display  = 'none';
-            document.getElementById('resultArea').style.display = 'block';
-        }
-
-        // ── RENDER HASIL ─────────────────────────────────────────────────────
-        function renderResult(data) {
-            const wib = getWIB();
-
-            // --- Card: Identitas pegawai ---
-            const cp = document.getElementById('cardPegawai');
-            cp.innerHTML = `
-                <div class="card-label"><i class="fas fa-id-card"></i> Identitas Pegawai</div>
-                <div class="pegawai-info">
-                    <div class="pegawai-avatar"><i class="fas fa-user-tie"></i></div>
-                    <div class="pegawai-detail">
-                        <div class="pegawai-nama">${esc(data.namaPegawai)}</div>
-                        <div class="pegawai-sub">${esc(data.namaLembaga)}</div>
-                    </div>
-                    <div class="pegawai-nip">${esc(data.username)}</div>
-                </div>`;
-
-            // --- Card: Status datang & pulang ---
-            const isFri = getWIB().getDay() === 5;
-            const cs = document.getElementById('cardStatus');
-            cs.innerHTML = `
-                <div class="card-label"><i class="fas fa-clipboard-check"></i> Status Presensi – ${fmtTglShort(wib)}</div>
-                <div class="status-grid">
-                    ${buildStatusCard('datang', data.datang, '06:00 – 07:00', data.namaPegawai)}
-                    ${buildStatusCard('pulang', data.pulang, isFri ? '14:30 – 16:30' : '15:00 – 16:30', data.namaPegawai)}
-                </div>`;
-            cs.style.display = 'block';
-
-            // --- Card: Ringkasan ---
-            const d = data.datang, p = data.pulang;
-            let sc, si, st;
-            if (d && p) {
-                sc='complete'; si='fas fa-check-circle';
-                st='Presensi hari ini <strong>lengkap</strong>. Datang dan pulang sudah terekam.';
-            } else if (d || p) {
-                sc='partial'; si='fas fa-exclamation-circle';
-                st = d
-                    ? 'Presensi <strong>datang</strong> sudah terekam. Presensi <strong>pulang</strong> belum.'
-                    : 'Presensi <strong>pulang</strong> terekam, namun <strong>datang</strong> belum.';
-            } else {
-                sc='none'; si='fas fa-times-circle';
-                st='Presensi hari ini <strong>belum ada</strong>. Datang dan pulang belum terekam.';
-            }
-
-            const cr = document.getElementById('cardRekap');
-            cr.innerHTML = `
-                <div class="card-label"><i class="fas fa-chart-bar"></i> Ringkasan Hari Ini</div>
-                <div class="summary-strip ${sc}" style="margin-bottom:14px;">
-                    <i class="${si}"></i><span>${st}</span>
+<!-- MODAL FOTO -->
+<div id="fotoModal">
+    <div class="modal-inner">
+        <div class="modal-handle"></div>
+        <div class="modal-hdr">
+            <h3><i class="fas fa-camera"></i> <span id="modalTitle">Foto Presensi</span></h3>
+            <button class="btn-close" onclick="tutupFoto()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-meta">
+                <strong id="modalNama">–</strong>
+                <span id="modalWaktu">–</span>
+            </div>
+            <div class="foto-box">
+                <div class="foto-loading" id="fotoLoading">
+                    <i class="fas fa-circle-notch"></i><span>Memuat foto...</span>
                 </div>
-                <div class="rekap-row">
-                    <span class="rekap-label"><i class="fas fa-sign-in-alt" style="color:#3b82f6;"></i> Jam Datang</span>
-                    <span class="rekap-val ${d ? 'ok' : 'miss'}">${d ? esc(d.jam) : '–'}</span>
-                </div>
-                <div class="rekap-row">
-                    <span class="rekap-label"><i class="fas fa-sign-out-alt" style="color:#7c3aed;"></i> Jam Pulang</span>
-                    <span class="rekap-val ${p ? 'ok' : 'miss'}">${p ? esc(p.jam) : '–'}</span>
-                </div>
-                <div class="rekap-row">
-                    <span class="rekap-label"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Datang</span>
-                    <span class="rekap-val ${d ? (parseFloat(d.jarak) > 0 ? 'warn' : 'ok') : 'miss'}">${d ? esc(d.jarak) + ' m' : '–'}</span>
-                </div>
-                <div class="rekap-row">
-                    <span class="rekap-label"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Pulang</span>
-                    <span class="rekap-val ${p ? (parseFloat(p.jarak) > 0 ? 'warn' : 'ok') : 'miss'}">${p ? esc(p.jarak) + ' m' : '–'}</span>
-                </div>
-                <div class="rekap-row">
-                    <span class="rekap-label"><i class="fas fa-camera" style="color:#0891b2;"></i> Foto Selfie</span>
-                    <span class="rekap-val">
-                        ${d?.fotoUrl ? '<span style="color:var(--success);">✓ Datang</span>' : ''}
-                        ${d?.fotoUrl && p?.fotoUrl ? ' &amp; ' : ''}
-                        ${p?.fotoUrl ? '<span style="color:var(--success);">✓ Pulang</span>' : ''}
-                        ${!d?.fotoUrl && !p?.fotoUrl ? '<span style="color:var(--gray);">–</span>' : ''}
-                    </span>
-                </div>
-                <p class="bottom-note" style="margin-top:12px;">
-                    <i class="fas fa-sync-alt"></i> Dicek pada: ${fmtJam(wib)}
-                </p>`;
-            cr.style.display = 'block';
+                <img id="fotoImg" src="" alt="Foto Presensi"
+                     style="display:none;" onload="fotoLoaded()" onerror="fotoError()">
+            </div>
+            <div class="foto-info">
+                <span><i class="fas fa-map-marker-alt"></i><span id="modalLokasi">–</span></span>
+                <span><i class="fas fa-ruler-combined"></i><span id="modalJarak">–</span></span>
+            </div>
+        </div>
+        <div class="modal-ftr">
+            <button class="btn-tutup" onclick="tutupFoto()"><i class="fas fa-times"></i> Tutup</button>
+        </div>
+    </div>
+</div>
 
-            document.getElementById('resultArea').style.display = 'block';
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxPMGnLI9FFZ-mYZaZyWzLE0jcjb8GYvp72SnI9MGoqzRQG4tuzeLhpSMsCTIWFx40ptQ/exec';
+
+const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+               'Juli','Agustus','September','Oktober','November','Desember'];
+
+// ── CAPTCHA ───────────────────────────────────────────────────
+let _captchaAnswer = 0;
+let _captchaVerified = false;
+
+const OPS = [
+    (a,b) => ({ soal:`${a} + ${b}`, ans: a+b }),
+    (a,b) => ({ soal:`${a+b} - ${b}`, ans: a }),   // selalu positif
+    (a,b) => ({ soal:`${a} × ${b}`, ans: a*b }),
+];
+
+function refreshCaptcha() {
+    _captchaVerified = false;
+    const btn = document.getElementById('btnCari');
+    btn.disabled = true;
+
+    // Animasi spin pada ikon refresh
+    const rb = document.getElementById('captchaRefreshBtn');
+    rb.classList.add('spin');
+    setTimeout(() => rb.classList.remove('spin'), 400);
+
+    const a   = Math.floor(Math.random() * 9) + 1;
+    const b   = Math.floor(Math.random() * 9) + 1;
+    const op  = OPS[Math.floor(Math.random() * OPS.length)];
+    const res = op(a, b);
+
+    _captchaAnswer = res.ans;
+    document.getElementById('captchaSoalTeks').textContent = res.soal;
+
+    const inp = document.getElementById('captchaInput');
+    inp.value = '';
+    inp.className = 'captcha-input';
+
+    const wrap = document.getElementById('captchaWrap');
+    wrap.className = 'captcha-wrap';
+
+    const hint = document.getElementById('captchaHint');
+    hint.textContent = 'Ketik jawaban dari soal di atas';
+    hint.className = 'captcha-hint';
+}
+
+function cekCaptcha() {
+    const inp  = document.getElementById('captchaInput');
+    const hint = document.getElementById('captchaHint');
+    const wrap = document.getElementById('captchaWrap');
+    const btn  = document.getElementById('btnCari');
+    const val  = parseInt(inp.value, 10);
+
+    if (inp.value === '' || isNaN(val)) {
+        inp.className = 'captcha-input';
+        hint.textContent = 'Ketik jawaban dari soal di atas';
+        hint.className = 'captcha-hint';
+        _captchaVerified = false;
+        btn.disabled = true;
+        wrap.className = 'captcha-wrap';
+        return;
+    }
+
+    if (val === _captchaAnswer) {
+        inp.className = 'captcha-input ok';
+        hint.textContent = '✓ Verifikasi berhasil!';
+        hint.className = 'captcha-hint ok-msg';
+        wrap.className = 'captcha-wrap verified';
+        _captchaVerified = true;
+        btn.disabled = false;
+    } else {
+        inp.className = 'captcha-input err';
+        hint.textContent = '✗ Jawaban salah, coba lagi.';
+        hint.className = 'captcha-hint err-msg';
+        wrap.className = 'captcha-wrap';
+        _captchaVerified = false;
+        btn.disabled = true;
+    }
+}
+
+// Inisialisasi captcha saat halaman dimuat
+refreshCaptcha();
+
+// ── WAKTU ─────────────────────────────────────────────────────
+function getWIB() {
+    const n = new Date();
+    return new Date(n.getTime() + n.getTimezoneOffset()*60000 + 25200000);
+}
+function pad(v) { return String(v).padStart(2,'0'); }
+function fmtJam(d)      { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} WIB`; }
+function fmtTgl(d)      { return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`; }
+function fmtTglShort(d) { return `${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`; }
+
+function updateClock() {
+    const w = getWIB();
+    document.getElementById('hdrTgl').textContent     = `${w.getDate()} ${BULAN[w.getMonth()]}`;
+    document.getElementById('hdrJam').textContent     = fmtJam(w);
+    document.getElementById('tickerHari').textContent = fmtTgl(w);
+    document.getElementById('tickerWib').textContent  = fmtJam(w);
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── KEYBOARD ──────────────────────────────────────────────────
+document.getElementById('usernameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+});
+document.getElementById('passwordInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('captchaInput').focus();
+});
+document.getElementById('captchaInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') cariPresensi();
+});
+
+// ── PASSWORD TOGGLE ───────────────────────────────────────────
+function togglePw() {
+    const inp = document.getElementById('passwordInput');
+    const ico = document.getElementById('eyeIcon');
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    ico.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
+// ── LOADING ───────────────────────────────────────────────────
+function setLoading(on) {
+    const b = document.getElementById('btnCari');
+    b.classList.toggle('loading', on);
+    b.innerHTML = on
+        ? '<i class="fas fa-circle-notch fa-spin"></i> Mencari...'
+        : '<i class="fas fa-search"></i> Cek Presensi';
+    if (!on) b.disabled = !_captchaVerified;
+}
+
+// ── JSONP HELPER ──────────────────────────────────────────────
+let _seq = 0;
+function jsonp(params) {
+    return new Promise((resolve, reject) => {
+        const cb  = '_cb' + (_seq++);
+        const tid = setTimeout(() => { cleanup(); reject(new Error('Koneksi timeout (15 detik). Coba lagi.')); }, 15000);
+
+        function cleanup() {
+            clearTimeout(tid);
+            delete window[cb];
+            if (sc && sc.parentNode) sc.parentNode.removeChild(sc);
         }
 
-        function buildStatusCard(tipe, rec, jamSlot, nama) {
-            const isDatang = tipe === 'datang';
-            const label = isDatang ? 'Datang' : 'Pulang';
-            const icon  = isDatang ? 'fas fa-sign-in-alt' : 'fas fa-sign-out-alt';
+        window[cb] = data => { cleanup(); resolve(data); };
 
-            if (rec) {
-                const lokasiStr = (rec.latitude && rec.longitude)
-                    ? `${String(rec.latitude).substring(0,9)}, ${String(rec.longitude).substring(0,10)}`
-                    : '–';
-                const fotoBtn = rec.fotoUrl
-                    ? `<button class="btn-lihat-foto ${isDatang ? '' : 'pulang-btn'}"
-                              onclick="lihatFoto('${esc(tipe)}','${esc(rec.fotoUrl)}','${esc(nama)}','${esc(rec.jam)}','${esc(lokasiStr)}','${esc(rec.jarak)}')">
-                           <i class="fas fa-image"></i> Lihat Foto
-                       </button>`
-                    : `<div style="margin-top:10px;font-size:0.72rem;color:var(--gray);"><i class="fas fa-image"></i> Foto tidak tersedia</div>`;
+        const qs = Object.entries({ ...params, callback: cb })
+            .map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+            .join('&');
 
-                const radiusClass = rec.statusRadius === 'DI DALAM RADIUS' ? 'dalam' : 'luar';
-                const radiusLabel = rec.statusRadius === 'DI DALAM RADIUS' ? '✓ Dalam Radius' : '⚠ Luar Radius';
+        const sc = document.createElement('script');
+        sc.src = BACKEND_URL + '?' + qs;
+        sc.onerror = () => { cleanup(); reject(new Error('Gagal menghubungi server. Periksa koneksi internet.')); };
+        document.body.appendChild(sc);
+    });
+}
 
-                return `
-                    <div class="status-card ${tipe} has-record">
-                        <div class="status-card-header"><i class="${icon}"></i> ${label}</div>
-                        <div class="status-card-body">
-                            <div class="status-badge recorded"><i class="fas fa-check-circle"></i> Terekam</div>
-                            <div class="record-time">
-                                <i class="fas fa-clock" style="font-size:.75rem;color:var(--success);margin-right:3px;"></i>
-                                <span>${esc(rec.jam)}</span>
-                            </div>
-                            <div class="record-location">
-                                <i class="fas fa-map-marker-alt" style="color:var(--primary);flex-shrink:0;"></i>
-                                ${esc(lokasiStr)}
-                            </div>
-                            <div><span class="status-radius ${radiusClass}">${radiusLabel}</span></div>
-                            ${fotoBtn}
-                        </div>
-                    </div>`;
-            } else {
-                return `
-                    <div class="status-card ${tipe} no-record">
-                        <div class="status-card-header"><i class="${icon}"></i> ${label}</div>
-                        <div class="status-card-body">
-                            <div class="status-badge not-recorded"><i class="fas fa-minus-circle"></i> Belum</div>
-                            <div style="margin-top:8px;font-size:.75rem;color:var(--text-secondary);line-height:1.4;">
-                                <i class="fas fa-clock" style="margin-right:3px;"></i>${jamSlot}
-                            </div>
-                        </div>
-                    </div>`;
-            }
+// ── CARI PRESENSI ─────────────────────────────────────────────
+async function cariPresensi() {
+    if (!_captchaVerified) {
+        document.getElementById('captchaInput').classList.add('err');
+        document.getElementById('captchaHint').textContent = '✗ Selesaikan verifikasi terlebih dahulu.';
+        document.getElementById('captchaHint').className = 'captcha-hint err-msg';
+        document.getElementById('captchaInput').focus();
+        return;
+    }
+
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value.trim();
+
+    if (!username) { alert('Masukkan username terlebih dahulu.'); return; }
+    if (!password) { alert('Masukkan password terlebih dahulu.');  return; }
+
+    setLoading(true);
+    document.getElementById('resultArea').style.display = 'none';
+
+    try {
+        const data = await jsonp({ action: 'cekPresensi', username, password });
+
+        if (!data.success) {
+            renderError(data.message || 'Terjadi kesalahan.', data.code);
+        } else {
+            renderResult(data);
         }
+    } catch (err) {
+        renderNetworkError(err.message);
+    }
 
-        function renderNotFound(username) {
-            document.getElementById('cardPegawai').innerHTML = `
-                <div style="text-align:center;padding:30px 10px;">
-                    <i class="fas fa-calendar-times" style="font-size:3rem;color:var(--gray);display:block;margin-bottom:12px;"></i>
-                    <strong style="font-size:1rem;">Belum Ada Data Presensi</strong>
-                    <p style="color:var(--text-secondary);font-size:.9rem;margin-top:6px;">
-                        Akun <strong>${esc(username)}</strong> terautentikasi, namun belum ada riwayat presensi sama sekali.
-                    </p>
-                </div>`;
-            document.getElementById('cardStatus').style.display = 'none';
-            document.getElementById('cardRekap').style.display  = 'none';
-            document.getElementById('resultArea').style.display = 'block';
-        }
+    setLoading(false);
 
-        function renderError(msg) {
-            document.getElementById('cardPegawai').innerHTML = `
-                <div class="alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>Gagal mengambil data: <strong>${esc(msg)}</strong>. Coba beberapa saat lagi.</span>
-                </div>`;
-            document.getElementById('cardStatus').style.display = 'none';
-            document.getElementById('cardRekap').style.display  = 'none';
-            document.getElementById('resultArea').style.display = 'block';
-        }
+    // Reset captcha setelah submit agar tidak bisa spam
+    refreshCaptcha();
+}
 
-        // ── MODAL FOTO ───────────────────────────────────────────────────────
-        function lihatFoto(tipe, fotoUrl, nama, jam, lokasi, jarak) {
-            document.getElementById('modalTitle').textContent = tipe === 'datang' ? 'Foto Presensi Datang' : 'Foto Presensi Pulang';
-            document.getElementById('modalNama').textContent  = nama;
-            document.getElementById('modalWaktu').textContent = jam;
-            document.getElementById('modalLokasi').textContent = lokasi;
-            document.getElementById('modalJarak').textContent  = jarak ? jarak + ' m dari lembaga' : '–';
+// ── RENDER: ERROR JARINGAN ────────────────────────────────────
+function renderNetworkError(msg) {
+    document.getElementById('cardPegawai').innerHTML = `
+        <div class="alert err">
+            <i class="fas fa-wifi"></i>
+            <div><strong>Gagal Terhubung</strong><br>${esc(msg)}</div>
+        </div>`;
+    document.getElementById('cardStatus').style.display = 'none';
+    document.getElementById('cardRekap').style.display  = 'none';
+    document.getElementById('resultArea').style.display = 'block';
+}
 
-            const img = document.getElementById('fotoImg');
-            document.getElementById('fotoLoading').style.display = 'flex';
-            img.style.display = 'none';
+// ── RENDER: ERROR SERVER ──────────────────────────────────────
+function renderError(msg, code) {
+    const isAuth    = code === 'AUTH_FAILED';
+    const isBlocked = code === 'BLOCKED';
+    const icon = isAuth ? 'fa-lock' : isBlocked ? 'fa-ban' : 'fa-exclamation-circle';
+    const cls  = isBlocked ? 'warn' : 'err';
+    document.getElementById('cardPegawai').innerHTML = `
+        <div class="alert ${cls}">
+            <i class="fas ${icon}"></i>
+            <div><strong>${isAuth?'Akses Ditolak':isBlocked?'Akun Diblokir':'Kesalahan'}</strong><br>${msg}</div>
+        </div>`;
+    document.getElementById('cardStatus').style.display = 'none';
+    document.getElementById('cardRekap').style.display  = 'none';
+    document.getElementById('resultArea').style.display = 'block';
+}
 
-            // Konversi Google Drive URL ke thumbnail langsung
-            img.src = driveThumbnailUrl(fotoUrl);
+// ── RENDER: HASIL ─────────────────────────────────────────────
+function renderResult(data) {
+    const wib  = getWIB();
+    const peg  = data.pegawai;
+    const d    = data.datang;
+    const p    = data.pulang;
+    const ijin = data.ijin;
 
-            document.getElementById('fotoModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
+    const izinBadge = ijin
+        ? `<div class="izin-badge"><i class="fas fa-file-alt"></i><span>${esc(ijin.jenis)}${ijin.ket ? ' – ' + esc(ijin.ket) : ''}</span></div>`
+        : '';
 
-        // Google Drive: ubah ke format thumbnail/preview yang bisa ditampilkan di <img>
-        function driveThumbnailUrl(url) {
-            if (!url) return '';
-            // Format: https://drive.google.com/file/d/FILE_ID/view
-            const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
-            // Format: https://drive.google.com/open?id=FILE_ID
-            const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w600`;
-            return url;
-        }
+    document.getElementById('cardPegawai').innerHTML = `
+        <div class="card-eye"><i class="fas fa-id-card"></i> Identitas Pegawai</div>
+        <div class="peg-row">
+            <div class="avatar"><i class="fas fa-user-tie"></i></div>
+            <div class="peg-detail">
+                <div class="peg-nama">${esc(peg.nama)}</div>
+                <div class="peg-lembaga">${esc(peg.lembaga)}</div>
+            </div>
+            <div class="peg-nip">${esc(peg.nip)}</div>
+        </div>${izinBadge}`;
 
-        function fotoLoaded() {
-            document.getElementById('fotoImg').style.display = 'block';
-            document.getElementById('fotoLoading').style.display = 'none';
-        }
-        function fotoError() {
-            document.getElementById('fotoLoading').innerHTML =
-                '<i class="fas fa-image" style="color:#94a3b8;"></i><span style="color:#94a3b8;font-size:.8rem;">Foto tidak dapat dimuat</span>';
-        }
-        function tutupFoto() {
-            document.getElementById('fotoModal').classList.remove('show');
-            document.body.style.overflow = '';
-            setTimeout(() => { document.getElementById('fotoImg').src = ''; }, 300);
-        }
-        document.getElementById('fotoModal').addEventListener('click', function(e) {
-            if (e.target === this) tutupFoto();
-        });
+    const isFri = wib.getDay() === 5;
+    const cs = document.getElementById('cardStatus');
+    cs.innerHTML = `
+        <div class="card-eye"><i class="fas fa-clipboard-check"></i> Status Presensi – ${fmtTglShort(wib)}</div>
+        <div class="status-grid">
+            ${buildScard('datang', d, '06:00 – 07:00', peg.nama)}
+            ${buildScard('pulang', p, isFri ? '14:30 – 16:30' : '15:00 – 16:30', peg.nama)}
+        </div>`;
+    cs.style.display = 'block';
 
-        function esc(s) {
-            return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-        }
+    let sc, si, st;
+    if (d && p)      { sc='complete'; si='fas fa-check-circle';       st='Presensi hari ini <strong>lengkap</strong>. Datang dan pulang sudah terekam.'; }
+    else if (d || p) { sc='partial';  si='fas fa-exclamation-circle'; st = d ? 'Presensi <strong>datang</strong> terekam. Presensi <strong>pulang</strong> belum.' : 'Presensi <strong>pulang</strong> terekam, namun <strong>datang</strong> belum.'; }
+    else             { sc='none';     si='fas fa-times-circle';       st='Presensi hari ini <strong>belum ada</strong>. Datang dan pulang belum terekam.'; }
 
-        // ── INIT ─────────────────────────────────────────────────────────────
-        renewCaptcha(false);
-        // Gambar ulang noise saat window resize (agar canvas sesuai ukuran)
-        window.addEventListener('resize', () => drawNoise());
-    </script>
+    const cr = document.getElementById('cardRekap');
+    cr.innerHTML = `
+        <div class="card-eye"><i class="fas fa-chart-bar"></i> Ringkasan Hari Ini</div>
+        <div class="summary ${sc}"><i class="${si}"></i><span>${st}</span></div>
+        <div class="rekap-row">
+            <span class="rlbl"><i class="fas fa-sign-in-alt" style="color:#3b82f6;"></i> Jam Datang</span>
+            <span class="rval ${d?'ok':'miss'}">${d ? esc(d.waktu) : '–'}</span>
+        </div>
+        <div class="rekap-row">
+            <span class="rlbl"><i class="fas fa-sign-out-alt" style="color:var(--purple);"></i> Jam Pulang</span>
+            <span class="rval ${p?'ok':'miss'}">${p ? esc(p.waktu) : '–'}</span>
+        </div>
+        <div class="rekap-row">
+            <span class="rlbl"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Datang</span>
+            <span class="rval ${d?(d.jarak>0?'warn':'ok'):'miss'}">${d && d.jarak!=null ? d.jarak+' m' : '–'}</span>
+        </div>
+        <div class="rekap-row">
+            <span class="rlbl"><i class="fas fa-ruler-combined" style="color:#0891b2;"></i> Jarak Pulang</span>
+            <span class="rval ${p?(p.jarak>0?'warn':'ok'):'miss'}">${p && p.jarak!=null ? p.jarak+' m' : '–'}</span>
+        </div>
+        <div class="rekap-row" style="border:none;">
+            <span class="rlbl"><i class="fas fa-camera" style="color:#0891b2;"></i> Foto Selfie</span>
+            <span class="rval">
+                ${d?.bukti ? '<span style="color:var(--green);">✓ Datang</span>' : ''}
+                ${d?.bukti && p?.bukti ? ' &amp; ' : ''}
+                ${p?.bukti ? '<span style="color:var(--green);">✓ Pulang</span>' : ''}
+                ${!d?.bukti && !p?.bukti ? '<span style="color:var(--g400);">–</span>' : ''}
+            </span>
+        </div>
+        <p class="bottom-note"><i class="fas fa-sync-alt"></i> Dicek pada: ${fmtJam(wib)}</p>`;
+    cr.style.display = 'block';
+    document.getElementById('resultArea').style.display = 'block';
+
+    // Scroll ke hasil
+    document.getElementById('resultArea').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── BUILD STATUS CARD ─────────────────────────────────────────
+function buildScard(tipe, rec, jamSlot, nama) {
+    const isD    = tipe === 'datang';
+    const label  = isD ? 'Datang' : 'Pulang';
+    const icon   = isD ? 'fas fa-sign-in-alt' : 'fas fa-sign-out-alt';
+    const btnCls = isD ? 'dt' : 'pl';
+
+    if (rec) {
+        const lokasiStr = (rec.lat && rec.lon)
+            ? `${String(rec.lat).substring(0,9)}, ${String(rec.lon).substring(0,10)}`
+            : '–';
+        const inRadius = rec.ketRadius === 'DI DALAM RADIUS';
+        const fotoBtn  = rec.bukti
+            ? `<button class="btn-foto ${btnCls}"
+                       onclick="lihatFoto('${esc(tipe)}','${esc(rec.bukti)}','${esc(nama)}','${esc(rec.waktu)}','${esc(lokasiStr)}','${rec.jarak??''}')">
+                   <i class="fas fa-image"></i> Lihat Foto
+               </button>`
+            : `<div style="margin-top:7px;font-size:.67rem;color:var(--g400);"><i class="fas fa-image"></i> Foto tidak tersedia</div>`;
+
+        return `
+        <div class="scard ${tipe} recorded">
+            <div class="scard-head"><i class="${icon}"></i> ${label}</div>
+            <div class="scard-body">
+                <span class="badge ok"><i class="fas fa-check-circle"></i> Terekam</span>
+                <div class="scard-time"><i class="fas fa-clock"></i> ${esc(rec.waktu)}</div>
+                <div class="scard-loc"><i class="fas fa-map-marker-alt" style="color:var(--blue);"></i>${esc(lokasiStr)}</div>
+                <span class="rtag ${inRadius?'dalam':'luar'}">${inRadius?'✓ Dalam Radius':'⚠ Luar Radius'}</span>
+                ${fotoBtn}
+            </div>
+        </div>`;
+    }
+
+    return `
+    <div class="scard ${tipe}">
+        <div class="scard-head"><i class="${icon}"></i> ${label}</div>
+        <div class="scard-body">
+            <span class="badge miss"><i class="fas fa-minus-circle"></i> Belum</span>
+            <div class="scard-slot"><i class="fas fa-clock"></i> ${jamSlot}</div>
+        </div>
+    </div>`;
+}
+
+// ── MODAL FOTO ────────────────────────────────────────────────
+function lihatFoto(tipe, buktiUrl, nama, waktu, lokasi, jarak) {
+    document.getElementById('modalTitle').textContent  = tipe === 'datang' ? 'Foto Presensi Datang' : 'Foto Presensi Pulang';
+    document.getElementById('modalNama').textContent   = nama;
+    document.getElementById('modalWaktu').textContent  = waktu;
+    document.getElementById('modalLokasi').textContent = lokasi;
+    document.getElementById('modalJarak').textContent  = jarak ? jarak + ' m dari lembaga' : '–';
+
+    const img = document.getElementById('fotoImg');
+    document.getElementById('fotoLoading').style.display = 'flex';
+    img.style.display = 'none';
+    img.src = driveThumb(buktiUrl);
+
+    document.getElementById('fotoModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function driveThumb(url) {
+    if (!url) return '';
+    const m  = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (m)  return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
+    const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w600`;
+    return url;
+}
+
+function fotoLoaded() {
+    document.getElementById('fotoImg').style.display = 'block';
+    document.getElementById('fotoLoading').style.display = 'none';
+}
+function fotoError() {
+    document.getElementById('fotoLoading').innerHTML = '<i class="fas fa-image" style="color:#94a3b8;font-size:1.8rem;"></i><span style="color:#94a3b8;font-size:.75rem;">Foto tidak dapat dimuat</span>';
+}
+function tutupFoto() {
+    document.getElementById('fotoModal').classList.remove('show');
+    document.body.style.overflow = '';
+    setTimeout(() => { document.getElementById('fotoImg').src = ''; }, 300);
+}
+document.getElementById('fotoModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('fotoModal')) tutupFoto();
+});
+
+function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
 </body>
 </html>
