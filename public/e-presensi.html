@@ -494,9 +494,8 @@ const MonitoringPresensi = ({ data, refreshData, userRole, userLembaga }) => {
 
   useEffect(()=>{ if(!canEdit&&userLembaga) setFlLem(userLembaga); },[canEdit,userLembaga]);
   const filtered = useMemo(()=>data.filter(i=>(i['Nama Lembaga']||'').toLowerCase().includes(flLem.toLowerCase())&&(i['Nama Pegawai']||'').toLowerCase().includes(flNama.toLowerCase())),[data,flLem,flNama]);
-  useEffect(()=>setPage(1),[flLem,flNama]);
+  useEffect(()=>{ setPage(1); setRpp(10); },[flLem,flNama]);
   const total = filtered.length;
-  useEffect(()=>{ if(rpp>total&&total>0) setRpp(total); else if(total===0) setRpp(10); },[total,rpp]);
   const eff = rpp===total?total:rpp;
   const paged = filtered.slice((page-1)*eff, page*eff);
 
@@ -663,9 +662,8 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
 
   useEffect(()=>{ if(!canEditLem&&userLembaga) setFlLem(userLembaga); },[canEditLem,userLembaga]);
   const filtered = useMemo(()=>data.filter(i=>(i['Nama Lembaga']||'').toLowerCase().includes(flLem.toLowerCase())&&(i['Nama Pegawai']||'').toLowerCase().includes(flNama.toLowerCase())),[data,flLem,flNama]);
-  useEffect(()=>setPage(1),[flLem,flNama]);
+  useEffect(()=>{ setPage(1); setRpp(10); },[flLem,flNama]);
   const total = filtered.length;
-  useEffect(()=>{ if(rpp>total&&total>0) setRpp(total); else if(total===0) setRpp(10); },[total,rpp]);
   const eff   = rpp===total?total:rpp;
   const paged = filtered.slice((page-1)*eff, page*eff);
 
@@ -860,9 +858,8 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
     (i['Name Lembaga']||'').toLowerCase().includes(flLem.toLowerCase())&&
     (i['Name Pegawai']||'').toLowerCase().includes(flNama.toLowerCase())
   ),[data,flLem,flNama]);
-  useEffect(()=>setPage(1),[flLem,flNama]);
+  useEffect(()=>{ setPage(1); setRpp(10); },[flLem,flNama]);
   const total=filtered.length;
-  useEffect(()=>{ if(rpp>total&&total>0) setRpp(total); else if(total===0) setRpp(10); },[total,rpp]);
   const eff  = rpp===total?total:rpp;
   const paged= filtered.slice((page-1)*eff,page*eff);
 
@@ -1678,7 +1675,7 @@ const ActivityLog = ({ userRole }) => {
   const canView = userRole==='Admin';
   const fetchLogs = async()=>{ if(!canView) return; setLoad(true); const r=await runGoogleScript('getActivityLogs'); setLogs(r||[]); setLoad(false); };
   useEffect(()=>{ if(canView) fetchLogs(); },[canView]);
-  useEffect(()=>setPage(1),[flUser,flAct,dS,dE]);
+  useEffect(()=>{ setPage(1); setRpp(10); },[flUser,flAct,dS,dE]);
   const filtered = useMemo(()=>{
     let r=logs;
     if(flUser) r=r.filter(l=>(l.Username||'').toLowerCase().includes(flUser.toLowerCase()));
