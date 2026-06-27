@@ -156,7 +156,7 @@
     <div class="login-logo">
       <div class="icon">🏫</div>
       <h2>Sistem Absensi</h2>
-      <p>MANUAL</p>
+      <p id="login-school-name">Memuat...</p>
     </div>
     <div class="form-group" style="margin-bottom:12px">
       <label>Username</label>
@@ -167,6 +167,7 @@
       <input type="password" id="login-password" placeholder="Masukkan password"/>
     </div>
     <button class="login-btn" onclick="doLogin()">🔐 Masuk</button>
+    <button class="login-btn" onclick="doInitDB()" style="background:#27ae60;margin-top:8px;font-size:0.85rem;">🚀 Inisialisasi Database (pertama kali)</button>
     <div class="login-err" id="login-err">Username atau password salah</div>
   </div>
 </div>
@@ -203,44 +204,30 @@
       <span class="icon">⚙️</span> Pengaturan
     </div>
     <div class="menu-sep" style="margin-top:20px">API</div>
-    <div class="menu-item" onclick="showPage('config')" id="menu-config">
+    <div class="menu-item" onclick="showPage('config')" id="menu-config" style="display:none;">
       <span class="icon">🔗</span> Konfigurasi
     </div>
   </aside>
 
   <main>
-    <!-- CONFIG PAGE -->
-    <div class="page active" id="page-config">
+    <!-- CONFIG PAGE (hidden, URL sudah hardcoded) -->
+    <div class="page" id="page-config">
       <div class="page-title">🔗 Konfigurasi API</div>
       <div class="card">
-        <div class="api-notice">
-          ⚠️ <strong>Langkah pertama:</strong> Masukkan URL Google Apps Script Web App Anda. Deploy Code.gs sebagai Web App di Google Apps Script, kemudian salin URL-nya ke sini.
+        <div class="api-notice" style="background:#d5f5e3;border-color:#27ae60;color:#1a6b3c;">
+          ✅ URL API sudah terpasang otomatis. Halaman ini hanya untuk keperluan teknis.
         </div>
         <div class="form-group">
-          <label>URL Google Apps Script Web App</label>
+          <label>URL Google Apps Script (aktif)</label>
           <div class="api-config-box">
-            <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/AKfycby3ZttICryDatPs_vqyHWkhXBaMpbSDTmw9xLb4JwlQ8RQp7NaOy0YyArDhch7B-hiQ/exec" />
+            <input type="text" id="api-url-input" readonly style="color:#888;font-size:0.78rem;" />
           </div>
         </div>
         <div class="flex-row">
-          <button class="btn btn-primary" onclick="saveApiUrl()">💾 Simpan URL</button>
-          <button class="btn btn-outline" onclick="testApi()">🔍 Test Koneksi</button>
           <button class="btn btn-success" onclick="initApi()">🚀 Inisialisasi Database</button>
+          <button class="btn btn-outline" onclick="testApi()">🔍 Test Koneksi</button>
         </div>
         <div id="api-test-result" style="margin-top:14px; font-size:0.88rem;"></div>
-      </div>
-      <div class="card">
-        <div class="section-title">📖 Cara Deploy Google Apps Script</div>
-        <ol style="line-height:2; padding-left:20px; color:var(--text2); font-size:0.9rem;">
-          <li>Buka <a href="https://script.google.com" target="_blank" style="color:var(--primary)">script.google.com</a> dan buat project baru</li>
-          <li>Salin isi file <strong>Code.gs</strong> ke editor</li>
-          <li>Klik <strong>Deploy → New deployment → Web App</strong></li>
-          <li>Set <strong>Execute as: Me</strong> dan <strong>Who has access: Anyone</strong></li>
-          <li>Klik Deploy, salin URL yang muncul</li>
-          <li>Tempel URL di atas dan klik Simpan</li>
-          <li>Klik <strong>Inisialisasi Database</strong> untuk setup awal</li>
-          <li>Login dengan username: <strong>admin</strong>, password: <strong>admin123</strong></li>
-        </ol>
       </div>
     </div>
 
@@ -405,7 +392,8 @@
 // ============================================================
 // STATE & CONFIG
 // ============================================================
-let API_URL = localStorage.getItem('absensi_api_url') || '';
+const API_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycby3ZttICryDatPs_vqyHWkhXBaMpbSDTmw9xLb4JwlQ8RQp7NaOy0YyArDhch7B-hiQ/exec';
+let API_URL = localStorage.getItem('absensi_api_url') || API_URL_DEFAULT;
 let currentUser = null;
 let laporanData = null;
 let settings = {};
@@ -454,6 +442,7 @@ async function doLogin() {
 
 function showLoginErr(msg) {
   const el = document.getElementById('login-err');
+  el.style.color = 'var(--red)';
   el.textContent = msg; el.style.display = 'block';
 }
 
@@ -677,7 +666,7 @@ async function exportPDF() {
   const bulan = parseInt(document.getElementById('lap-bulan').value);
   const tahun = parseInt(document.getElementById('lap-tahun').value);
   const st = laporanData.settings || {};
-  const namaSekolah = st.nama_sekolah || 'MANUAL';
+  const namaSekolah = st.nama_sekolah || 'SD Negeri Girikerto 2';
   const kepsek = st.kepala_sekolah || 'BUDI UTAMI, S.Pd';
   const nipKepsek = st.nip_kepsek || '19750525 200801 2 010';
   const kota = st.kota || 'Sine';
@@ -1045,9 +1034,48 @@ document.getElementById('login-password').addEventListener('keydown', e => {
   if(e.key==='Enter') doLogin();
 });
 
-// Init: check if API URL exists
+// Inisialisasi Database dari halaman login
+async function doInitDB() {
+  const el = document.getElementById('login-err');
+  el.style.display = 'block';
+  el.style.color = 'var(--primary)';
+  el.textContent = '⏳ Menginisialisasi database...';
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'init'})
+    });
+    const json = await res.json();
+    el.style.color = '#27ae60';
+    el.textContent = '✅ Database siap! Login dengan admin / admin123';
+  } catch(e) {
+    el.style.color = 'var(--red)';
+    el.textContent = '❌ Gagal: ' + e.message;
+  }
+}
+
+// Load nama sekolah ke halaman login
+async function loadSchoolNameForLogin() {
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'getSettings'})
+    });
+    const json = await res.json();
+    if (json.status==='ok' && json.settings && json.settings.nama_sekolah) {
+      document.getElementById('login-school-name').textContent = json.settings.nama_sekolah;
+    } else {
+      document.getElementById('login-school-name').textContent = 'SD Negeri Girikerto 2';
+    }
+  } catch(e) {
+    document.getElementById('login-school-name').textContent = 'SD Negeri Girikerto 2';
+  }
+}
+
+// Init on load
 window.addEventListener('load', () => {
   document.getElementById('api-url-input').value = API_URL;
+  loadSchoolNameForLogin();
 });
 </script>
 </body>
