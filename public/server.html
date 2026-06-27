@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YoriAPP — Server Panel</title>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/yorian99/yor-iapp/83963469a2d61d52405349d6039f1648edd93c6d/favicon.png">
 <style>
   /* ── Tokens ─────────────────────────────────────────── */
   :root {
@@ -609,7 +610,7 @@
   <div id="loginScreen">
     <div class="login-box">
       <div class="brand">
-        <div class="brand-icon">Y/</div>
+        <img src="https://raw.githubusercontent.com/yorian99/yor-iapp/83963469a2d61d52405349d6039f1648edd93c6d/favicon.png" class="brand-icon" style="border-radius:10px;width:40px;height:40px;object-fit:cover;background:var(--blue);" onerror="this.outerHTML='<div class=&quot;brand-icon&quot;>Y/</div>'">
         <div class="brand-text">
           <h1>YoriAPP</h1>
           <p>Server Management Panel</p>
@@ -813,6 +814,8 @@ window.addEventListener('keydown', e => {
 });
 
 // ─── API Helper ─────────────────────────────────────────────
+// GAS hanya bisa diakses via GET dengan JSONP atau iframe trick
+// Solusi: pakai fetch dengan redirect:follow — GAS auto CORS saat deploy "Anyone"
 async function api(action, params = {}) {
   const flat = {};
   for (const k in params) {
@@ -824,12 +827,38 @@ async function api(action, params = {}) {
     token: session?.token || '',
     ...flat,
   });
+  const url = API + '?' + qs;
   try {
-    const r    = await fetch(API + '?' + qs, { redirect: 'follow' });
+    // Coba fetch biasa dulu (works jika deploy benar)
+    const r = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow',
+    });
     const text = await r.text();
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text);
+    } catch(_) {
+      return { ok: false, msg: 'Response bukan JSON. Cek GAS deployment.' };
+    }
   } catch (e) {
-    return { ok: false, msg: 'Koneksi gagal: ' + e.message };
+    // Fallback: coba via JSONP
+    return new Promise((resolve) => {
+      const cbName = '_gasCallback_' + Date.now();
+      const script = document.createElement('script');
+      const timer  = setTimeout(() => {
+        delete window[cbName];
+        document.head.removeChild(script);
+        resolve({ ok: false, msg: 'Timeout. Pastikan GAS deploy dengan akses "Anyone".' });
+      }, 10000);
+      window[cbName] = (data) => {
+        clearTimeout(timer);
+        delete window[cbName];
+        document.head.removeChild(script);
+        resolve(data);
+      };
+      script.src = url + '&callback=' + cbName;
+      document.head.appendChild(script);
+    });
   }
 }
 
