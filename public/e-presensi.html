@@ -1784,8 +1784,31 @@ const App = () => {
   const [tab,setTab]=useState('dashboard');
   const [presensi,setPresensi]=useState([]), [ijin,setIjin]=useState([]), [pegawai,setPegawai]=useState([]);
   const [load,setLoad]=useState(false), [sideOpen,setSideOpen]=useState(false);
+  const [fetchDuration,setFetchDuration]=useState(null);  // ms
+  const [lastSync,setLastSync]=useState(null);             // Date
 
-  const fetchData = async()=>{ setLoad(true); try{ const [rP,rI,rPg]=await Promise.all([runGoogleScript('getPresensi'),runGoogleScript('getIjin'),runGoogleScript('getPegawai')]); setPresensi(rP||[]); setIjin(rI||[]); setPegawai(rPg||[]); }catch(e){console.error(e);} setLoad(false); };
+  const fmtDuration = ms => {
+    if(ms===null) return null;
+    if(ms<1000) return `${ms}ms`;
+    const s=(ms/1000).toFixed(1);
+    if(ms<60000) return `${s}dtk`;
+    const m=Math.floor(ms/60000), sisa=((ms%60000)/1000).toFixed(0);
+    return `${m}mnt ${sisa}dtk`;
+  };
+  const fmtTime = d => d?d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):null;
+
+  const fetchData = async()=>{
+    setLoad(true);
+    const t0=Date.now();
+    try{
+      const [rP,rI,rPg]=await Promise.all([runGoogleScript('getPresensi'),runGoogleScript('getIjin'),runGoogleScript('getPegawai')]);
+      setPresensi(rP||[]); setIjin(rI||[]); setPegawai(rPg||[]);
+      const dur=Date.now()-t0;
+      setFetchDuration(dur);
+      setLastSync(new Date());
+    }catch(e){console.error(e);}
+    setLoad(false);
+  };
   useEffect(()=>{ if(user) fetchData(); },[user]);
   const enriched = useMemo(()=>enrichPresensiWithIjin(presensi,ijin),[presensi,ijin]);
   const canPegawai = user&&(user.role==='Admin'||user.role==='Superuser'||user.role==='User');
@@ -1864,9 +1887,37 @@ const App = () => {
               <p className="text-[10px] text-slate-400 ml-3 mt-0.5">{new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200"><i className="fas fa-database text-slate-300"></i><span>{presensi.length} data</span></div>
-            <button onClick={fetchData} disabled={load} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs transition-all ${load?'bg-blue-50 border-blue-200 text-blue-600 cursor-not-allowed':'bg-white border-slate-200 text-slate-500 hover:bg-blue-600 hover:border-blue-600 hover:text-white shadow-sm hover:shadow-md hover:shadow-blue-500/20'}`}>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Info jumlah data — desktop only */}
+            <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
+              <i className="fas fa-database text-slate-300"></i>
+              <span>{presensi.length} data</span>
+            </div>
+            {/* Info durasi + waktu sync */}
+            {!load&&lastSync&&(
+              <div className="hidden sm:flex flex-col items-end leading-none gap-0.5">
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <i className="fas fa-clock text-slate-300" style={{fontSize:'9px'}}></i>
+                  Sync {fmtTime(lastSync)}
+                </span>
+                {fetchDuration!==null&&(
+                  <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                    <i className="fas fa-bolt" style={{fontSize:'9px'}}></i>
+                    {fmtDuration(fetchDuration)}
+                  </span>
+                )}
+              </div>
+            )}
+            {load&&(
+              <div className="hidden sm:flex flex-col items-end leading-none gap-0.5">
+                <span className="text-[10px] text-blue-400 flex items-center gap-1 animate-pulse">
+                  <i className="fas fa-spinner fa-spin" style={{fontSize:'9px'}}></i>
+                  Menarik data...
+                </span>
+              </div>
+            )}
+            {/* Tombol tarik data */}
+            <button onClick={fetchData} disabled={load} className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl border font-bold text-xs transition-all ${load?'bg-blue-50 border-blue-200 text-blue-600 cursor-not-allowed':'bg-white border-slate-200 text-slate-500 hover:bg-blue-600 hover:border-blue-600 hover:text-white shadow-sm hover:shadow-md hover:shadow-blue-500/20'}`}>
               <i className={`fas fa-sync-alt text-sm ${load?'fa-spin':''}`}></i>
               <span className="hidden sm:inline whitespace-nowrap">{load?'Memuat...':'Tarik Data Presensi'}</span>
             </button>
