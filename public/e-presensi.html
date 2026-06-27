@@ -228,21 +228,81 @@ const TablePagination = ({ currentPage, totalItems, rowsPerPage, onPageChange, o
 };
 
 
+/* ── CAPTCHA helper ── */
+const genCaptcha = () => {
+  const ops = ['+','-','×'];
+  const op  = ops[Math.floor(Math.random()*ops.length)];
+  let a = Math.floor(Math.random()*9)+1;
+  let b = Math.floor(Math.random()*9)+1;
+  if(op==='-'&&b>a){const t=a;a=b;b=t;}
+  const ans = op==='+'?a+b:op==='-'?a-b:a*b;
+  return {q:`${a} ${op} ${b} = ?`, ans};
+};
+
+const CaptchaBox = ({ captcha, value, onChange, onRefresh, error }) => (
+  <div>
+    <label className="block text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1.5">Verifikasi CAPTCHA</label>
+    <div className="flex gap-2 items-stretch">
+      {/* soal */}
+      <div className="flex-1 flex items-center justify-center gap-3 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl px-4 py-2.5 select-none border-2 border-slate-700 relative overflow-hidden">
+        {/* noise texture */}
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage:'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)',backgroundSize:'6px 6px'}}></div>
+        <span className="relative font-black text-xl tracking-[.18em] text-white" style={{fontFamily:'monospace',letterSpacing:'0.2em',textShadow:'1px 1px 0 #0004,2px 2px 0 #0002'}}>
+          {captcha.q.split('').map((c,i)=>(
+            <span key={i} style={{display:'inline-block',transform:`rotate(${(Math.random()-0.5)*14}deg) translateY(${(Math.random()-0.5)*4}px)`,color:['#93c5fd','#6ee7b7','#fde68a','#f9a8d4','#c4b5fd'][i%5]}}>
+              {c==='?'?'?':c}
+            </span>
+          ))}
+        </span>
+      </div>
+      {/* refresh */}
+      <button type="button" onClick={onRefresh} title="Ganti CAPTCHA"
+        className="w-11 rounded-xl border-2 border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-300 text-slate-400 hover:text-blue-500 transition-all flex items-center justify-center flex-shrink-0">
+        <i className="fas fa-redo-alt text-sm"></i>
+      </button>
+    </div>
+    {/* jawaban */}
+    <div className="relative mt-2">
+      <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-300"><i className="fas fa-keyboard text-sm"></i></span>
+      <input type="number" required value={value} onChange={onChange}
+        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl text-sm outline-none transition-colors placeholder-slate-300 ${error?'border-red-400 bg-red-50 focus:border-red-500':'border-slate-200 focus:border-blue-500'}`}
+        placeholder="Masukkan jawaban…" />
+    </div>
+    {error&&<p className="text-xs text-red-500 mt-1 flex items-center gap-1"><i className="fas fa-exclamation-circle text-xs"></i>{error}</p>}
+  </div>
+);
+
 const Login = ({ onLogin }) => {
   const [un,setUn]=useState(''), [pw,setPw]=useState(''), [load,setLoad]=useState(false), [show,setShow]=useState(false);
+  const [captcha,setCaptcha]=useState(()=>genCaptcha());
+  const [capVal,setCapVal]=useState(''), [capErr,setCapErr]=useState('');
+
+  const refreshCaptcha = () => { setCaptcha(genCaptcha()); setCapVal(''); setCapErr(''); };
+
   const submit = async e => {
-    e.preventDefault(); setLoad(true);
+    e.preventDefault();
+    // validasi captcha dulu
+    if(parseInt(capVal,10)!==captcha.ans){
+      setCapErr('Jawaban salah, coba lagi!');
+      refreshCaptcha();
+      return;
+    }
+    setCapErr(''); setLoad(true);
     const r = await runGoogleScript('login',un,pw);
-    if (r&&r.success) onLogin(r.user);
-    else Swal.fire({icon:'error',title:'Akses Ditolak',text:'Username atau password salah!',confirmButtonColor:'#2563eb'});
+    if(r&&r.success) onLogin(r.user);
+    else {
+      Swal.fire({icon:'error',title:'Akses Ditolak',text:'Username atau password salah!',confirmButtonColor:'#2563eb'});
+      refreshCaptcha();
+    }
     setLoad(false);
   };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 px-4 py-8">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col md:flex-row">
         {/* Form */}
         <div className="md:w-5/12 p-8 lg:p-12 flex flex-col justify-center anim-l">
-          <div className="mb-8">
+          <div className="mb-7">
             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-blue-400/30">
               <i className="fas fa-fingerprint text-2xl text-white"></i>
             </div>
@@ -265,11 +325,13 @@ const Login = ({ onLogin }) => {
                 <button type="button" onClick={()=>setShow(!show)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-300 hover:text-blue-500 transition-colors"><i className={`fas ${show?'fa-eye-slash':'fa-eye'} text-sm`}></i></button>
               </div>
             </div>
+            {/* CAPTCHA */}
+            <CaptchaBox captcha={captcha} value={capVal} onChange={e=>setCapVal(e.target.value)} onRefresh={refreshCaptcha} error={capErr} />
             <button type="submit" disabled={load} className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 rounded-xl font-black text-sm tracking-wider shadow-lg shadow-blue-500/25 transition-all disabled:opacity-60">
               {load ? <span><i className="fas fa-spinner fa-spin mr-2"></i>Memproses...</span> : <span><i className="fas fa-sign-in-alt mr-2"></i>MASUK</span>}
             </button>
           </form>
-          <p className="text-center text-[10px] text-slate-300 mt-8">Dinas Pendidikan Kabupaten Ngawi &copy; {new Date().getFullYear()}</p>
+          <p className="text-center text-[10px] text-slate-300 mt-6">Dinas Pendidikan Kabupaten Ngawi &copy; {new Date().getFullYear()}</p>
         </div>
         {/* Hero */}
         <div className="hidden md:flex md:w-7/12 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 p-12 flex-col justify-center items-center text-white anim-r relative overflow-hidden">
@@ -290,6 +352,10 @@ const Login = ({ onLogin }) => {
           </div>
         </div>
       </div>
+      {/* Footer login */}
+      <p className="mt-6 text-[11px] text-slate-400 text-center">
+        <span className="font-semibold text-slate-500">E-Presensi</span> &bull; Powered by <span className="font-bold text-blue-500">YoriAPP</span> &bull; &copy; {new Date().getFullYear()}
+      </p>
     </div>
   );
 };
@@ -1521,6 +1587,29 @@ const App = () => {
                 {tab==='activity'             && <ActivityLog userRole={user.role} />}
               </div>
           }
+          {/* Footer */}
+          <footer className="mt-6 pt-4 border-t border-slate-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <i className="fas fa-fingerprint text-white" style={{fontSize:'8px'}}></i>
+                </span>
+                <span><strong className="text-slate-500 font-bold">E-Presensi</strong> &mdash; Sistem Monitoring Presensi Digital</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <i className="fas fa-school text-slate-300"></i>
+                  Korwil Sine &bull; Dinas Pendidikan Kab. Ngawi
+                </span>
+                <span className="hidden sm:inline text-slate-200">|</span>
+                <span className="flex items-center gap-1 font-semibold text-blue-400">
+                  <i className="fas fa-code text-blue-300" style={{fontSize:'9px'}}></i>
+                  Powered by <strong>YoriAPP</strong>
+                </span>
+                <span className="text-slate-300">&copy; {new Date().getFullYear()}</span>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
