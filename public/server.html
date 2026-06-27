@@ -958,7 +958,7 @@ function updateStats() {
 function renderHead() {
   const isAdmin = session?.role === 'ADMIN';
   const adminCols = isAdmin
-    ? '<th>Domain</th><th>Repo</th><th>DB</th><th>Backend</th><th>Rentang Aktif</th><th>Aksi</th>'
+    ? '<th>Domain</th><th>Host</th><th>DB</th><th>Backend</th><th>Rentang Aktif</th><th>Aksi</th>'
     : '<th>Rentang Aktif</th>';
   document.getElementById('tableHead').innerHTML = `
     <tr>
