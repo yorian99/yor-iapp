@@ -809,10 +809,9 @@ const roleBadge = role => {
 
 const emptyFd = ()=>({'Username (MP/ID)':'','Password':'','Name Lembaga':'','Name Pegawai':'','Latitude':'','Longitude':'','Radius (m)':'','Role':''});
 
-const DatabasePegawai = ({ refreshParent, userRole }) => {
-  const [data,setData]     = useState([]);
-  const [loadFetch,setLoadFetch] = useState(false);
-  const [savingId,setSavingId]   = useState(null); // rowIndex sedang disimpan
+const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
+  const [data,setData]     = useState(pegawaiData||[]);
+  const [savingId,setSavingId]   = useState(null);
   const [flLem,setFlLem]   = useState(''), [flNama,setFlNama] = useState('');
   const [modal,setModal]   = useState(false), [editRow,setEditRow] = useState(null);
   const [fd,setFd]         = useState(emptyFd());
@@ -820,13 +819,8 @@ const DatabasePegawai = ({ refreshParent, userRole }) => {
   const [page,setPage]     = useState(1), [rpp,setRpp] = useState(10);
   const canM = userRole==='Admin'||userRole==='Superuser';
 
-  const loadData = async () => {
-    setLoadFetch(true);
-    const r = await runGoogleScript('getPegawai');
-    setData(r||[]);
-    setLoadFetch(false);
-  };
-  useEffect(()=>{ loadData(); },[]);
+  // Sinkronisasi ketika parent refresh data
+  useEffect(()=>{ setData(pegawaiData||[]); },[pegawaiData]);
 
   const filtered = useMemo(()=>data.filter(i=>
     (i['Name Lembaga']||'').toLowerCase().includes(flLem.toLowerCase())&&
@@ -858,7 +852,7 @@ const DatabasePegawai = ({ refreshParent, userRole }) => {
     if(editRow) {
       setData(prev=>prev.map(p=>p._rowIndex===editRow?{...p,...fd}:p));
     } else {
-      setData(prev=>[{...fd,_rowIndex:'__tmp__',...fd},...prev]);
+      setData(prev=>[{...fd,_rowIndex:'__tmp__'},...prev]);
     }
     setModal(false);
     const r = editRow
@@ -868,10 +862,8 @@ const DatabasePegawai = ({ refreshParent, userRole }) => {
       Swal.fire({icon:'success',title:editRow?'Data diperbarui!':'Pegawai ditambahkan!',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
       if(refreshParent) refreshParent();
     } else {
-      Swal.fire('Gagal','Data gagal disimpan, memuat ulang...','error');
+      Swal.fire('Gagal','Data gagal disimpan.','error');
     }
-    // Refresh dari server untuk sinkronisasi
-    await loadData();
     setSavingId(null);
   };
 
@@ -887,8 +879,9 @@ const DatabasePegawai = ({ refreshParent, userRole }) => {
       Swal.fire({icon:'success',title:'Terhapus!',timer:900,showConfirmButton:false,toast:true,position:'top-end'});
       if(refreshParent) refreshParent();
     } else {
-      Swal.fire('Gagal','Gagal menghapus, memuat ulang...','error');
-      await loadData();
+      Swal.fire('Gagal','Gagal menghapus.','error');
+      // Rollback: kembalikan data dari parent
+      setData(pegawaiData||[]);
     }
     setSavingId(null);
   };
@@ -908,19 +901,13 @@ const DatabasePegawai = ({ refreshParent, userRole }) => {
               </span>
               Database Pegawai
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5 ml-10">
-              {loadFetch?<span className="text-blue-400"><i className="fas fa-spinner fa-spin mr-1"></i>Memuat...</span>:<span>{total} pegawai ditemukan</span>}
-            </p>
+            <p className="text-xs text-slate-400 mt-0.5 ml-10">{total} pegawai ditemukan</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={loadData} disabled={loadFetch} className="w-9 h-9 rounded-xl border border-slate-200 bg-white text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 flex items-center justify-center transition-all flex-shrink-0">
-              <i className={`fas fa-sync-alt text-sm ${loadFetch?'fa-spin text-blue-500':''}`}></i>
-            </button>
             {canM
               ? <button onClick={()=>openMod()} className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all">
                   <i className="fas fa-plus-circle"></i>
-                  <span className="hidden xs:inline sm:inline">Tambah Pegawai</span>
-                  <span className="inline xs:hidden sm:hidden">Tambah</span>
+                  <span>Tambah Pegawai</span>
                 </button>
               : <div className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-xl border border-red-100 flex items-center gap-2"><i className="fas fa-lock"></i><span className="hidden sm:inline">Hanya Admin/Superuser</span></div>
             }
@@ -1931,7 +1918,7 @@ const App = () => {
                 {tab==='monitoring_presensi'  && <MonitoringPresensi data={enriched} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} />}
-                {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} />}
+                {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} />}
                 {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={fetchData} userRole={user.role} />}
                 {tab==='activity'             && <ActivityLog userRole={user.role} />}
               </div>
