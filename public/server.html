@@ -813,27 +813,29 @@ window.addEventListener('keydown', e => {
 });
 
 // ─── API Helper ─────────────────────────────────────────────
-async function api(action, body = {}) {
+async function api(action, params = {}) {
+  const flat = {};
+  for (const k in params) {
+    const v = params[k];
+    flat[k] = (v === null || v === undefined) ? '' : String(v);
+  }
+  const qs = new URLSearchParams({
+    action,
+    token: session?.token || '',
+    ...flat,
+  });
   try {
-    const r = await fetch(API, {
-      method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({ action, token: session?.token, ...body }),
-    });
-    return await r.json();
+    const r    = await fetch(API + '?' + qs, { redirect: 'follow' });
+    const text = await r.text();
+    return JSON.parse(text);
   } catch (e) {
     return { ok: false, msg: 'Koneksi gagal: ' + e.message };
   }
 }
 
 async function apiGet(params) {
-  const qs = new URLSearchParams({ token: session?.token, ...params });
-  try {
-    const r = await fetch(API + '?' + qs);
-    return await r.json();
-  } catch (e) {
-    return { ok: false, msg: 'Koneksi gagal: ' + e.message };
-  }
+  const { action, ...rest } = params;
+  return api(action, rest);
 }
 
 // ─── Auth ───────────────────────────────────────────────────
