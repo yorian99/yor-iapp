@@ -1720,7 +1720,7 @@ const ArsipData = ({ userRole, username, refreshData }) => {
     if(new Date(rStart) > new Date(rEnd)){ Swal.fire('Peringatan','Tanggal mulai tidak boleh lebih besar dari tanggal akhir.','warning'); return; }
     const c = await Swal.fire({
       title:'Arsipkan Data Presensi?',
-      html:`Seluruh data <b>RekapPresensi</b> pada rentang <b>${rStart}</b> s/d <b>${rEnd}</b> akan <u>dipindahkan</u> ke sheet arsip baru sesuai rentang tanggal tersebut.<br/><br/>Setelah diarsipkan, data tersebut tidak lagi tampil di "Presensi Sekarang" pada menu Monitoring Presensi, dan hanya bisa dilihat melalui dropdown sumber data arsip.`,
+      html:`Seluruh data <b>RekapPresensi</b> pada rentang <b>${rStart}</b> s/d <b>${rEnd}</b> akan <u>dipindahkan</u> ke arsip baru sesuai rentang tanggal tersebut.<br/><br/>Setelah diarsipkan, data tersebut tidak lagi tampil di "Presensi Sekarang" pada menu Monitoring Presensi, dan hanya bisa dilihat melalui dropdown sumber data arsip.`,
       icon:'warning', showCancelButton:true, confirmButtonColor:'#4f46e5', cancelButtonColor:'#334155',
       confirmButtonText:'Ya, Arsipkan', cancelButtonText:'Batal'
     });
@@ -1764,7 +1764,7 @@ const ArsipData = ({ userRole, username, refreshData }) => {
     <div className="space-y-4 anim-f">
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
         <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><span className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><i className="fas fa-box-archive text-indigo-600 text-sm"></i></span>Arsip Data Presensi</h3>
-        <p className="text-xs text-slate-400 mt-1 ml-10">Pindahkan data RekapPresensi ke sheet arsip berdasarkan rentang tanggal. Data yang sudah diarsipkan dapat dilihat kembali lewat dropdown "Sumber Data" pada menu Monitoring Presensi.</p>
+        <p className="text-xs text-slate-400 mt-1 ml-10">Pindahkan data RekapPresensi ke arsip berdasarkan rentang tanggal. Data yang sudah diarsipkan dapat dilihat kembali lewat dropdown "Sumber Data" pada menu Monitoring Presensi.</p>
       </div>
 
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
