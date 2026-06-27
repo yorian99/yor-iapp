@@ -167,7 +167,6 @@
       <input type="password" id="login-password" placeholder="Masukkan password"/>
     </div>
     <button class="login-btn" onclick="doLogin()">🔐 Masuk</button>
-    <button class="login-btn" onclick="doInitDB()" style="background:#27ae60;margin-top:8px;font-size:0.85rem;">🚀 Inisialisasi Database (pertama kali)</button>
     <div class="login-err" id="login-err">Username atau password salah</div>
   </div>
 </div>
@@ -1033,26 +1032,6 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 document.getElementById('login-password').addEventListener('keydown', e => {
   if(e.key==='Enter') doLogin();
 });
-
-// Inisialisasi Database dari halaman login
-async function doInitDB() {
-  const el = document.getElementById('login-err');
-  el.style.display = 'block';
-  el.style.color = 'var(--primary)';
-  el.textContent = '⏳ Menginisialisasi database...';
-  try {
-    const res = await fetch(API_URL, {
-      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'init'})
-    });
-    const json = await res.json();
-    el.style.color = '#27ae60';
-    el.textContent = '✅ Database siap! Login dengan admin / admin123';
-  } catch(e) {
-    el.style.color = 'var(--red)';
-    el.textContent = '❌ Gagal: ' + e.message;
-  }
-}
 
 // Load nama sekolah ke halaman login
 async function loadSchoolNameForLogin() {
