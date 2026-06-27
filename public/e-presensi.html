@@ -4,6 +4,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monitoring Presensi Korwil Sine</title>
+  <script>
+  // ============================================================
+  // ANTI-INSPECT / ANTI-COPY DETERRENT
+  // Catatan: ini HANYA mempersulit user awam, BUKAN keamanan asli.
+  // Source code tetap terkirim ke browser dan tetap bisa dibaca
+  // oleh siapapun yang cukup paham (Network tab, view-source, dll).
+  // ============================================================
+  (function(){
+    // 1. Nonaktifkan klik kanan / context menu
+    document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+    // 2. Nonaktifkan drag (mis. drag gambar untuk save)
+    document.addEventListener('dragstart', function(e){ e.preventDefault(); });
+
+    // 3. Nonaktifkan shortcut keyboard umum: F12, Ctrl/Cmd+Shift+I/J/C, Ctrl/Cmd+U, Ctrl/Cmd+S
+    document.addEventListener('keydown', function(e){
+      const k = (e.key || '').toUpperCase();
+      const ctrlOrCmd = e.ctrlKey || e.metaKey;
+      if (k === 'F12') { e.preventDefault(); return false; }
+      if (ctrlOrCmd && e.shiftKey && ['I','J','C'].includes(k)) { e.preventDefault(); return false; }
+      if (ctrlOrCmd && (k === 'U' || k === 'S')) { e.preventDefault(); return false; }
+    });
+
+    // 4. Deteksi (perkiraan) DevTools terbuka via selisih ukuran window
+    //    Tidak 100% akurat (bisa false-positive di HP / multi-monitor),
+    //    jadi hanya dipakai untuk peringatan halus di console, tidak mengunci halaman.
+    let warned = false;
+    setInterval(function(){
+      const threshold = 170;
+      const open = (window.outerWidth - window.innerWidth > threshold) ||
+                   (window.outerHeight - window.innerHeight > threshold);
+      if (open && !warned) {
+        warned = true;
+        console.log('%c⚠ Developer Tools terdeteksi', 'color:#ef4444;font-size:16px;font-weight:bold;');
+      } else if (!open) {
+        warned = false;
+      }
+    }, 1000);
+
+    console.log('%c⚠ Peringatan', 'color:#ef4444;font-size:22px;font-weight:bold;');
+    console.log('%cAplikasi ini adalah milik Korwil Sine. Penyalinan / modifikasi tanpa izin tidak diperbolehkan.', 'font-size:12px;color:#475569;');
+  })();
+  </script>
+  <style>
+    /* 5. Nonaktifkan seleksi teks di seluruh halaman, KECUALI pada input/textarea
+          (supaya form login & input data tetap bisa diketik/diseleksi normal) */
+    body{ -webkit-user-select:none; -ms-user-select:none; user-select:none; }
+    input, textarea, [contenteditable="true"]{
+      -webkit-user-select:text; -ms-user-select:text; user-select:text;
+    }
+  </style>
   <link rel="icon" href="https://github.com/YorianP22/CP22/blob/main/Logo.png?raw=true" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
