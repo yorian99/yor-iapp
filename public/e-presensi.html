@@ -160,30 +160,62 @@ const TablePagination = ({ currentPage, totalItems, rowsPerPage, onPageChange, o
     p = Math.min(Math.max(1,p),total);
     onPageChange(p); setJump('');
   };
-  const btnCls = (dis) => `w-8 h-8 rounded-lg border flex items-center justify-center text-xs transition-all flex-shrink-0 ${dis?'border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed':'border-slate-200 bg-white text-slate-500 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'}`;
+  const btnCls = (dis) => `w-9 h-9 rounded-xl border flex items-center justify-center text-xs transition-all flex-shrink-0 touch-manipulation ${dis?'border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed':'border-slate-200 bg-white text-slate-500 active:bg-blue-50 active:border-blue-300 active:text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'}`;
   return (
-    <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-slate-50 border-t border-slate-100 gap-y-2 gap-x-3 min-w-0">
-      <div className="flex items-center gap-2 text-xs text-slate-500 flex-shrink-0">
-        Tampilkan
-        <select className="border border-slate-200 rounded-lg px-2 py-1 bg-white text-xs outline-none focus:ring-2 focus:ring-blue-400" value={rowsPerPage}
-          onChange={e=>{const v=e.target.value==='all'?totalItems:Number(e.target.value);onRowsPerPageChange(v);onPageChange(1);}}>
-          {[10,25,50,100].map(n=><option key={n} value={n}>{n}</option>)}
-          <option value="all">Semua</option>
-        </select>
-        baris &mdash; <strong className="text-slate-700">{totalItems}</strong> data
+    <div className="bg-slate-50 border-t border-slate-100 px-3 py-3">
+      {/* Baris atas: Tampilkan baris + info data */}
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+          <span className="hidden sm:inline">Tampilkan</span>
+          <select
+            className="border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-xs outline-none focus:ring-2 focus:ring-blue-400 touch-manipulation"
+            value={rowsPerPage}
+            onChange={e=>{const v=e.target.value==='all'?totalItems:Number(e.target.value);onRowsPerPageChange(v);onPageChange(1);}}>
+            {[10,25,50,100].map(n=><option key={n} value={n}>{n}</option>)}
+            <option value="all">Semua</option>
+          </select>
+          <span className="text-slate-400">baris</span>
+        </div>
+        <div className="text-xs text-slate-500">
+          <span className="text-slate-400">Total </span>
+          <strong className="text-slate-700 font-bold">{totalItems}</strong>
+          <span className="text-slate-400"> data</span>
+        </div>
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <button onClick={()=>onPageChange(1)} disabled={currentPage===1} className={btnCls(currentPage===1)}><i className="fas fa-angle-double-left"></i></button>
-        <button onClick={()=>onPageChange(currentPage-1)} disabled={currentPage===1} className={btnCls(currentPage===1)}><i className="fas fa-angle-left"></i></button>
-        <span className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold min-w-[64px] text-center flex-shrink-0">{currentPage} / {total}</span>
-        <button onClick={()=>onPageChange(currentPage+1)} disabled={currentPage>=total} className={btnCls(currentPage>=total)}><i className="fas fa-angle-right"></i></button>
-        <button onClick={()=>onPageChange(total)} disabled={currentPage>=total} className={btnCls(currentPage>=total)}><i className="fas fa-angle-double-right"></i></button>
-      </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <input type="number" min="1" max={total} value={jump} onChange={e=>setJump(e.target.value)}
-          onKeyDown={e=>e.key==='Enter'&&doJump()}
-          className="w-14 border border-slate-200 rounded-lg px-2 py-1 text-xs text-center bg-white outline-none focus:ring-2 focus:ring-blue-400" placeholder="Hal" />
-        <button onClick={doJump} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors">Go</button>
+      {/* Baris bawah: Navigasi halaman + jump */}
+      <div className="flex items-center justify-between gap-2">
+        {/* Tombol navigasi */}
+        <div className="flex items-center gap-1">
+          <button onClick={()=>onPageChange(1)} disabled={currentPage===1} className={btnCls(currentPage===1)} title="Halaman pertama">
+            <i className="fas fa-angle-double-left text-[11px]"></i>
+          </button>
+          <button onClick={()=>onPageChange(currentPage-1)} disabled={currentPage===1} className={btnCls(currentPage===1)} title="Halaman sebelumnya">
+            <i className="fas fa-angle-left text-[11px]"></i>
+          </button>
+          <span className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold min-w-[60px] text-center flex-shrink-0 select-none">
+            {currentPage} / {total}
+          </span>
+          <button onClick={()=>onPageChange(currentPage+1)} disabled={currentPage>=total} className={btnCls(currentPage>=total)} title="Halaman berikutnya">
+            <i className="fas fa-angle-right text-[11px]"></i>
+          </button>
+          <button onClick={()=>onPageChange(total)} disabled={currentPage>=total} className={btnCls(currentPage>=total)} title="Halaman terakhir">
+            <i className="fas fa-angle-double-right text-[11px]"></i>
+          </button>
+        </div>
+        {/* Jump to page */}
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number" min="1" max={total} value={jump}
+            onChange={e=>setJump(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&doJump()}
+            className="w-12 border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs text-center bg-white outline-none focus:ring-2 focus:ring-blue-400 touch-manipulation"
+            placeholder="Hal" />
+          <button
+            onClick={doJump}
+            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 active:bg-blue-800 transition-colors touch-manipulation">
+            Go
+          </button>
+        </div>
       </div>
     </div>
   );
