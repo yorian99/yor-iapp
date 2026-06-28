@@ -99,16 +99,29 @@
 
                     <div class="flex flex-col gap-6 w-full mb-8">
                         
-                        <div class="text-left">
-                            <div class="flex items-center mb-2 px-1">
-                                <span class="status-pulse"></span>
-                                <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Server 1 Aktif</span>
+                        <div class="text-left bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-3">
+                            <div>
+                                <div class="flex items-center mb-2 px-1">
+                                    <span class="status-pulse"></span>
+                                    <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Server 1 Utama</span>
+                                </div>
+                                <a href="https://github.com/yorian99/yor-iapp/raw/refs/heads/main/app/E-Presensi%20yapp.apk" 
+                                   class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3 text-lg">
+                                     <i class="fa-solid fa-server"></i>
+                                     Unduh via Server 1
+                                </a>
                             </div>
-                            <a href="https://github.com/yorian99/yor-iapp/raw/refs/heads/main/app/E-Presensi%20yapp.apk" 
-                               class="w-full bg-slate-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg shadow-blue-100 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 text-lg">
-                                 <i class="fa-solid fa-server"></i>
-                                 Unduh via Server 1
-                            </a>
+                            
+                            <div class="border-t border-slate-200 pt-3">
+                                <span class="block text-[11px] font-medium text-amber-700 mb-1.5 px-1">
+                                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Bermasalah dengan Server 1? Coba alternatif ini:
+                                </span>
+                                <a href="https://github.com/yorian99/yor-iapp/raw/refs/heads/main/app/E-Presensi%20Sine_signed.apk" 
+                                   class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2 text-sm">
+                                     <i class="fa-solid fa-key"></i>
+                                     Unduh Alternatif Server 1 (Signed APK)
+                                </a>
+                            </div>
                         </div>
 
                         <div class="text-left">
@@ -137,20 +150,11 @@
 
                     </div>
 
-                    <div class="mt-2 flex flex-col gap-3 w-full">
-                        <div class="flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100">
-                            <i class="fa-solid fa-circle-info text-amber-500 mt-1"></i>
-                            <p class="text-xs text-amber-700 leading-relaxed">
-                                <strong>Catatan:</strong> Jika muncul peringatan "File mungkin berbahaya", pilih "Tetap Download". Ini adalah prosedur standar untuk file APK yang diunduh di luar Play Store.
-                            </p>
-                        </div>
-                        
-                        <div class="flex items-start gap-3 text-left bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <i class="fa-solid fa-circle-exclamation text-blue-500 mt-1"></i>
-                            <p class="text-xs text-blue-700 leading-relaxed">
-                                <strong>Kendala Penginstalan Server 1?</strong> Jika Anda mengalami kendala atau gagal saat menginstal berkas dari Server 1, silakan <a href="https://github.com/yorian99/yor-iapp/raw/refs/heads/main/app/E-Presensi%20Sine_signed.apk" class="font-bold underline hover:text-blue-900">unduh berkas APK alternatif ini</a> untuk menyelesaikannya.
-                            </p>
-                        </div>
+                    <div class="mt-2 flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100 w-full">
+                        <i class="fa-solid fa-circle-info text-amber-500 mt-1"></i>
+                        <p class="text-xs text-amber-700 leading-relaxed">
+                            <strong>Catatan:</strong> Jika muncul peringatan "File mungkin berbahaya", pilih "Tetap Download". Ini adalah prosedur standar untuk file APK yang diunduh di luar Play Store.
+                        </p>
                     </div>
                 </div>
             </div>
