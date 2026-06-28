@@ -2489,7 +2489,7 @@ const App = () => {
 
                 </div>
               </div>
-            : <div className="w-full flex flex-col">
+            : <div className="w-full flex flex-col flex-1 min-h-0">
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
                 {tab==='monitoring_presensi'  && <MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
