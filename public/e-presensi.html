@@ -378,11 +378,19 @@ const Login = ({ onLogin }) => {
     }
     setCapErr(''); setLoad(true);
     try {
-      const r = await runGoogleScript('login',un,pw);
-      if(r&&r.success) {
+      // Fetch langsung (tidak pakai runGoogleScript) agar response
+      // { success: false } dikembalikan sebagai data, bukan dilempar sebagai exception
+      const res = await fetch('/api/gas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', args: [un, pw] })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const r = await res.json();
+
+      if (r && r.success) {
         onLogin(r.user);
       } else {
-        // Pesan error spesifik berdasarkan kode dari server
         let title = 'Akses Ditolak';
         let text  = 'Terjadi kesalahan, silakan coba lagi.';
         let icon  = 'error';
@@ -398,7 +406,6 @@ const Login = ({ onLogin }) => {
           text  = 'Akun Anda terdaftar namun tidak memiliki hak akses ke sistem ini. Hubungi administrator.';
           icon  = 'warning';
         } else {
-          // Fallback: server lama yang belum mengembalikan errorCode
           text = r && r.message ? r.message : 'Username atau password salah!';
         }
         Swal.fire({ icon, title, text, confirmButtonColor:'#2563eb' });
