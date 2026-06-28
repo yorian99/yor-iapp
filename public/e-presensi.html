@@ -806,7 +806,7 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
   const statColor = s => s==='Disetujui'?'bg-green-600 text-white border-green-600':s==='Ditolak'?'bg-red-600 text-white border-red-600':'bg-blue-600 text-white border-blue-600';
 
   return (
-    <div className="space-y-4 anim-f">
+    <div className="space-y-4 anim-f flex flex-col flex-1 min-h-0">
       {/* Filter */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex flex-wrap gap-3 items-center">
@@ -827,8 +827,8 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
       {canEdit&&<div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 flex items-center gap-3"><i className="fas fa-info-circle text-blue-400 text-sm"></i><p className="text-xs text-blue-600 font-medium">Klik tombol status untuk menyimpan otomatis. Klik kolom Keterangan lalu tekan Enter atau klik di luar untuk menyimpan.</p></div>}
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
-        <div className="overflow-x-auto rounded-t-2xl">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col">
+        <div className="overflow-x-auto rounded-t-2xl flex-1">
           <table className="w-full text-sm text-left">
             <thead className="bg-gradient-to-r from-blue-700 to-blue-800 text-white text-xs">
               <tr>
@@ -913,7 +913,9 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga }) => {
             </tbody>
           </table>
         </div>
-        <TablePagination currentPage={page} totalItems={total} rowsPerPage={rpp} onPageChange={setPage} onRowsPerPageChange={setRpp} />
+        <div className="flex-shrink-0">
+          <TablePagination currentPage={page} totalItems={total} rowsPerPage={rpp} onPageChange={setPage} onRowsPerPageChange={setRpp} />
+        </div>
       </div>
 
       {/* Modal PDF */}
@@ -1010,7 +1012,7 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
   const lCls = "block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5";
 
   return (
-    <div className="space-y-4 anim-f">
+    <div className="space-y-4 anim-f flex flex-col flex-1 min-h-0">
       {/* Header */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex flex-wrap justify-between items-center gap-3">
@@ -1053,10 +1055,10 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
       </div>
 
       {/* Tabel desktop / Card mobile */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
 
         {/* ── MOBILE: Card list (< md) ── */}
-        <div className="block md:hidden divide-y divide-slate-100">
+        <div className="block md:hidden divide-y divide-slate-100 flex-1 overflow-y-auto">
           {paged.length===0&&(
             <div className="py-16 text-center text-slate-300">
               <i className="fas fa-users text-4xl block mb-3"></i>
@@ -1112,7 +1114,7 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
         </div>
 
         {/* ── DESKTOP: Tabel (≥ md) ── */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto flex-1">
           <table className="w-full text-sm text-left">
             <thead className="bg-gradient-to-r from-blue-700 to-blue-800 text-white text-xs">
               <tr>
@@ -1167,7 +1169,9 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
           </table>
         </div>
 
-        <TablePagination currentPage={page} totalItems={total} rowsPerPage={rpp} onPageChange={setPage} onRowsPerPageChange={setRpp} />
+        <div className="flex-shrink-0">
+          <TablePagination currentPage={page} totalItems={total} rowsPerPage={rpp} onPageChange={setPage} onRowsPerPageChange={setRpp} />
+        </div>
       </div>
 
       {/* ── MODAL CRUD ── */}
@@ -2168,7 +2172,7 @@ const ActivityLog = ({ userRole }) => {
   const paged=filtered.slice((page-1)*eff, page*eff);
   if(!canView) return <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 text-center"><div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4"><i className="fas fa-lock text-3xl text-slate-300"></i></div><h3 className="text-lg font-bold text-slate-700">Akses Ditolak</h3><p className="text-slate-400 text-sm mt-2">Log aktivitas hanya untuk Admin.</p></div>;
   return (
-    <div className="space-y-4 anim-f">
+    <div className="space-y-4 anim-f flex flex-col flex-1 min-h-0">
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100"><h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><span className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><i className="fas fa-history text-blue-600 text-sm"></i></span>Log Monitoring Aktivitas</h3><p className="text-xs text-slate-400 mt-1 ml-10">Riwayat login dan aktivitas pengguna sistem.</p></div>
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-3 items-center">
         <input type="text" placeholder="Cari Username..." className="border border-slate-200 px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 flex-1 min-w-[120px]" value={flUser} onChange={e=>setFlUser(e.target.value)} />
@@ -2178,8 +2182,8 @@ const ActivityLog = ({ userRole }) => {
         <button onClick={()=>{setFlUser('');setFlAct('');setDS('');setDE('');}} className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold transition-colors"><i className="fas fa-undo mr-1.5"></i>Reset</button>
         <button onClick={fetchLogs} disabled={load} className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 disabled:opacity-60"><i className={`fas fa-sync-alt ${load?'fa-spin':''}`}></i>Refresh</button>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
-        <div className="overflow-x-auto rounded-t-2xl">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col">
+        <div className="overflow-x-auto rounded-t-2xl flex-1">
           <table className="w-full text-sm text-left">
             <thead className="bg-gradient-to-r from-blue-700 to-blue-800 text-white text-xs">
               <tr>
@@ -2207,7 +2211,7 @@ const ActivityLog = ({ userRole }) => {
             </tbody>
           </table>
         </div>
-        {total>0&&<TablePagination currentPage={page} totalItems={total} rowsPerPage={rpp} onPageChange={setPage} onRowsPerPageChange={v=>{setRpp(v);setPage(1);}} />}
+        {total>0&&<div className="flex-shrink-0"><TablePagination currentPage={page} totalItems={total} rowsPerPage={rpp} onPageChange={setPage} onRowsPerPageChange={v=>{setRpp(v);setPage(1);}} /></div>}
       </div>
     </div>
   );
