@@ -526,7 +526,7 @@ const Dashboard = ({ presensiData, ijinData, pegawaiData }) => {
 };
 
 
-const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga }) => {
+const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga, pegawaiData }) => {
   const [flLem,setFlLem]=useState(''), [flNama,setFlNama]=useState('');
   const [editingRow,setEditingRow]=useState(null), [editVal,setEditVal]=useState('');
   const [modalImg,setModalImg]=useState(null), [modalMap,setModalMap]=useState(null);
@@ -535,6 +535,73 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
   const [rStart,setRStart]=useState(''), [rEnd,setREnd]=useState(''), [rStat,setRStat]=useState('Libur'), [rKet,setRKet]=useState('');
   const [showCRUD,setShowCRUD]=useState(false), [cMode,setCMode]=useState('add'), [cRowIdx,setCRowIdx]=useState(null);
   const [fv,setFv]=useState({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''});
+  // ★ Pilih pegawai dari database (auto-isi Lembaga, NIP, Latitude/Longitude default lembaga)
+  const [pilihUname,setPilihUname]=useState('');
+  const [cariPegawaiCrud,setCariPegawaiCrud]=useState('');
+  // ★ Upload foto bukti dukung
+  const [fotoFile,setFotoFile]=useState(null); // { dataUrl, fileName }
+  const [savingCrud,setSavingCrud]=useState(false);
+
+  const pegawaiTerfilterCrud = useMemo(()=>(pegawaiData||[]).filter(p=>
+    (p['Name Pegawai']||'').toLowerCase().includes(cariPegawaiCrud.toLowerCase()) ||
+    (p['Username (MP/ID)']||'').toLowerCase().includes(cariPegawaiCrud.toLowerCase())
+  ),[pegawaiData,cariPegawaiCrud]);
+
+  // Haversine: jarak (meter) antara koordinat presensi pegawai dengan koordinat presensi yang dimasukkan
+  const hitungJarakMeter = (lat1,lon1,lat2,lon2) => {
+    const toRad = d => d*Math.PI/180;
+    const R = 6371000;
+    const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  };
+
+  const pilihPegawaiCrud = (uname) => {
+    setPilihUname(uname);
+    const p = (pegawaiData||[]).find(x=>x['Username (MP/ID)']===uname);
+    if (!p) return;
+    setFv(f=>({
+      ...f,
+      'Nama Lembaga': p['Name Lembaga']||'',
+      'Nama Pegawai': p['Name Pegawai']||'',
+      'Nip': p['Username (MP/ID)']||'',
+      'Latitude': p['Latitude']||f['Latitude'],
+      'Longitude': p['Longitude']||f['Longitude']
+    }));
+  };
+
+  const ambilLokasiCrud = () => {
+    if(!navigator.geolocation){ Swal.fire('Info','Perangkat/browser tidak mendukung geolokasi.','info'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const latAbsen = pos.coords.latitude, lngAbsen = pos.coords.longitude;
+        setFv(f=>{
+          const next = {...f};
+          const p = (pegawaiData||[]).find(x=>x['Username (MP/ID)']===pilihUname);
+          if (p && p['Latitude'] && p['Longitude']) {
+            const jarak = hitungJarakMeter(parseFloat(p['Latitude']), parseFloat(p['Longitude']), latAbsen, lngAbsen);
+            next['Jarak Absen'] = `${Math.round(jarak)} meter`;
+            const radius = parseFloat(p['Radius (m)']) || 100;
+            next['Keterangan Radius'] = jarak <= radius ? 'DI DALAM RADIUS' : 'DI LUAR RADIUS';
+          }
+          return next;
+        });
+        Swal.fire({icon:'success',title:'Lokasi diambil & jarak dihitung',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
+      },
+      err => Swal.fire('Gagal','Tidak bisa mengambil lokasi: '+err.message,'error'),
+      { enableHighAccuracy:true, timeout:10000 }
+    );
+  };
+
+  const onPilihFoto = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { Swal.fire('Peringatan','File harus berupa gambar.','warning'); return; }
+    const reader = new FileReader();
+    reader.onload = () => setFotoFile({ dataUrl: reader.result, fileName: file.name });
+    reader.readAsDataURL(file);
+  };
+
 
   // ★ Sumber data: 'live' = RekapPresensi (Presensi Sekarang) atau nama sheet arsip hasil pengarsipan
   const [sumber,setSumber]=useState('live');
@@ -574,19 +641,37 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
     const r = await runGoogleScript('updateKeteranganBukti',idx,editVal);
     if(r.success){ Swal.fire({icon:'success',title:'Tersimpan',timer:700,showConfirmButton:false,toast:true,position:'top-end'}); setEditingRow(null); refreshData(); }
   };
-  const openAdd = () => { setCMode('add'); setCRowIdx(null); setFv({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''}); setShowCRUD(true); };
-  const openEdit= item => { setCMode('edit'); setCRowIdx(item._rowIndex); setFv({'Hari Tanggal':item['Hari Tanggal']||'','Waktu':item['Waktu']||'','Jenis Presensi':item['Jenis Presensi']||'','Nama Lembaga':item['Nama Lembaga']||'','Nama Pegawai':item['Nama Pegawai']||'','Nip':item['Nip']||'','Bukti Dukung':item['Bukti Dukung']||'','Latitude':item['Latitude']||'','Longitude':item['Longitude']||'','Jarak Absen':item['Jarak Absen']||'','Keterangan Radius':item['Keterangan Radius']||'','Keterangan Bukti':item['Keterangan Bukti']||''}); setShowCRUD(true); };
+  const openAdd = () => { setCMode('add'); setCRowIdx(null); setPilihUname(''); setCariPegawaiCrud(''); setFotoFile(null); setFv({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''}); setShowCRUD(true); };
+  const openEdit= item => { setCMode('edit'); setCRowIdx(item._rowIndex); setPilihUname(item['Nip']||''); setCariPegawaiCrud(''); setFotoFile(null); setFv({'Hari Tanggal':item['Hari Tanggal']||'','Waktu':item['Waktu']||'','Jenis Presensi':item['Jenis Presensi']||'','Nama Lembaga':item['Nama Lembaga']||'','Nama Pegawai':item['Nama Pegawai']||'','Nip':item['Nip']||'','Bukti Dukung':item['Bukti Dukung']||'','Latitude':item['Latitude']||'','Longitude':item['Longitude']||'','Jarak Absen':item['Jarak Absen']||'','Keterangan Radius':item['Keterangan Radius']||'','Keterangan Bukti':item['Keterangan Bukti']||''}); setShowCRUD(true); };
   const delItem = async (idx,nm) => {
     const c = await Swal.fire({title:'Hapus Presensi?',text:`Yakin hapus presensi ${nm}?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#d33',cancelButtonColor:'#334155',confirmButtonText:'Ya, Hapus'});
     if(c.isConfirmed){ const la=Swal.fire({title:'Menghapus...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()}); const r=await runGoogleScript('deletePresensi',idx); la.close(); if(r.success){Swal.fire({icon:'success',title:'Terhapus',timer:1200,showConfirmButton:false});refreshData();}else Swal.fire('Error','Gagal menghapus','error'); }
   };
   const submitCRUD = async () => {
     if(!fv['Waktu']||!fv['Jenis Presensi']||!fv['Nama Pegawai']){ Swal.fire('Peringatan','Waktu, Jenis Presensi, dan Nama Pegawai wajib diisi.','warning'); return; }
-    const la=Swal.fire({title:'Menyimpan...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-    const r = cMode==='add' ? await runGoogleScript('addPresensi',fv) : await runGoogleScript('updatePresensi',cRowIdx,fv);
-    la.close();
-    if(r.success){ Swal.fire({icon:'success',title:cMode==='add'?'Ditambahkan':'Diperbarui',timer:1200,showConfirmButton:false}); setShowCRUD(false); refreshData(); }
-    else Swal.fire('Error','Gagal menyimpan data','error');
+    setSavingCrud(true);
+    const la=Swal.fire({title: fotoFile ? 'Mengupload foto & menyimpan...' : 'Menyimpan...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+    let fvFinal = {...fv};
+    try {
+      if (fotoFile) {
+        const upRes = await runGoogleScript('uploadBuktiPresensi', fotoFile.dataUrl, fotoFile.fileName);
+        if (upRes && upRes.success) {
+          fvFinal['Bukti Dukung'] = upRes.fileUrl;
+        } else {
+          la.close(); setSavingCrud(false);
+          Swal.fire('Gagal','Gagal mengupload foto: '+(upRes&&upRes.message?upRes.message:'Terjadi kesalahan'),'error');
+          return;
+        }
+      }
+      const r = cMode==='add' ? await runGoogleScript('addPresensi',fvFinal) : await runGoogleScript('updatePresensi',cRowIdx,fvFinal);
+      la.close();
+      if(r.success){ Swal.fire({icon:'success',title:cMode==='add'?'Ditambahkan':'Diperbarui',timer:1200,showConfirmButton:false}); setShowCRUD(false); setFotoFile(null); refreshData(); }
+      else Swal.fire('Error','Gagal menyimpan data','error');
+    } catch(e) {
+      la.close();
+      Swal.fire('Error', e.message||'Terjadi kesalahan.', 'error');
+    }
+    setSavingCrud(false);
   };
 
   const iCls = "w-full border border-slate-200 px-3 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 outline-none bg-white transition-shadow";
@@ -718,14 +803,84 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
       {/* Modal Libur */}
       {showRange&&<div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center" style={{padding:'20px'}} onClick={()=>setShowRange(false)}><div className="bg-white rounded-2xl shadow-2xl w-full flex flex-col" style={{maxWidth:'520px',maxHeight:'90vh'}} onClick={e=>e.stopPropagation()}><div className="flex-shrink-0 px-6 py-4 flex justify-between items-center bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-2xl"><span className="font-bold flex items-center gap-2.5"><i className="fas fa-calendar-alt"></i>Atur Libur Manual</span><button onClick={()=>setShowRange(false)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors" style={{fontSize:'24px',lineHeight:1}}>&times;</button></div><div className="overflow-y-auto flex-1 p-6 space-y-5"><div className="grid grid-cols-2 gap-4"><div><label className={lCls}>Tgl Awal</label><input type="date" className={iCls} value={rStart} onChange={e=>setRStart(e.target.value)} /></div><div><label className={lCls}>Tgl Akhir</label><input type="date" className={iCls} value={rEnd} onChange={e=>setREnd(e.target.value)} /></div></div><div><label className={lCls}>Status</label><select className={iCls} value={rStat} onChange={e=>setRStat(e.target.value)}><option>Libur</option><option>Cuti Bersama</option><option>Izin</option><option>Sakit</option></select></div><div><label className={lCls}>Keterangan (opsional)</label><textarea className={iCls} rows="3" value={rKet} onChange={e=>setRKet(e.target.value)} placeholder="Contoh: Libur Hari Raya"></textarea></div><div className="flex justify-end gap-3 pt-3 border-t border-slate-100"><button onClick={()=>setShowRange(false)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button><button onClick={async()=>{ if(!rStart||!rEnd){Swal.fire('Peringatan','Tanggal harus diisi','warning');return;} const la=Swal.fire({title:'Memproses...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()}); const r=await runGoogleScript('setStatusRentang',rStart,rEnd,rStat,rKet); la.close(); if(r.success){Swal.fire({icon:'success',title:'Berhasil',text:`${r.updated} data diupdate`});setShowRange(false);refreshData();}else Swal.fire('Error','Gagal','error'); }} className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700">Terapkan</button></div></div></div></div>}
 
-      {/* CRUD Modal — dengan dropdown Nama Lembaga & Keterangan Radius */}
-      {showCRUD&&<div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center" style={{padding:'20px'}} onClick={()=>setShowCRUD(false)}><div className="bg-white rounded-2xl shadow-2xl w-full flex flex-col" style={{maxWidth:'780px',maxHeight:'90vh'}} onClick={e=>e.stopPropagation()}><div className="flex-shrink-0 px-6 py-5 flex justify-between items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-t-2xl"><span className="font-bold text-base flex items-center gap-2.5"><i className={`fas ${cMode==='add'?'fa-plus-circle':'fa-edit'} text-blue-200`}></i>{cMode==='add'?'Tambah Presensi Baru':'Edit Data Presensi'}</span><button onClick={()=>setShowCRUD(false)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors" style={{fontSize:'24px',lineHeight:1}}>&times;</button></div><div className="overflow-y-auto flex-1 p-6 space-y-5"><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className={lCls}>Hari Tanggal</label><input type="text" value={fv['Hari Tanggal']} onChange={e=>setFv({...fv,'Hari Tanggal':e.target.value})} className={iCls} /></div><div><label className={lCls}>Waktu *</label><input type="text" value={fv['Waktu']} onChange={e=>setFv({...fv,'Waktu':e.target.value})} className={iCls} required /></div><div><label className={lCls}>Jenis Presensi *</label><select value={fv['Jenis Presensi']} onChange={e=>setFv({...fv,'Jenis Presensi':e.target.value})} className={iCls} required><option value="">-- Pilih --</option><option>Datang</option><option>Pulang</option></select></div>
-              {/* ★ DROPDOWN Nama Lembaga */}
-              <div><label className={lCls}>Nama Lembaga</label><select value={fv['Nama Lembaga']} onChange={e=>setFv({...fv,'Nama Lembaga':e.target.value})} className={iCls}><option value="">-- Pilih Lembaga --</option>{lembagaList.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
-              <div><label className={lCls}>Nama Pegawai *</label><input type="text" value={fv['Nama Pegawai']} onChange={e=>setFv({...fv,'Nama Pegawai':e.target.value})} className={iCls} required /></div><div><label className={lCls}>NIP</label><input type="text" value={fv['Nip']} onChange={e=>setFv({...fv,'Nip':e.target.value})} className={iCls} /></div><div className="md:col-span-2"><label className={lCls}>Bukti Dukung (URL)</label><input type="text" value={fv['Bukti Dukung']} onChange={e=>setFv({...fv,'Bukti Dukung':e.target.value})} className={iCls} /></div><div><label className={lCls}>Latitude</label><input type="text" value={fv['Latitude']} onChange={e=>setFv({...fv,'Latitude':e.target.value})} className={iCls} /></div><div><label className={lCls}>Longitude</label><input type="text" value={fv['Longitude']} onChange={e=>setFv({...fv,'Longitude':e.target.value})} className={iCls} /></div><div><label className={lCls}>Jarak Absen</label><input type="text" value={fv['Jarak Absen']} onChange={e=>setFv({...fv,'Jarak Absen':e.target.value})} className={iCls} /></div>
-              {/* ★ DROPDOWN Keterangan Radius */}
-              <div><label className={lCls}>Keterangan Radius</label><select value={fv['Keterangan Radius']} onChange={e=>setFv({...fv,'Keterangan Radius':e.target.value})} className={iCls}><option value="">-- Pilih Status --</option><option value="DI DALAM RADIUS">DI DALAM RADIUS</option><option value="DI LUAR RADIUS">DI LUAR RADIUS</option><option value="Tidak Hadir">Tidak Hadir</option><option value="Hari Libur">Hari Libur</option><option value="Cuti Bersama">Cuti Bersama</option></select></div>
-              <div className="md:col-span-2"><label className={lCls}>Keterangan Bukti</label><input type="text" value={fv['Keterangan Bukti']} onChange={e=>setFv({...fv,'Keterangan Bukti':e.target.value})} className={iCls} /></div></div><div className="flex justify-end gap-3 pt-4 border-t border-slate-100"><button onClick={()=>setShowCRUD(false)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button><button onClick={submitCRUD} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 flex items-center gap-2"><i className="fas fa-save"></i>Simpan</button></div></div></div></div>}
+      {/* CRUD Modal — pilih pegawai dari database (auto-isi lembaga/NIP/lokasi) + upload foto bukti dukung */}
+      {showCRUD&&(
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center" style={{padding:'20px'}} onClick={()=>setShowCRUD(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full flex flex-col" style={{maxWidth:'780px',maxHeight:'90vh'}} onClick={e=>e.stopPropagation()}>
+            <div className="flex-shrink-0 px-6 py-5 flex justify-between items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-t-2xl">
+              <span className="font-bold text-base flex items-center gap-2.5"><i className={`fas ${cMode==='add'?'fa-plus-circle':'fa-edit'} text-blue-200`}></i>{cMode==='add'?'Tambah Presensi Baru':'Edit Data Presensi'}</span>
+              <button onClick={()=>setShowCRUD(false)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors" style={{fontSize:'24px',lineHeight:1}}>&times;</button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-6 space-y-5">
+
+              {/* ★ Pilih Pegawai dari Database — auto-isi Lembaga, NIP, Latitude/Longitude default */}
+              <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 space-y-3">
+                <label className={lCls}>Pilih Pegawai dari Database <span className="text-red-400">*</span></label>
+                <input type="text" value={cariPegawaiCrud} onChange={e=>setCariPegawaiCrud(e.target.value)} className={iCls} placeholder="Cari nama / username pegawai..." />
+                <select value={pilihUname} onChange={e=>pilihPegawaiCrud(e.target.value)} className={iCls} size={Math.min(6, Math.max(3, pegawaiTerfilterCrud.length))}>
+                  {pegawaiTerfilterCrud.length===0 && <option value="" disabled>Tidak ada pegawai yang cocok</option>}
+                  {pegawaiTerfilterCrud.map(p=>(
+                    <option key={p['Username (MP/ID)']} value={p['Username (MP/ID)']}>
+                      {p['Name Pegawai']} — {p['Name Lembaga']||'-'} ({p['Username (MP/ID)']})
+                    </option>
+                  ))}
+                </select>
+                {fv['Nama Pegawai'] && (
+                  <div className="flex items-center gap-2 text-xs bg-white border border-blue-200 rounded-lg px-3 py-2">
+                    <i className="fas fa-user-check text-blue-500"></i>
+                    <span className="font-bold text-slate-700">{fv['Nama Pegawai']}</span>
+                    <span className="text-slate-400">· {fv['Nama Lembaga']||'-'} · NIP {fv['Nip']||'-'}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label className={lCls}>Hari Tanggal</label><input type="text" value={fv['Hari Tanggal']} onChange={e=>setFv({...fv,'Hari Tanggal':e.target.value})} className={iCls} placeholder="Contoh: Senin, 28 Juni 2026" /></div>
+                <div><label className={lCls}>Waktu *</label><input type="text" value={fv['Waktu']} onChange={e=>setFv({...fv,'Waktu':e.target.value})} className={iCls} placeholder="Contoh: Senin, 28 Juni 2026 pukul 07.00.00" required /></div>
+                <div><label className={lCls}>Jenis Presensi *</label><select value={fv['Jenis Presensi']} onChange={e=>setFv({...fv,'Jenis Presensi':e.target.value})} className={iCls} required><option value="">-- Pilih --</option><option>Datang</option><option>Pulang</option></select></div>
+                <div><label className={lCls}>Nama Lembaga</label><div className={iCls+' bg-slate-50 text-slate-500'}>{fv['Nama Lembaga']||<span className="italic text-slate-300">Otomatis dari pegawai terpilih</span>}</div></div>
+              </div>
+
+              {/* ★ Lokasi presensi & perhitungan jarak otomatis */}
+              <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className={lCls+' mb-0'}>Lokasi &amp; Jarak Absen</label>
+                  <button type="button" onClick={ambilLokasiCrud} disabled={!pilihUname} className="text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5">
+                    <i className="fas fa-location-crosshairs"></i> Ambil Lokasi Saat Ini (GPS) &amp; Hitung Jarak
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div><label className={lCls}>Latitude</label><input type="text" value={fv['Latitude']} onChange={e=>setFv({...fv,'Latitude':e.target.value})} className={iCls+' font-mono'} /></div>
+                  <div><label className={lCls}>Longitude</label><input type="text" value={fv['Longitude']} onChange={e=>setFv({...fv,'Longitude':e.target.value})} className={iCls+' font-mono'} /></div>
+                  <div><label className={lCls}>Jarak Absen</label><input type="text" value={fv['Jarak Absen']} onChange={e=>setFv({...fv,'Jarak Absen':e.target.value})} className={iCls} placeholder="Contoh: 35 meter" /></div>
+                </div>
+                <div><label className={lCls}>Keterangan Radius</label><select value={fv['Keterangan Radius']} onChange={e=>setFv({...fv,'Keterangan Radius':e.target.value})} className={iCls}><option value="">-- Pilih Status --</option><option value="DI DALAM RADIUS">DI DALAM RADIUS</option><option value="DI LUAR RADIUS">DI LUAR RADIUS</option><option value="Tidak Hadir">Tidak Hadir</option><option value="Hari Libur">Hari Libur</option><option value="Cuti Bersama">Cuti Bersama</option></select></div>
+              </div>
+
+              {/* ★ Pilih Foto Bukti Dukung */}
+              <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+                <label className={lCls}>Foto Bukti Dukung</label>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 transition-colors text-slate-600 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <i className="fas fa-camera"></i> Pilih Foto
+                    <input type="file" accept="image/*" className="hidden" onChange={onPilihFoto} />
+                  </label>
+                  {fotoFile && <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1.5"><i className="fas fa-check-circle"></i>{fotoFile.fileName}</span>}
+                  {!fotoFile && fv['Bukti Dukung'] && <span className="text-xs text-slate-400 flex items-center gap-1.5"><i className="fas fa-link"></i>Sudah ada bukti tersimpan</span>}
+                </div>
+                {fotoFile && <img src={fotoFile.dataUrl} alt="Preview" className="max-h-40 rounded-lg border border-slate-200 object-contain" />}
+                <div><label className={lCls}>atau isi URL Bukti Dukung manual</label><input type="text" value={fv['Bukti Dukung']} onChange={e=>setFv({...fv,'Bukti Dukung':e.target.value})} className={iCls} placeholder="https://..." /></div>
+              </div>
+
+              <div><label className={lCls}>Keterangan Bukti</label><input type="text" value={fv['Keterangan Bukti']} onChange={e=>setFv({...fv,'Keterangan Bukti':e.target.value})} className={iCls} /></div>
+            </div>
+            <div className="flex-shrink-0 px-6 py-4 border-t border-slate-100 flex justify-end gap-3">
+              <button onClick={()=>setShowCRUD(false)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+              <button onClick={submitCRUD} disabled={savingCrud} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"><i className="fas fa-save"></i>{savingCrud?'Menyimpan...':'Simpan'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -935,6 +1090,23 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
   const [showPw,setShowPw] = useState(false);
   const [page,setPage]     = useState(1), [rpp,setRpp] = useState(10);
   const canM = userRole==='Admin'||userRole==='Superuser';
+
+  // ★ Master data Lembaga (Latitude/Longitude/Radius default per lembaga) — untuk auto-isi saat pilih lembaga
+  const [lembagaData,setLembagaData] = useState([]);
+  useEffect(()=>{ runGoogleScript('getLembagaList').then(r=>setLembagaData(r||[])).catch(()=>{}); },[]);
+
+  const pilihLembagaFd = (namaLembaga) => {
+    setFd(f=>{
+      const next = {...f, 'Name Lembaga': namaLembaga};
+      const l = lembagaData.find(x=>x['Nama Lembaga']===namaLembaga);
+      if (l) {
+        next['Latitude'] = l['Latitude']||'';
+        next['Longitude'] = l['Longitude']||'';
+        next['Radius (m)'] = l['Radius (m)']||'';
+      }
+      return next;
+    });
+  };
 
   // Sinkronisasi ketika parent refresh data
   useEffect(()=>{ setData(pegawaiData||[]); },[pegawaiData]);
@@ -1213,11 +1385,12 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
                   <label className={lCls}>Nama Lembaga</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-3 flex items-center text-slate-300 pointer-events-none"><i className="fas fa-school text-xs"></i></span>
-                    <select value={fd['Name Lembaga']} onChange={e=>setFd({...fd,'Name Lembaga':e.target.value})} className={iCls+' pl-9'}>
+                    <select value={fd['Name Lembaga']} onChange={e=>pilihLembagaFd(e.target.value)} className={iCls+' pl-9'}>
                       <option value="">-- Pilih Lembaga --</option>
                       {lembagaList.map(l=><option key={l} value={l}>{l}</option>)}
                     </select>
                   </div>
+                  <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1"><i className="fas fa-info-circle"></i>Latitude, Longitude, dan Radius akan otomatis terisi sesuai data master lembaga.</p>
                 </div>
                 {/* Latitude */}
                 <div>
@@ -1886,6 +2059,10 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
   const [selected,setSelected] = useState(new Set());
   const [flLem,setFlLem]     = useState(''), [flNama,setFlNama] = useState('');
   const [modalPegawai,setModalPegawai] = useState(null);
+  const [modalEdit,setModalEdit] = useState(null); // item jadwal yang sedang diedit daftar pegawainya
+  const [editSelected,setEditSelected] = useState(new Set()); // hasil akhir pilihan pegawai saat edit
+  const [editFlLem,setEditFlLem] = useState(''), [editFlNama,setEditFlNama] = useState('');
+  const [savingEdit,setSavingEdit] = useState(false);
   const [page,setPage]       = useState(1), [rpp,setRpp] = useState(10);
 
   const muatDaftar = async () => {
@@ -1985,6 +2162,61 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
     setModalPegawai({ nama: item['Nama Acara'], daftar: daftarUsername.map(u=>namaMap[u]||u) });
   };
 
+  const openEditPegawai = (item) => {
+    let daftarUsername = [];
+    try { daftarUsername = JSON.parse(item['Daftar Pegawai']||'[]'); } catch(e){}
+    setEditSelected(new Set(daftarUsername.map(String)));
+    setEditFlLem(''); setEditFlNama('');
+    setModalEdit(item);
+  };
+
+  const editFilteredPegawai = useMemo(()=>(pegawaiData||[]).filter(p=>
+    (p['Name Lembaga']||'').toLowerCase().includes(editFlLem.toLowerCase()) &&
+    (p['Name Pegawai']||'').toLowerCase().includes(editFlNama.toLowerCase())
+  ),[pegawaiData,editFlLem,editFlNama]);
+
+  const editAllFilteredSelected = editFilteredPegawai.length>0 && editFilteredPegawai.every(p=>editSelected.has(p['Username (MP/ID)']));
+
+  const toggleEditSatu = uname => {
+    setEditSelected(prev=>{ const next=new Set(prev); if(next.has(uname)) next.delete(uname); else next.add(uname); return next; });
+  };
+  const toggleEditSemuaFilter = () => {
+    setEditSelected(prev=>{
+      const next = new Set(prev);
+      if (editAllFilteredSelected) editFilteredPegawai.forEach(p=>next.delete(p['Username (MP/ID)']));
+      else editFilteredPegawai.forEach(p=>next.add(p['Username (MP/ID)']));
+      return next;
+    });
+  };
+
+  const simpanEditPegawai = async () => {
+    if (!modalEdit) return;
+    let daftarLama = [];
+    try { daftarLama = JSON.parse(modalEdit['Daftar Pegawai']||'[]'); } catch(e){}
+    const lamaSet = new Set(daftarLama.map(String));
+    const tambah = Array.from(editSelected).filter(u=>!lamaSet.has(u));
+    const hapus = daftarLama.filter(u=>!editSelected.has(String(u)));
+    if (tambah.length===0 && hapus.length===0) { setModalEdit(null); return; }
+    setSavingEdit(true);
+    const la = Swal.fire({title:'Menyimpan perubahan...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+    try {
+      const r = await runGoogleScript('editJadwalAcaraPegawai', modalEdit._rowIndex, { tambah, hapus }, username);
+      la.close();
+      if (r.success) {
+        Swal.fire({icon:'success',title:'Berhasil',text:r.message});
+        setModalEdit(null);
+        await muatDaftar();
+        if (refreshData) refreshData();
+      } else {
+        Swal.fire('Gagal', r.message||'Terjadi kesalahan.', 'error');
+      }
+    } catch(e) {
+      la.close();
+      Swal.fire('Error', e.message||'Terjadi kesalahan.', 'error');
+    }
+    setSavingEdit(false);
+  };
+
   if(!canM) return <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 text-center"><div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4"><i className="fas fa-lock text-3xl text-slate-300"></i></div><h3 className="text-lg font-bold text-slate-700">Akses Ditolak</h3><p className="text-slate-400 text-sm mt-2">Jadwal Acara hanya untuk Admin/Superuser.</p></div>;
 
   const iCls = "w-full border border-slate-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 outline-none bg-white transition-shadow";
@@ -2046,6 +2278,8 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-1.5">
                         {(item['Status']==='Terjadwal'||item['Status']==='Aktif') &&
+                          <button onClick={()=>openEditPegawai(item)} className="w-8 h-8 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit Daftar Pegawai"><i className="fas fa-user-edit text-xs"></i></button>}
+                        {(item['Status']==='Terjadwal'||item['Status']==='Aktif') &&
                           <button onClick={()=>batalkan(item)} className="w-8 h-8 bg-amber-50 text-amber-600 border border-amber-100 rounded-lg flex items-center justify-center hover:bg-amber-100 transition-colors" title="Batalkan Jadwal"><i className="fas fa-ban text-xs"></i></button>}
                         {(item['Status']==='Selesai'||item['Status']==='Dibatalkan') &&
                           <button onClick={()=>hapus(item)} className="w-8 h-8 bg-red-50 text-red-500 border border-red-100 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors" title="Hapus Riwayat"><i className="fas fa-trash-alt text-xs"></i></button>}
@@ -2073,7 +2307,7 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
                 <label className={lCls}>Nama Acara <span className="text-red-400">*</span></label>
                 <input type="text" value={fd.namaAcara} onChange={e=>setFd({...fd,namaAcara:e.target.value})} className={iCls} placeholder="Contoh: Rapat Koordinasi KKG Kecamatan Sine" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-1">
                 <div><label className={lCls}>Tanggal Mulai <span className="text-red-400">*</span></label><input type="date" value={fd.tanggalMulai} onChange={e=>setFd({...fd,tanggalMulai:e.target.value})} className={iCls} /></div>
                 <div><label className={lCls}>Tanggal Akhir <span className="text-red-400">*</span></label><input type="date" value={fd.tanggalAkhir} onChange={e=>setFd({...fd,tanggalAkhir:e.target.value})} className={iCls} /></div>
               </div>
@@ -2082,30 +2316,31 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
                 <div><label className={lCls}>Longitude <span className="text-red-400">*</span></label><input type="text" value={fd.longitude} onChange={e=>setFd({...fd,longitude:e.target.value})} className={iCls+' font-mono'} placeholder="111.xxxxx" /></div>
                 <div><label className={lCls}>Radius (meter) <span className="text-red-400">*</span></label><input type="number" min="0" value={fd.radius} onChange={e=>setFd({...fd,radius:e.target.value})} className={iCls} placeholder="Contoh: 100" /></div>
               </div>
-              <button type="button" onClick={ambilLokasi} className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5"><i className="fas fa-location-crosshairs"></i> Ambil Lokasi Saat Ini (GPS)</button>
+              <button type="button" onClick={ambilLokasi} className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 -mt-1"><i className="fas fa-location-crosshairs"></i> Ambil Lokasi Saat Ini (GPS)</button>
 
-              <div className="border-t border-slate-100 pt-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+
+              <div className="border-t border-slate-100 pt-5 mt-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                   <label className={lCls+' mb-0'}>Pilih Pegawai <span className="text-red-400">*</span> <span className="text-slate-400 font-normal normal-case">({selected.size} terpilih)</span></label>
                   <label className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 cursor-pointer select-none">
                     <input type="checkbox" checked={allFilteredSelected} onChange={toggleSemuaFilter} className="rounded accent-blue-600 w-3.5 h-3.5" /> Pilih Semua (sesuai filter)
                   </label>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <input type="text" value={flNama} onChange={e=>setFlNama(e.target.value)} className={iCls} placeholder="Cari nama pegawai..." />
                   <select value={flLem} onChange={e=>setFlLem(e.target.value)} className={iCls}>
                     <option value="">-- Semua Lembaga --</option>
                     {lembagaList.map(l=><option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
-                <div className="border border-slate-200 rounded-xl max-h-64 overflow-y-auto divide-y divide-slate-100">
+                <div className="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100">
                   {filteredPegawai.length>0 ? filteredPegawai.map((p,i)=>{
                     const uname = p['Username (MP/ID)'];
                     return (
-                      <label key={i} className="flex items-center gap-3 px-3 py-2 hover:bg-blue-50/50 cursor-pointer text-xs">
+                      <label key={i} className="flex items-center gap-3 px-3.5 py-3 hover:bg-blue-50/50 cursor-pointer text-xs">
                         <input type="checkbox" checked={selected.has(uname)} onChange={()=>toggleSatu(uname)} className="rounded accent-blue-600 w-3.5 h-3.5 flex-shrink-0" />
-                        <span className="font-semibold text-slate-700 truncate">{p['Name Pegawai']}</span>
-                        <span className="text-slate-400 truncate ml-auto text-[11px]">{p['Name Lembaga']}</span>
+                        <span className="font-semibold text-slate-700 truncate flex-1 min-w-0">{p['Name Pegawai']}</span>
+                        <span className="text-slate-400 truncate text-[11px] flex-shrink-0 max-w-[40%] text-right">{p['Name Lembaga']}</span>
                       </label>
                     );
                   }) : <div className="text-center py-8 text-slate-300 text-xs">Tidak ada pegawai yang cocok dengan filter</div>}
@@ -2132,6 +2367,56 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
               {modalPegawai.daftar.length>0 ? modalPegawai.daftar.map((nm,i)=>(
                 <div key={i} className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600"><i className="fas fa-user text-slate-300 text-[10px]"></i>{nm}</div>
               )) : <div className="text-center py-8 text-slate-300 text-xs">Tidak ada pegawai</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Daftar Pegawai (tambah/hapus pegawai pada jadwal yang masih berjalan) */}
+      {modalEdit && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={()=>setModalEdit(null)}>
+          <div className="bg-white w-full sm:rounded-2xl shadow-2xl flex flex-col modal-outer" style={{maxWidth:'620px',maxHeight:'100dvh'}} onClick={e=>e.stopPropagation()}>
+            <div className="flex-shrink-0 px-5 sm:px-6 py-4 sm:py-5 flex justify-between items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white sm:rounded-t-2xl rounded-t-2xl">
+              <span className="font-bold text-sm sm:text-base flex items-center gap-2.5"><i className="fas fa-user-edit text-blue-200"></i>Edit Daftar Pegawai</span>
+              <button onClick={()=>setModalEdit(null)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors text-xl font-bold leading-none">&times;</button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4 sm:p-6 modal-body space-y-4">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700">
+                <i className="fas fa-info-circle mr-1.5"></i>
+                Menambah/menghapus pegawai untuk jadwal <b>"{modalEdit['Nama Acara']}"</b>.
+                {modalEdit['Status']==='Aktif' && ' Karena jadwal sedang Aktif, perubahan langsung diterapkan ke lokasi/radius presensi pegawai terkait.'}
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <label className={lCls+' mb-0'}>Daftar Pegawai <span className="text-slate-400 font-normal normal-case">({editSelected.size} terpilih)</span></label>
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 cursor-pointer select-none">
+                    <input type="checkbox" checked={editAllFilteredSelected} onChange={toggleEditSemuaFilter} className="rounded accent-blue-600 w-3.5 h-3.5" /> Pilih Semua (sesuai filter)
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <input type="text" value={editFlNama} onChange={e=>setEditFlNama(e.target.value)} className={iCls} placeholder="Cari nama pegawai..." />
+                  <select value={editFlLem} onChange={e=>setEditFlLem(e.target.value)} className={iCls}>
+                    <option value="">-- Semua Lembaga --</option>
+                    {lembagaList.map(l=><option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div className="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100">
+                  {editFilteredPegawai.length>0 ? editFilteredPegawai.map((p,i)=>{
+                    const uname = p['Username (MP/ID)'];
+                    return (
+                      <label key={i} className="flex items-center gap-3 px-3.5 py-3 hover:bg-blue-50/50 cursor-pointer text-xs">
+                        <input type="checkbox" checked={editSelected.has(uname)} onChange={()=>toggleEditSatu(uname)} className="rounded accent-blue-600 w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="font-semibold text-slate-700 truncate flex-1 min-w-0">{p['Name Pegawai']}</span>
+                        <span className="text-slate-400 truncate text-[11px] flex-shrink-0 max-w-[40%] text-right">{p['Name Lembaga']}</span>
+                      </label>
+                    );
+                  }) : <div className="text-center py-8 text-slate-300 text-xs">Tidak ada pegawai yang cocok dengan filter</div>}
+                </div>
+              </div>
+            </div>
+            <div className="flex-shrink-0 px-5 sm:px-6 py-4 border-t border-slate-100 flex justify-end gap-2">
+              <button onClick={()=>setModalEdit(null)} className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-slate-500 hover:bg-slate-100 transition-colors">Batal</button>
+              <button onClick={simpanEditPegawai} disabled={savingEdit} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all"><i className="fas fa-save"></i> Simpan Perubahan</button>
             </div>
           </div>
         </div>
@@ -2485,7 +2770,7 @@ const App = () => {
               </div>
             : <div className="w-full">
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
-                {tab==='monitoring_presensi'  && <MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
+                {tab==='monitoring_presensi'  && <MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} pegawaiData={pegawai} />}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} />}
                 {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} />}
