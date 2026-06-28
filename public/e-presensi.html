@@ -377,10 +377,35 @@ const Login = ({ onLogin }) => {
       return;
     }
     setCapErr(''); setLoad(true);
-    const r = await runGoogleScript('login',un,pw);
-    if(r&&r.success) onLogin(r.user);
-    else {
-      Swal.fire({icon:'error',title:'Akses Ditolak',text:'Username atau password salah!',confirmButtonColor:'#2563eb'});
+    try {
+      const r = await runGoogleScript('login',un,pw);
+      if(r&&r.success) {
+        onLogin(r.user);
+      } else {
+        // Pesan error spesifik berdasarkan kode dari server
+        let title = 'Akses Ditolak';
+        let text  = 'Terjadi kesalahan, silakan coba lagi.';
+        let icon  = 'error';
+        const code = r && r.errorCode ? r.errorCode : '';
+        if (code === 'USER_NOT_FOUND') {
+          title = 'Akun Tidak Terdaftar';
+          text  = 'Akun Anda tidak terdaftar dalam sistem. Hubungi administrator untuk pendaftaran akun.';
+        } else if (code === 'WRONG_PASSWORD') {
+          title = 'Password Salah';
+          text  = 'Password yang Anda masukkan salah. Periksa kembali dan coba lagi.';
+        } else if (code === 'NO_ACCESS') {
+          title = 'Tidak Memiliki Hak Akses';
+          text  = 'Akun Anda terdaftar namun tidak memiliki hak akses ke sistem ini. Hubungi administrator.';
+          icon  = 'warning';
+        } else {
+          // Fallback: server lama yang belum mengembalikan errorCode
+          text = r && r.message ? r.message : 'Username atau password salah!';
+        }
+        Swal.fire({ icon, title, text, confirmButtonColor:'#2563eb' });
+        refreshCaptcha();
+      }
+    } catch(err) {
+      Swal.fire({icon:'error',title:'Gagal Terhubung',text:'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',confirmButtonColor:'#2563eb'});
       refreshCaptcha();
     }
     setLoad(false);
