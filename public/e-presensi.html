@@ -2499,12 +2499,19 @@ const ActivityLog = ({ userRole }) => {
 };
 
 
-const PengajuanPSW = ({ user, userLembaga }) => {
-  const [pegList,setPegList]=useState([]);
+const PengajuanPSW = ({ user, userLembaga, pegawaiData }) => {
   const [fd,setFd]=useState({nip:'',jenis:'',tglAwal:'',tglAkhir:''});
   const [file,setFile]=useState(null), [load,setLoad]=useState(false);
   const lemAktif = userLembaga || (user&&user.lembaga) || '';
-  useEffect(()=>{ const f=async()=>{ if(!lemAktif) return; const r=await runGoogleScript('getPegawaiByLembaga',lemAktif); setPegList(Array.isArray(r)?r:[]); }; f(); },[lemAktif]);
+  const norm = s => (s||'').toString().trim().toLowerCase().replace(/\s+/g,' ');
+  const pegList = useMemo(()=>{
+    if(!lemAktif) return [];
+    return (pegawaiData||[])
+      .filter(p=>norm(p['Name Lembaga'])===norm(lemAktif))
+      .map(p=>({nama:p['Name Pegawai']||'', nip:p['Username (MP/ID)']||p['Nip']||''}))
+      .filter(p=>p.nama)
+      .sort((a,b)=>a.nama.localeCompare(b.nama));
+  },[pegawaiData,lemAktif]);
   const onFile=e=>{
     const f=e.target.files[0]; if(!f) return;
     if(f.type!=='application/pdf'){Swal.fire('Format Salah','Hanya PDF diizinkan.','warning');e.target.value='';return;}
@@ -2779,7 +2786,7 @@ const App = () => {
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
                 {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} /></div>}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
-                {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} />}
+                {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} pegawaiData={pegawai} />}
                 {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} />}
                 {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={fetchData} userRole={user.role} />}
                 {tab==='arsip_data'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><ArsipData userRole={user.role} username={user.username} refreshData={fetchData} ijinData={ijin} pegawaiData={pegawai} /></div>}
