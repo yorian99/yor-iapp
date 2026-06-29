@@ -1335,6 +1335,7 @@ const ManajemenLembaga = ({ refreshParent, userRole, lembagaData }) => {
 };
 
 // ======================= DATABASE PEGAWAI =======================
+const roleBadge = role => {
   const map = {Admin:'bg-red-100 text-red-700 border-red-200',Superuser:'bg-purple-100 text-purple-700 border-purple-200',User:'bg-blue-100 text-blue-700 border-blue-200',Supervisor:'bg-amber-100 text-amber-700 border-amber-200'};
   return map[role]||'bg-slate-100 text-slate-600 border-slate-200';
 };
