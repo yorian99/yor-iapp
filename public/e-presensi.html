@@ -670,7 +670,7 @@ const Dashboard = ({ presensiData, ijinData, pegawaiData }) => {
 };
 
 
-const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga, lembagaData }) => {
+const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga, lembagaData, pegawaiData }) => {
   const [flLem,setFlLem]=useState(''), [flNama,setFlNama]=useState('');
   const [editingRow,setEditingRow]=useState(null), [editVal,setEditVal]=useState('');
   const [modalImg,setModalImg]=useState(null), [modalMap,setModalMap]=useState(null);
@@ -886,11 +886,29 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
               <div><label className={lCls}>Nama Lembaga</label><select value={fv['Nama Lembaga']} onChange={e=>{
                 const sel=e.target.value;
                 const lemDb=(lembagaData||[]).find(l=>l['Name Lembaga']===sel);
-                setFv({...fv,'Nama Lembaga':sel,'Latitude':lemDb?lemDb['Latitude']:fv['Latitude'],'Longitude':lemDb?lemDb['Longitude']:fv['Longitude']});
+                setFv({...fv,'Nama Lembaga':sel,'Latitude':lemDb?lemDb['Latitude']:fv['Latitude'],'Longitude':lemDb?lemDb['Longitude']:fv['Longitude'],'Nama Pegawai':'','Nip':''});
               }} className={iCls}><option value="">-- Pilih Lembaga --</option>{(lembagaData&&lembagaData.length>0?lembagaData.map(l=><option key={l['Name Lembaga']} value={l['Name Lembaga']}>{l['Name Lembaga']}</option>):lembagaList.map(l=><option key={l} value={l}>{l}</option>))}</select>
               {fv['Nama Lembaga']&&(lembagaData||[]).find(l=>l['Name Lembaga']===fv['Nama Lembaga'])&&<p className="text-[10px] text-indigo-500 mt-1 flex items-center gap-1"><i className="fas fa-info-circle"></i>Koordinat diisi otomatis</p>}
               </div>
-              <div><label className={lCls}>Nama Pegawai *</label><input type="text" value={fv['Nama Pegawai']} onChange={e=>setFv({...fv,'Nama Pegawai':e.target.value})} className={iCls} required /></div><div><label className={lCls}>NIP</label><input type="text" value={fv['Nip']} onChange={e=>setFv({...fv,'Nip':e.target.value})} className={iCls} /></div>
+              {/* ★ DROPDOWN Nama Pegawai — filter by lembaga, auto-isi NIP */}
+              <div><label className={lCls}>Nama Pegawai *</label>
+              {fv['Nama Lembaga'] ? (
+                <select value={fv['Nama Pegawai']} onChange={e=>{
+                  const sel=e.target.value;
+                  const pg=(pegawaiData||[]).find(p=>p['Name Pegawai']===sel&&p['Name Lembaga']===fv['Nama Lembaga']);
+                  setFv({...fv,'Nama Pegawai':sel,'Nip':pg?pg['Username (MP/ID)']||'':''});
+                }} className={iCls} required>
+                  <option value="">-- Pilih Pegawai --</option>
+                  {(pegawaiData||[]).filter(p=>p['Name Lembaga']===fv['Nama Lembaga']).map(p=>(
+                    <option key={p['Username (MP/ID)']} value={p['Name Pegawai']}>{p['Name Pegawai']}</option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" value={fv['Nama Pegawai']} onChange={e=>setFv({...fv,'Nama Pegawai':e.target.value})} className={iCls} placeholder="Pilih lembaga dulu..." required />
+              )}
+              </div>
+              {/* NIP — auto-terisi, masih bisa diedit manual */}
+              <div className="md:col-span-2"><label className={lCls}>NIP {fv['Nip']&&<span className="text-indigo-400 text-[9px] font-bold ml-1">● Otomatis terisi</span>}</label><input type="text" value={fv['Nip']} onChange={e=>setFv({...fv,'Nip':e.target.value})} className={iCls} placeholder="Terisi otomatis saat pegawai dipilih" /></div>
               {/* ★ BUKTI DUKUNG — upload gambar */}
               <div className="md:col-span-2">
                 <label className={lCls}>Bukti Dukung (Foto)</label>
@@ -3175,7 +3193,7 @@ const App = () => {
               </div>
             : <div className="w-full flex flex-col flex-1 min-h-0">
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
-                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} /></div>}
+                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} pegawaiData={pegawai} /></div>}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} pegawaiData={pegawai} />}
                 {tab==='manajemen_lembaga'&&canPegawai && <ManajemenLembaga refreshParent={fetchData} userRole={user.role} lembagaData={lembagaData} />}
