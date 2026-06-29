@@ -82,7 +82,6 @@
     .row-late{background-color:#fef9c3!important}
     .row-outside{background-color:#fee2e2!important}
     .row-psw{background-color:#dcfce7!important}
-    .row-jadwal{background-color:#dbeafe!important}
     .row-th td{background-color:#1e293b!important;color:#fff!important}
     @keyframes slideL{from{transform:translateX(-40px);opacity:0}to{transform:translateX(0);opacity:1}}
     @keyframes slideR{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -239,7 +238,8 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
   const approved = ijin.filter(i=>i.Status&&i.Status.toLowerCase()==='disetujui');
   const jadwalAktif = (jadwal||[]).filter(j=>j['Status']==='Aktif'||j['Status']==='Terjadwal'||j['Status']==='Selesai');
 
-  // ── Bangun jadwalMap: "uname||mulai||akhir" ──────────────────────────────
+  // Buat set: "username|tanggalISO" → true, untuk pegawai dalam jadwal acara
+  // agar lookup O(1) per presensi
   const jadwalSet = new Set();
   jadwalAktif.forEach(j => {
     let daftarUsername = [];
@@ -247,10 +247,12 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
     if (!daftarUsername.length) return;
     const mulai = j['Tanggal Mulai'], akhir = j['Tanggal Akhir'];
     if (!mulai||!akhir) return;
-    daftarUsername.forEach(uname => jadwalSet.add(`${uname}||${mulai}||${akhir}`));
+    daftarUsername.forEach(uname => {
+      jadwalSet.add(`${uname}||${mulai}||${akhir}`);
+    });
   });
 
-  // Helper: cek apakah username masuk jadwal pada tanggal ISO tertentu
+  // Helper cek apakah pegawai username masuk jadwal pada tanggal ISO tertentu
   const isInJadwal = (username, tglISO) => {
     for (const key of jadwalSet) {
       const [uname, mulai, akhir] = key.split('||');
@@ -260,25 +262,24 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
     return false;
   };
 
-  // ── Hitung presensi per "uname||tgl": berapa banyak baris & apakah ada yg sudah baik ──
-  // Kunci: jika pegawai masuk jadwal acara pada tanggal itu,
-  // SEMUA presensinya pada hari itu (meski hanya 1 baris, meski Tidak Hadir / Luar Radius)
-  // dianggap DI DALAM RADIUS — cukup 1 presensi sudah cukup untuk hadir di acara.
-  const jadwalCountMap = new Map(); // key → { total, baikCount }
+  // Buat map: "username|tanggalISO" → pegawai ini punya MINIMAL 1 presensi pada hari itu
+  // selagi masuk Jadwal Acara aktif. CUKUP 1 presensi (datang ATAU pulang, apapun status
+  // radius aslinya — termasuk yang semula "Tidak Hadir"/"Di Luar Radius") untuk menandai
+  // hari itu aman (DI DALAM RADIUS), karena pegawai yang mengikuti acara di lapangan tidak
+  // selalu bisa presensi normal (datang+pulang, di lokasi induk). Jika pegawai TIDAK punya
+  // presensi sama sekali pada hari itu, ia tetap akan tercatat "Tidak Hadir" seperti biasa.
+  const jadwalPresensiBaikSet = new Set();
   prs.forEach(p => {
     const uname = p['Username (MP/ID)'] || p['Nip'] || normalizeName(p['Nama Pegawai']||'');
     const tgl   = parsePresensiDateISO(p['Waktu']);
-    if (!uname||!tgl||!isInJadwal(uname, tgl)) return;
-    const key = `${uname}||${tgl}`;
-    if (!jadwalCountMap.has(key)) jadwalCountMap.set(key, { total:0, baikCount:0 });
-    const ent = jadwalCountMap.get(key);
-    ent.total++;
-    const kr = (p['Keterangan Radius']||'').toLowerCase();
-    if (kr.includes('di dalam radius') || kr === 'psw') ent.baikCount++;
+    if (!uname||!tgl) return;
+    if (!isInJadwal(uname, tgl)) return;
+    // Ada presensi (apapun jenis/status radiusnya) pada hari+user ini selagi jadwal aktif
+    jadwalPresensiBaikSet.add(`${uname}||${tgl}`);
   });
 
   return prs.map(p => {
-    // 1. PSW (ijin disetujui) — prioritas tertinggi
+    // 1. Cek PSW (ijin disetujui) — tetap prioritas tertinggi
     const psw = approved.some(ij => {
       if (normalizeName(p['Nama Pegawai']||'')!==normalizeName(ij['Nama Pegawai']||'')) return false;
       const pd = parsePresensiDate(p['Waktu']); if (!pd) return false;
@@ -288,16 +289,12 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
     });
     if (psw) return {...p, isPSW:true, displayRadius:'PSW'};
 
-    // 2. Jadwal Acara
+    // 2. Cek jadwal acara
     const uname = p['Username (MP/ID)'] || p['Nip'] || normalizeName(p['Nama Pegawai']||'');
     const tgl   = parsePresensiDateISO(p['Waktu']);
     if (uname && tgl && isInJadwal(uname, tgl)) {
-      const ent = jadwalCountMap.get(`${uname}||${tgl}`);
-      // Kondisi aman:
-      //   A. Sudah ada ≥1 presensi "DI DALAM RADIUS" pada hari itu (multi-presensi)
-      //   B. Hanya ada 1 presensi (apapun statusnya) → dianggap hadir di acara
-      const aman = ent && (ent.baikCount > 0 || ent.total === 1);
-      if (aman) {
+      // Jika ada minimal 1 presensi (apapun status radiusnya) pada hari itu untuk user ini
+      if (jadwalPresensiBaikSet.has(`${uname}||${tgl}`)) {
         return {...p, isPSW:false, isJadwal:true, displayRadius:'DI DALAM RADIUS'};
       }
     }
@@ -636,7 +633,7 @@ const Dashboard = ({ presensiData, ijinData, pegawaiData }) => {
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2"><i className="fas fa-palette text-slate-300"></i> Keterangan Warna Baris</p>
         <div className="flex flex-wrap gap-2">
-          {[['bg-green-100 border-green-200 text-green-700','PSW (Disetujui)'],['bg-blue-100 border-blue-200 text-blue-700','Jadwal Acara'],['bg-yellow-100 border-yellow-200 text-yellow-700','Terlambat (>07:00)'],['bg-red-100 border-red-200 text-red-700','Luar Radius'],['bg-slate-800 border-slate-700 text-white','Tidak Hadir'],['bg-white border-slate-200 text-slate-600','Normal']].map(([c,l])=>(
+          {[['bg-green-100 border-green-200 text-green-700','PSW (Disetujui)'],['bg-yellow-100 border-yellow-200 text-yellow-700','Terlambat (>07:00)'],['bg-red-100 border-red-200 text-red-700','Luar Radius'],['bg-slate-800 border-slate-700 text-white','Tidak Hadir'],['bg-white border-slate-200 text-slate-600','Normal']].map(([c,l])=>(
             <span key={l} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border ${c}`}><span className={`w-2 h-2 rounded-full ${c.split(' ')[0]}`}></span>{l}</span>
           ))}
         </div>
@@ -763,17 +760,15 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paged.map((item,i) => {
-                const out     = isOutsideRadius(item.displayRadius);
-                const late    = checkLateStatus(item['Waktu'],item['Jenis Presensi']);
-                const th      = isTidakHadir(item.displayRadius);
-                const psw     = item.isPSW;
-                const jadwal  = item.isJadwal;  // ← pegawai dalam jadwal acara
+                const out  = isOutsideRadius(item.displayRadius);
+                const late = checkLateStatus(item['Waktu'],item['Jenis Presensi']);
+                const th   = isTidakHadir(item.displayRadius);
+                const psw  = item.isPSW;
                 let rCls = 'hover:bg-slate-50/50';
-                if(psw)         rCls='row-psw';
-                else if(jadwal) rCls='row-jadwal';   // warna khusus jadwal acara
-                else if(th)     rCls='row-th';
-                else if(out)    rCls='row-outside hover:opacity-90';
-                else if(late)   rCls='row-late hover:opacity-90';
+                if(psw)  rCls='row-psw';
+                else if(th)   rCls='row-th';
+                else if(out)  rCls='row-outside hover:opacity-90';
+                else if(late) rCls='row-late hover:opacity-90';
                 return (
                   <tr key={i} className={`${rCls} transition-colors`}>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -790,14 +785,9 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider
-                        ${psw    ? 'bg-green-600 text-white'
-                        : jadwal ? 'bg-blue-600 text-white'
-                        : th     ? 'bg-slate-800 text-white'
-                        : out    ? 'bg-red-600 text-white'
-                                 : 'bg-green-600 text-white'}`}>
-                        <i className={`fas ${psw ? 'fa-file-signature' : jadwal ? 'fa-calendar-check' : (!th&&!out) ? 'fa-check-circle' : th ? 'fa-times-circle' : 'fa-exclamation-circle'} text-[7px]`}></i>
-                        {jadwal ? 'HADIR (ACARA)' : item.displayRadius}
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider ${psw?'bg-green-600 text-white':th?'bg-slate-800 text-white':out?'bg-red-600 text-white':'bg-green-600 text-white'}`}>
+                        <i className={`fas ${psw||(!th&&!out)?'fa-check-circle':th?'fa-times-circle':'fa-exclamation-circle'} text-[7px]`}></i>
+                        {item.displayRadius}
                       </span>
                       {item['Jarak Absen']&&<div className="text-[10px] mt-1 text-slate-400">{item['Jarak Absen']}</div>}
                     </td>
@@ -1457,7 +1447,7 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
       const ranges=[{name:'Tanggal 1-10',minDay:1,maxDay:10},{name:'Tanggal 11-20',minDay:11,maxDay:20},{name:'Tanggal 21-31',minDay:21,maxDay:31}];
       const groups=ranges.map(r=>({...r,dates:allDates.filter(d=>d.dayNumber>=r.minDay&&d.dayNumber<=r.maxDay)})).filter(g=>g.dates.length>0);
       const gPresensi=getFiltered(null), gpMap=new Map();
-      gPresensi.forEach(p=>{ const dt=parsePresensiDate(p['Waktu']); if(!dt) return; const nn=normalizeName(p['Nama Pegawai']||''), key=`${nn}|${dt}`; if(!gpMap.has(key)) gpMap.set(key,{datang:null,pulang:null}); const ent=gpMap.get(key), j=(p['Jenis Presensi']||'').toLowerCase(), t=exTime(p['Waktu']), rad=p.displayRadius||p['Keterangan Radius']||'', lib=rad.toLowerCase().includes('libur')||rad.toLowerCase().includes('cuti bersama'), late=j==='datang'?checkLateStatus(p['Waktu'],'datang'):false, isJadwalAcara=!!p.isJadwal, rec={time:t,radius:rad,isLibur:lib,late,isJadwal:isJadwalAcara}; if(j==='datang') ent.datang=rec; else if(j==='pulang') ent.pulang=rec; });
+      gPresensi.forEach(p=>{ const dt=parsePresensiDate(p['Waktu']); if(!dt) return; const nn=normalizeName(p['Nama Pegawai']||''), key=`${nn}|${dt}`; if(!gpMap.has(key)) gpMap.set(key,{datang:null,pulang:null}); const ent=gpMap.get(key), j=(p['Jenis Presensi']||'').toLowerCase(), t=exTime(p['Waktu']), rad=p.displayRadius||p['Keterangan Radius']||'', lib=rad.toLowerCase().includes('libur')||rad.toLowerCase().includes('cuti bersama'), late=j==='datang'?checkLateStatus(p['Waktu'],'datang'):false, rec={time:t,radius:rad,isLibur:lib,late}; if(j==='datang') ent.datang=rec; else if(j==='pulang') ent.pulang=rec; });
       const isTH = r => !r||(r.radius&&isTidakHadir(r.radius));
       const lems=flLem?[flLem]:[...lembagaList]; let first=true;
       for(const lem of lems){
@@ -1470,11 +1460,7 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
           if(pswActive(nm,dt)){const j=pswJenis(nm,dt);return{text:`PSW${j?` (${j})`:''}`,style:'psw'};}
           if(ent&&((ent.datang&&ent.datang.isLibur)||(ent.pulang&&ent.pulang.isLibur))) return{text:'LIBUR',style:'libur'};
           const rec=tp==='D'?(ent?ent.datang:null):(ent?ent.pulang:null);
-          if(isTH(rec)){
-            // Cek apakah ada baris jadwal acara untuk pegawai+tanggal ini
-            if(rec&&rec.isJadwal) return{text:'ACARA',style:'jadwal'};
-            return{text:'TH',style:'th'};
-          }
+          if(isTH(rec)) return{text:'TH',style:'th'};
           if(rec&&rec.time){
             const outside=rec.radius&&isOutsideRadius(rec.radius);
             const style=outside?'outside':rec.late?'late':'ok';
@@ -1500,8 +1486,6 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
               if(pv.style==='outside') {cP.styles.fillColor=[254,202,202];cP.styles.textColor=[185,28,28];cP.styles.fontStyle='bold';}
               if(dv.style==='psw')     {cD.styles.fillColor=[209,250,229];cD.styles.textColor=[22,101,52];}
               if(pv.style==='psw')     {cP.styles.fillColor=[209,250,229];cP.styles.textColor=[22,101,52];}
-              if(dv.style==='jadwal')  {cD.styles.fillColor=[219,234,254];cD.styles.textColor=[30,64,175];cD.styles.fontStyle='bold';}
-              if(pv.style==='jadwal')  {cP.styles.fillColor=[219,234,254];cP.styles.textColor=[30,64,175];cP.styles.fontStyle='bold';}
               if(dv.style==='libur')   {cD.styles.fillColor=[219,234,254];cD.styles.textColor=[30,64,175];}
               if(pv.style==='libur')   {cP.styles.fillColor=[219,234,254];cP.styles.textColor=[30,64,175];}
               row.push(cD,cP);
@@ -1517,7 +1501,7 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
         doc.setFontSize(8);doc.setTextColor(80);doc.text(`BULAN: ${bulan}`,14,22);doc.text(`UNIT KERJA: ${lem}`,14,28);doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`,14,40);
         let cy=46;
         for(let i=0;i<groups.length;i++){ if(i>0) doc.addPage(); doc.setFontSize(9);doc.setTextColor(0,51,102);doc.setFont(undefined,'bold');doc.text(groups[i].name,14,i===0?cy:20); cy=buildTbl(groups[i],(i===0?cy:20)+6); }
-        for(let i=1;i<=doc.internal.getNumberOfPages();i++){doc.setPage(i);doc.setFontSize(6);doc.setTextColor(100);doc.text('KETERANGAN: D=Datang, P=Pulang, TH=Tidak Hadir, ACARA=Jadwal Acara (dihitung Hadir), Kuning=Terlambat (>07:00), Merah=Luar Radius, Hijau=PSW, Biru=Libur/Acara',14,doc.internal.pageSize.getHeight()-8);}
+        for(let i=1;i<=doc.internal.getNumberOfPages();i++){doc.setPage(i);doc.setFontSize(6);doc.setTextColor(100);doc.text('KETERANGAN: D=Datang, P=Pulang, TH=Tidak Hadir, Kuning=Terlambat (>07:00), Merah=Luar Radius, Hijau=PSW, Biru=Libur',14,doc.internal.pageSize.getHeight()-8);}
       }
       const now=new Date(), tgl=now.toISOString().slice(0,10), wkt=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/\./g,'-');
       doc.save(`${(flLem||'Semua_Lembaga').replace(/\s/g,'_')}_Daftar_Hadir_${tgl}_${wkt}.pdf`);
@@ -1615,8 +1599,7 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
         const ent=rekapGpMap.get(key), j=(p['Jenis Presensi']||'').toLowerCase(),
           rad=p.displayRadius||p['Keterangan Radius']||'',
           lib=rad.toLowerCase().includes('libur')||rad.toLowerCase().includes('cuti bersama'),
-          isJadwalAcara=!!p.isJadwal,
-          rec={time:exTime(p['Waktu']),radius:rad,isLibur:lib,late:j==='datang'?checkLateStatus(p['Waktu'],'datang'):false,isJadwal:isJadwalAcara};
+          rec={time:exTime(p['Waktu']),radius:rad,isLibur:lib,late:j==='datang'?checkLateStatus(p['Waktu'],'datang'):false};
         if(j==='datang') ent.datang=rec; else if(j==='pulang') ent.pulang=rec;
       });
       
@@ -1633,7 +1616,7 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
         }
       }
       
-      const isTHrek=r=>!r||(r.radius&&isTidakHadir(r.radius)&&!r.isJadwal);
+      const isTHrek=r=>!r||(r.radius&&isTidakHadir(r.radius));
 
       const lemaReks=[];
       for(const lem of tls){
@@ -1645,12 +1628,12 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
           const nn=normalizeName(nm);
           const myDatang=datangRows.filter(x=>normalizeName(x['Nama Pegawai']||'')===nn);
           
-          const lateRows=myDatang.filter(x=>checkLateStatus(x['Waktu'],'datang')&&!isTidakHadir(x.displayRadius||x['Keterangan Radius'])&&!x.isJadwal);
+          const lateRows=myDatang.filter(x=>checkLateStatus(x['Waktu'],'datang')&&!isTidakHadir(x.displayRadius||x['Keterangan Radius']));
           const totalMins=lateRows.reduce((s,x)=>s+calcLateMins(x['Waktu']),0);
           
-          const hadirCount=myDatang.filter(x=>!isTidakHadir(x.displayRadius||x['Keterangan Radius'])||x.isJadwal).length;
+          const hadirCount=myDatang.filter(x=>!isTidakHadir(x.displayRadius||x['Keterangan Radius'])).length;
           
-          const luarRadius=myDatang.filter(x=>isOutsideRadius(x.displayRadius||x['Keterangan Radius'])&&!x.isJadwal).length;
+          const luarRadius=myDatang.filter(x=>isOutsideRadius(x.displayRadius||x['Keterangan Radius'])).length;
           
           let thDates;
           if(rekapWorkDates.length>0){
@@ -1658,12 +1641,11 @@ const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, d
               if(pswActive(nm,dt)) return false; // PSW bukan TH
               const ent=rekapGpMap.get(`${nn}|${dt}`);
               if(ent&&((ent.datang&&ent.datang.isLibur)||(ent.pulang&&ent.pulang.isLibur))) return false; // hari libur
-              // Jika masuk jadwal acara, bukan TH
-              if(ent&&((ent.datang&&ent.datang.isJadwal)||(ent.pulang&&ent.pulang.isJadwal))) return false;
               return isTHrek(ent?ent.datang:null);
             });
           } else {
-            thDates=myDatang.filter(x=>isTidakHadir(x.displayRadius||x['Keterangan Radius'])&&!x.isJadwal).map(x=>parsePresensiDate(x['Waktu'])).filter(Boolean);
+           
+            thDates=myDatang.filter(x=>isTidakHadir(x.displayRadius||x['Keterangan Radius'])).map(x=>parsePresensiDate(x['Waktu'])).filter(Boolean);
           }
           const abs=classifyAbsence(nm,thDates);
           const totalTH=abs.alpa+abs.sakitDgSurat+abs.sakitTanpaSurat+abs.ijinRes+abs.dinasLuar+abs.cutiRes;
