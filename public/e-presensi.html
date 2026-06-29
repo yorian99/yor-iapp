@@ -1371,7 +1371,7 @@ const ManajemenLembaga = ({ refreshParent, userRole, lembagaData }) => {
                   <label className={lCls}>Nama Lembaga <span className="text-red-400">*</span></label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-3 flex items-center text-slate-300 pointer-events-none"><i className="fas fa-building text-xs"></i></span>
-                    <input type="text" value={fd['Name Lembaga']} onChange={e => setFd({ ...fd, 'Name Lembaga': e.target.value })} className={iCls + ' pl-9'} placeholder="Contoh: SDN SINE 1" required />
+                    <input type="text" value={fd['Name Lembaga']} onChange={e => setFd({ ...fd, 'Name Lembaga': e.target.value })} className={iCls + ' pl-9'} placeholder="Contoh: SDN ----" required />
                   </div>
                 </div>
                 {/* Latitude */}
