@@ -252,12 +252,39 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
     });
   });
 
+  // Normalisasi tanggal ke "YYYY-MM-DD" apapun format aslinya dari backend:
+  // - "2026-06-29" / "2026-06-29T00:00:00.000Z" → ambil 10 char pertama
+  // - "29/06/2026" / "29/06/2026 0:00:00"       → format DD/MM/YYYY
+  // - format lain yang masih bisa di-parse Date  → fallback new Date()
+  // Ini PENTING karena Google Sheets/Apps Script kadang mengembalikan tanggal
+  // dalam format berbeda dari yang dipakai presensi (YYYY-MM-DD), sehingga
+  // perbandingan string biasa bisa gagal walau tanggalnya sebenarnya sama.
+  const toISODateLoose = v => {
+    if (!v) return null;
+    const s = String(v).trim();
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return null;
+  };
+  // Normalisasi identitas pegawai (trim + string) agar tidak gagal cocok karena
+  // beda tipe data (angka vs teks) atau spasi tak sengaja dari input/sheet.
+  const normUname = v => (v===null||v===undefined) ? '' : String(v).trim();
+
   // Helper cek apakah pegawai username masuk jadwal pada tanggal ISO tertentu
   const isInJadwal = (username, tglISO) => {
+    const uTarget = normUname(username);
+    const tglNorm = toISODateLoose(tglISO);
+    if (!uTarget||!tglNorm) return false;
     for (const key of jadwalSet) {
       const [uname, mulai, akhir] = key.split('||');
-      if (uname !== username) continue;
-      if (tglISO >= mulai && tglISO <= akhir) return true;
+      if (normUname(uname) !== uTarget) continue;
+      const m = toISODateLoose(mulai), a = toISODateLoose(akhir);
+      if (!m||!a) continue;
+      if (tglNorm >= m && tglNorm <= a) return true;
     }
     return false;
   };
