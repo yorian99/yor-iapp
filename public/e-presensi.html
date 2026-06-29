@@ -2502,16 +2502,54 @@ const ActivityLog = ({ userRole }) => {
 const PengajuanPSW = ({ user, userLembaga, pegawaiData }) => {
   const [fd,setFd]=useState({nip:'',jenis:'',tglAwal:'',tglAkhir:''});
   const [file,setFile]=useState(null), [load,setLoad]=useState(false);
+  const [pegBackend,setPegBackend]=useState(null); // hasil fallback dari server, null = belum dicoba
+  const [pegLoading,setPegLoading]=useState(false);
   const lemAktif = userLembaga || (user&&user.lembaga) || '';
-  const norm = s => (s||'').toString().trim().toLowerCase().replace(/\s+/g,' ');
-  const pegList = useMemo(()=>{
+  const norm  = s => (s||'').toString().trim().toLowerCase().replace(/\s+/g,' ');
+  const fuzzy = s => (s||'').toString().toLowerCase().replace(/[^a-z0-9]/g,''); // buang semua spasi/simbol, anti typo format
+
+  // Lapis 1: cocokkan persis (sudah dirapikan spasi & huruf besar/kecil)
+  const exactMatch = useMemo(()=>{
     if(!lemAktif) return [];
-    return (pegawaiData||[])
-      .filter(p=>norm(p['Name Lembaga'])===norm(lemAktif))
-      .map(p=>({nama:p['Name Pegawai']||'', nip:p['Username (MP/ID)']||p['Nip']||''}))
-      .filter(p=>p.nama)
-      .sort((a,b)=>a.nama.localeCompare(b.nama));
+    return (pegawaiData||[]).filter(p=>norm(p['Name Lembaga'])===norm(lemAktif));
   },[pegawaiData,lemAktif]);
+
+  // Lapis 2: kalau lapis 1 kosong, coba cocokkan fuzzy (anti beda spasi/tanda baca/typo format)
+  const fuzzyMatch = useMemo(()=>{
+    if(!lemAktif || exactMatch.length>0) return [];
+    const target = fuzzy(lemAktif);
+    return (pegawaiData||[]).filter(p=>fuzzy(p['Name Lembaga'])===target);
+  },[pegawaiData,lemAktif,exactMatch]);
+
+  const toOptions = arr => arr
+    .map(p=>({nama:p['Name Pegawai']||'', nip:p['Username (MP/ID)']||p['Nip']||''}))
+    .filter(p=>p.nama)
+    .sort((a,b)=>a.nama.localeCompare(b.nama));
+
+  const localList = exactMatch.length>0 ? toOptions(exactMatch) : toOptions(fuzzyMatch);
+
+  // Lapis 3: kalau data lokal (sudah dimuat di app) tetap kosong, minta langsung ke server sebagai jaring pengaman terakhir
+  useEffect(()=>{
+    setPegBackend(null);
+    if(!lemAktif || localList.length>0) return;
+    let cancelled=false;
+    setPegLoading(true);
+    (async()=>{
+      try{
+        const r = await runGoogleScript('getPegawaiByLembaga', lemAktif);
+        if(!cancelled) setPegBackend(Array.isArray(r)?r:[]);
+      }catch{
+        if(!cancelled) setPegBackend([]);
+      }
+      if(!cancelled) setPegLoading(false);
+    })();
+    return ()=>{ cancelled=true; };
+  },[lemAktif, localList.length]);
+
+  const pegList = localList.length>0
+    ? localList
+    : (Array.isArray(pegBackend) ? pegBackend.map(p=>({nama:p.nama||'',nip:p.nip||''})).filter(p=>p.nama).sort((a,b)=>a.nama.localeCompare(b.nama)) : []);
+  const sudahDicoba = pegBackend!==null; // lapis 3 sudah selesai dicoba (baik hasil ada atau tetap kosong)
   const onFile=e=>{
     const f=e.target.files[0]; if(!f) return;
     if(f.type!=='application/pdf'){Swal.fire('Format Salah','Hanya PDF diizinkan.','warning');e.target.value='';return;}
@@ -2538,7 +2576,12 @@ const PengajuanPSW = ({ user, userLembaga, pegawaiData }) => {
         </div>
         <form onSubmit={submit} className="p-6 md:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2"><label className="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">Pilih Pegawai *</label><select required value={fd.nip} onChange={e=>setFd({...fd,nip:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 outline-none"><option value="" disabled>-- Pilih Pegawai --</option>{pegList.map(p=><option key={p.nip} value={p.nip}>{p.nama} (NIP: {p.nip})</option>)}</select></div>
+            <div className="md:col-span-2"><label className="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2">Pilih Pegawai *</label><select required value={fd.nip} onChange={e=>setFd({...fd,nip:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-400 outline-none"><option value="" disabled>-- Pilih Pegawai --</option>{pegList.map(p=><option key={p.nip} value={p.nip}>{p.nama} (NIP: {p.nip})</option>)}</select>
+              {pegLoading && <p className="text-[11px] text-blue-500 mt-1.5 flex items-center gap-1.5"><i className="fas fa-spinner fa-spin"></i>Memeriksa data pegawai ke server...</p>}
+              {!pegLoading && sudahDicoba && pegList.length===0 && (
+                <p className="text-[11px] text-amber-600 mt-1.5 flex items-center gap-1.5"><i className="fas fa-exclamation-triangle"></i>Belum ada pegawai dengan Nama Lembaga = "{lemAktif}" di Database Pegawai. Cek penulisan nama lembaga pada data pegawai (Menu Database Pegawai), pastikan sama persis.</p>
+              )}
+            </div>
             <div className="md:col-span-2">
               <label className="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-3">Kategori Pengajuan *</label>
               <div className="grid grid-cols-3 gap-4">
