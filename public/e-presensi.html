@@ -670,7 +670,7 @@ const Dashboard = ({ presensiData, ijinData, pegawaiData }) => {
 };
 
 
-const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga }) => {
+const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga, lembagaData }) => {
   const [flLem,setFlLem]=useState(''), [flNama,setFlNama]=useState('');
   const [editingRow,setEditingRow]=useState(null), [editVal,setEditVal]=useState('');
   const [modalImg,setModalImg]=useState(null), [modalMap,setModalMap]=useState(null);
@@ -679,6 +679,7 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
   const [rStart,setRStart]=useState(''), [rEnd,setREnd]=useState(''), [rStat,setRStat]=useState('Libur'), [rKet,setRKet]=useState('');
   const [showCRUD,setShowCRUD]=useState(false), [cMode,setCMode]=useState('add'), [cRowIdx,setCRowIdx]=useState(null);
   const [fv,setFv]=useState({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''});
+  const [buktiFile,setBuktiFile]=useState(null), [buktiPreview,setBuktiPreview]=useState(''), [uploadingBukti,setUploadingBukti]=useState(false);
 
   // ★ Sumber data: 'live' = RekapPresensi (Presensi Sekarang) atau nama sheet arsip hasil pengarsipan
   const [sumber,setSumber]=useState('live');
@@ -718,8 +719,8 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
     const r = await runGoogleScript('updateKeteranganBukti',idx,editVal);
     if(r.success){ Swal.fire({icon:'success',title:'Tersimpan',timer:700,showConfirmButton:false,toast:true,position:'top-end'}); setEditingRow(null); refreshData(); }
   };
-  const openAdd = () => { setCMode('add'); setCRowIdx(null); setFv({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''}); setShowCRUD(true); };
-  const openEdit= item => { setCMode('edit'); setCRowIdx(item._rowIndex); setFv({'Hari Tanggal':item['Hari Tanggal']||'','Waktu':item['Waktu']||'','Jenis Presensi':item['Jenis Presensi']||'','Nama Lembaga':item['Nama Lembaga']||'','Nama Pegawai':item['Nama Pegawai']||'','Nip':item['Nip']||'','Bukti Dukung':item['Bukti Dukung']||'','Latitude':item['Latitude']||'','Longitude':item['Longitude']||'','Jarak Absen':item['Jarak Absen']||'','Keterangan Radius':item['Keterangan Radius']||'','Keterangan Bukti':item['Keterangan Bukti']||''}); setShowCRUD(true); };
+  const openAdd = () => { setCMode('add'); setCRowIdx(null); setFv({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''}); setBuktiFile(null); setBuktiPreview(''); setShowCRUD(true); };
+  const openEdit= item => { setCMode('edit'); setCRowIdx(item._rowIndex); setFv({'Hari Tanggal':item['Hari Tanggal']||'','Waktu':item['Waktu']||'','Jenis Presensi':item['Jenis Presensi']||'','Nama Lembaga':item['Nama Lembaga']||'','Nama Pegawai':item['Nama Pegawai']||'','Nip':item['Nip']||'','Bukti Dukung':item['Bukti Dukung']||'','Latitude':item['Latitude']||'','Longitude':item['Longitude']||'','Jarak Absen':item['Jarak Absen']||'','Keterangan Radius':item['Keterangan Radius']||'','Keterangan Bukti':item['Keterangan Bukti']||''}); setBuktiFile(null); setBuktiPreview(item['Bukti Dukung']||''); setShowCRUD(true); };
   const delItem = async (idx,nm) => {
     const c = await Swal.fire({title:'Hapus Presensi?',text:`Yakin hapus presensi ${nm}?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#d33',cancelButtonColor:'#334155',confirmButtonText:'Ya, Hapus'});
     if(c.isConfirmed){ const la=Swal.fire({title:'Menghapus...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()}); const r=await runGoogleScript('deletePresensi',idx); la.close(); if(r.success){Swal.fire({icon:'success',title:'Terhapus',timer:1200,showConfirmButton:false});refreshData();}else Swal.fire('Error','Gagal menghapus','error'); }
@@ -727,9 +728,24 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
   const submitCRUD = async () => {
     if(!fv['Waktu']||!fv['Jenis Presensi']||!fv['Nama Pegawai']){ Swal.fire('Peringatan','Waktu, Jenis Presensi, dan Nama Pegawai wajib diisi.','warning'); return; }
     const la=Swal.fire({title:'Menyimpan...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-    const r = cMode==='add' ? await runGoogleScript('addPresensi',fv) : await runGoogleScript('updatePresensi',cRowIdx,fv);
+    let finalFv = {...fv};
+    // Upload foto bukti jika ada file dipilih
+    if(buktiFile){
+      try {
+        const reader = new FileReader();
+        const base64 = await new Promise((res,rej)=>{ reader.onload=e=>res(e.target.result); reader.onerror=rej; reader.readAsDataURL(buktiFile); });
+        const safeNama = (fv['Nama Pegawai']||'bukti').replace(/[^a-zA-Z0-9]/g,'_');
+        const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+        const ext = buktiFile.name.split('.').pop()||'jpg';
+        const fileName = `bukti_${ts}_${safeNama}.${ext}`;
+        const up = await runGoogleScript('uploadBuktiFoto', base64, fileName);
+        if(!up.success){ la.close(); Swal.fire('Gagal Upload','Gagal mengunggah foto bukti: '+(up.message||''),'error'); return; }
+        finalFv = {...finalFv, 'Bukti Dukung': up.url};
+      } catch(err){ la.close(); Swal.fire('Error','Gagal membaca file foto.','error'); return; }
+    }
+    const r = cMode==='add' ? await runGoogleScript('addPresensi',finalFv) : await runGoogleScript('updatePresensi',cRowIdx,finalFv);
     la.close();
-    if(r.success){ Swal.fire({icon:'success',title:cMode==='add'?'Ditambahkan':'Diperbarui',timer:1200,showConfirmButton:false}); setShowCRUD(false); refreshData(); }
+    if(r.success){ Swal.fire({icon:'success',title:cMode==='add'?'Ditambahkan':'Diperbarui',timer:1200,showConfirmButton:false}); setShowCRUD(false); setBuktiFile(null); setBuktiPreview(''); refreshData(); }
     else Swal.fire('Error','Gagal menyimpan data','error');
   };
 
@@ -866,9 +882,59 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
 
       {/* CRUD Modal — dengan dropdown Nama Lembaga & Keterangan Radius */}
       {showCRUD&&<div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center" style={{padding:'20px'}} onClick={()=>setShowCRUD(false)}><div className="bg-white rounded-2xl shadow-2xl w-full flex flex-col" style={{maxWidth:'780px',maxHeight:'90vh'}} onClick={e=>e.stopPropagation()}><div className="flex-shrink-0 px-6 py-5 flex justify-between items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-t-2xl"><span className="font-bold text-base flex items-center gap-2.5"><i className={`fas ${cMode==='add'?'fa-plus-circle':'fa-edit'} text-blue-200`}></i>{cMode==='add'?'Tambah Presensi Baru':'Edit Data Presensi'}</span><button onClick={()=>setShowCRUD(false)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors" style={{fontSize:'24px',lineHeight:1}}>&times;</button></div><div className="overflow-y-auto flex-1 p-6 space-y-5"><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className={lCls}>Hari Tanggal</label><input type="text" value={fv['Hari Tanggal']} onChange={e=>setFv({...fv,'Hari Tanggal':e.target.value})} className={iCls} /></div><div><label className={lCls}>Waktu *</label><input type="text" value={fv['Waktu']} onChange={e=>setFv({...fv,'Waktu':e.target.value})} className={iCls} required /></div><div><label className={lCls}>Jenis Presensi *</label><select value={fv['Jenis Presensi']} onChange={e=>setFv({...fv,'Jenis Presensi':e.target.value})} className={iCls} required><option value="">-- Pilih --</option><option>Datang</option><option>Pulang</option></select></div>
-              {/* ★ DROPDOWN Nama Lembaga */}
-              <div><label className={lCls}>Nama Lembaga</label><select value={fv['Nama Lembaga']} onChange={e=>setFv({...fv,'Nama Lembaga':e.target.value})} className={iCls}><option value="">-- Pilih Lembaga --</option>{lembagaList.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
-              <div><label className={lCls}>Nama Pegawai *</label><input type="text" value={fv['Nama Pegawai']} onChange={e=>setFv({...fv,'Nama Pegawai':e.target.value})} className={iCls} required /></div><div><label className={lCls}>NIP</label><input type="text" value={fv['Nip']} onChange={e=>setFv({...fv,'Nip':e.target.value})} className={iCls} /></div><div className="md:col-span-2"><label className={lCls}>Bukti Dukung (URL)</label><input type="text" value={fv['Bukti Dukung']} onChange={e=>setFv({...fv,'Bukti Dukung':e.target.value})} className={iCls} /></div><div><label className={lCls}>Latitude</label><input type="text" value={fv['Latitude']} onChange={e=>setFv({...fv,'Latitude':e.target.value})} className={iCls} /></div><div><label className={lCls}>Longitude</label><input type="text" value={fv['Longitude']} onChange={e=>setFv({...fv,'Longitude':e.target.value})} className={iCls} /></div><div><label className={lCls}>Jarak Absen</label><input type="text" value={fv['Jarak Absen']} onChange={e=>setFv({...fv,'Jarak Absen':e.target.value})} className={iCls} /></div>
+              {/* ★ DROPDOWN Nama Lembaga — ambil dari lembagaData, auto-isi koordinat */}
+              <div><label className={lCls}>Nama Lembaga</label><select value={fv['Nama Lembaga']} onChange={e=>{
+                const sel=e.target.value;
+                const lemDb=(lembagaData||[]).find(l=>l['Name Lembaga']===sel);
+                setFv({...fv,'Nama Lembaga':sel,'Latitude':lemDb?lemDb['Latitude']:fv['Latitude'],'Longitude':lemDb?lemDb['Longitude']:fv['Longitude']});
+              }} className={iCls}><option value="">-- Pilih Lembaga --</option>{(lembagaData&&lembagaData.length>0?lembagaData.map(l=><option key={l['Name Lembaga']} value={l['Name Lembaga']}>{l['Name Lembaga']}</option>):lembagaList.map(l=><option key={l} value={l}>{l}</option>))}</select>
+              {fv['Nama Lembaga']&&(lembagaData||[]).find(l=>l['Name Lembaga']===fv['Nama Lembaga'])&&<p className="text-[10px] text-indigo-500 mt-1 flex items-center gap-1"><i className="fas fa-info-circle"></i>Koordinat diisi otomatis</p>}
+              </div>
+              <div><label className={lCls}>Nama Pegawai *</label><input type="text" value={fv['Nama Pegawai']} onChange={e=>setFv({...fv,'Nama Pegawai':e.target.value})} className={iCls} required /></div><div><label className={lCls}>NIP</label><input type="text" value={fv['Nip']} onChange={e=>setFv({...fv,'Nip':e.target.value})} className={iCls} /></div>
+              {/* ★ BUKTI DUKUNG — upload gambar */}
+              <div className="md:col-span-2">
+                <label className={lCls}>Bukti Dukung (Foto)</label>
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 bg-slate-50 hover:border-blue-400 transition-colors">
+                  <input type="file" accept="image/*" id="bukti-foto-input" className="hidden" onChange={e=>{
+                    const file=e.target.files[0]; if(!file) return;
+                    if(file.size>5*1024*1024){Swal.fire('Peringatan','Ukuran foto maksimal 5 MB.','warning');return;}
+                    setBuktiFile(file);
+                    const url=URL.createObjectURL(file); setBuktiPreview(url);
+                  }} />
+                  {buktiPreview ? (
+                    <div className="flex items-center gap-3">
+                      <img src={buktiPreview} alt="Preview" className="w-20 h-20 object-cover rounded-lg border border-slate-200 flex-shrink-0" onError={e=>{e.target.style.display='none'}} />
+                      <div className="flex-1 min-w-0">
+                        {buktiFile && <p className="text-xs font-semibold text-slate-700 truncate">{buktiFile.name}</p>}
+                        {buktiFile && <p className="text-[10px] text-slate-400 mt-0.5">{(buktiFile.size/1024).toFixed(1)} KB</p>}
+                        {!buktiFile && fv['Bukti Dukung'] && <p className="text-[10px] text-slate-400 break-all">URL: {fv['Bukti Dukung'].slice(0,60)}...</p>}
+                        <div className="flex gap-2 mt-2">
+                          <label htmlFor="bukti-foto-input" className="cursor-pointer px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition-colors flex items-center gap-1">
+                            <i className="fas fa-redo-alt"></i> Ganti Foto
+                          </label>
+                          <button type="button" onClick={()=>{setBuktiFile(null);setBuktiPreview('');setFv({...fv,'Bukti Dukung':''});}} className="px-3 py-1.5 bg-red-50 text-red-500 border border-red-100 rounded-lg text-[10px] font-bold hover:bg-red-100 transition-colors flex items-center gap-1">
+                            <i className="fas fa-times"></i> Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <label htmlFor="bukti-foto-input" className="cursor-pointer flex flex-col items-center justify-center gap-2 py-4">
+                      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <i className="fas fa-camera text-blue-400 text-xl"></i>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-semibold text-slate-600">Pilih atau ambil foto</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WEBP · Maks 5 MB</p>
+                      </div>
+                      <span className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors">
+                        <i className="fas fa-upload mr-1"></i> Pilih File
+                      </span>
+                    </label>
+                  )}
+                </div>
+                {uploadingBukti && <p className="text-[10px] text-blue-500 mt-1 flex items-center gap-1"><i className="fas fa-circle-notch fa-spin"></i>Mengunggah foto...</p>}
+              </div><div><label className={lCls}>Latitude</label><input type="text" value={fv['Latitude']} onChange={e=>setFv({...fv,'Latitude':e.target.value})} className={iCls} /></div><div><label className={lCls}>Longitude</label><input type="text" value={fv['Longitude']} onChange={e=>setFv({...fv,'Longitude':e.target.value})} className={iCls} /></div><div><label className={lCls}>Jarak Absen</label><input type="text" value={fv['Jarak Absen']} onChange={e=>setFv({...fv,'Jarak Absen':e.target.value})} className={iCls} /></div>
               {/* ★ DROPDOWN Keterangan Radius */}
               <div><label className={lCls}>Keterangan Radius</label><select value={fv['Keterangan Radius']} onChange={e=>setFv({...fv,'Keterangan Radius':e.target.value})} className={iCls}><option value="">-- Pilih Status --</option><option value="DI DALAM RADIUS">DI DALAM RADIUS</option><option value="DI LUAR RADIUS">DI LUAR RADIUS</option><option value="Tidak Hadir">Tidak Hadir</option><option value="Hari Libur">Hari Libur</option><option value="Cuti Bersama">Cuti Bersama</option></select></div>
               <div className="md:col-span-2"><label className={lCls}>Keterangan Bukti</label><input type="text" value={fv['Keterangan Bukti']} onChange={e=>setFv({...fv,'Keterangan Bukti':e.target.value})} className={iCls} /></div></div><div className="flex justify-end gap-3 pt-4 border-t border-slate-100"><button onClick={()=>setShowCRUD(false)} className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button><button onClick={submitCRUD} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 flex items-center gap-2"><i className="fas fa-save"></i>Simpan</button></div></div></div></div>}
@@ -3109,7 +3175,7 @@ const App = () => {
               </div>
             : <div className="w-full flex flex-col flex-1 min-h-0">
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
-                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} /></div>}
+                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} /></div>}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} pegawaiData={pegawai} />}
                 {tab==='manajemen_lembaga'&&canPegawai && <ManajemenLembaga refreshParent={fetchData} userRole={user.role} lembagaData={lembagaData} />}
