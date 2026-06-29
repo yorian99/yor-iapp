@@ -252,30 +252,57 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
     });
   });
 
+  // Normalisasi tanggal ke "YYYY-MM-DD" apapun format aslinya dari backend:
+  // - "2026-06-29" / "2026-06-29T00:00:00.000Z" → ambil 10 char pertama
+  // - "29/06/2026" / "29/06/2026 0:00:00"       → format DD/MM/YYYY
+  // - format lain yang masih bisa di-parse Date  → fallback new Date()
+  // Ini PENTING karena Google Sheets/Apps Script kadang mengembalikan tanggal
+  // dalam format berbeda dari yang dipakai presensi (YYYY-MM-DD), sehingga
+  // perbandingan string biasa bisa gagal walau tanggalnya sebenarnya sama.
+  const toISODateLoose = v => {
+    if (!v) return null;
+    const s = String(v).trim();
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return null;
+  };
+  // Normalisasi identitas pegawai (trim + string) agar tidak gagal cocok karena
+  // beda tipe data (angka vs teks) atau spasi tak sengaja dari input/sheet.
+  const normUname = v => (v===null||v===undefined) ? '' : String(v).trim();
+
   // Helper cek apakah pegawai username masuk jadwal pada tanggal ISO tertentu
   const isInJadwal = (username, tglISO) => {
+    const uTarget = normUname(username);
+    const tglNorm = toISODateLoose(tglISO);
+    if (!uTarget||!tglNorm) return false;
     for (const key of jadwalSet) {
       const [uname, mulai, akhir] = key.split('||');
-      if (uname !== username) continue;
-      if (tglISO >= mulai && tglISO <= akhir) return true;
+      if (normUname(uname) !== uTarget) continue;
+      const m = toISODateLoose(mulai), a = toISODateLoose(akhir);
+      if (!m||!a) continue;
+      if (tglNorm >= m && tglNorm <= a) return true;
     }
     return false;
   };
 
-  // Buat map: "username|tanggalISO" → ada presensi DI DALAM RADIUS (datang atau pulang)
-  // Dipakai untuk logik: jika salah satu (datang/pulang) absen di dalam radius pada hari itu,
-  // maka presensi lainnya pada hari yang sama juga dianggap aman (DI DALAM RADIUS).
+  // Buat map: "username|tanggalISO" → pegawai ini punya MINIMAL 1 presensi pada hari itu
+  // selagi masuk Jadwal Acara aktif. CUKUP 1 presensi (datang ATAU pulang, apapun status
+  // radius aslinya — termasuk yang semula "Tidak Hadir"/"Di Luar Radius") untuk menandai
+  // hari itu aman (DI DALAM RADIUS), karena pegawai yang mengikuti acara di lapangan tidak
+  // selalu bisa presensi normal (datang+pulang, di lokasi induk). Jika pegawai TIDAK punya
+  // presensi sama sekali pada hari itu, ia tetap akan tercatat "Tidak Hadir" seperti biasa.
   const jadwalPresensiBaikSet = new Set();
   prs.forEach(p => {
     const uname = p['Username (MP/ID)'] || p['Nip'] || normalizeName(p['Nama Pegawai']||'');
     const tgl   = parsePresensiDateISO(p['Waktu']);
     if (!uname||!tgl) return;
     if (!isInJadwal(uname, tgl)) return;
-    const kr = (p['Keterangan Radius']||'').toLowerCase();
-    // Sudah ada presensi di dalam radius pada hari+user ini
-    if (kr.includes('di dalam radius') || kr === 'psw') {
-      jadwalPresensiBaikSet.add(`${uname}||${tgl}`);
-    }
+    // Ada presensi (apapun jenis/status radiusnya) pada hari+user ini selagi jadwal aktif
+    jadwalPresensiBaikSet.add(`${uname}||${tgl}`);
   });
 
   return prs.map(p => {
@@ -293,7 +320,7 @@ const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
     const uname = p['Username (MP/ID)'] || p['Nip'] || normalizeName(p['Nama Pegawai']||'');
     const tgl   = parsePresensiDateISO(p['Waktu']);
     if (uname && tgl && isInJadwal(uname, tgl)) {
-      // Jika ada minimal 1 presensi baik (DI DALAM RADIUS) pada hari itu untuk user ini
+      // Jika ada minimal 1 presensi (apapun status radiusnya) pada hari itu untuk user ini
       if (jadwalPresensiBaikSet.has(`${uname}||${tgl}`)) {
         return {...p, isPSW:false, isJadwal:true, displayRadius:'DI DALAM RADIUS'};
       }
@@ -2472,11 +2499,12 @@ const ActivityLog = ({ userRole }) => {
 };
 
 
-const PengajuanPSW = ({ user }) => {
+const PengajuanPSW = ({ user, userLembaga }) => {
   const [pegList,setPegList]=useState([]);
   const [fd,setFd]=useState({nip:'',jenis:'',tglAwal:'',tglAkhir:''});
   const [file,setFile]=useState(null), [load,setLoad]=useState(false);
-  useEffect(()=>{ const f=async()=>{ if(!user||!user.lembaga) return; const r=await runGoogleScript('getPegawaiByLembaga',user.lembaga); setPegList(Array.isArray(r)?r:[]); }; f(); },[user]);
+  const lemAktif = userLembaga || (user&&user.lembaga) || '';
+  useEffect(()=>{ const f=async()=>{ if(!lemAktif) return; const r=await runGoogleScript('getPegawaiByLembaga',lemAktif); setPegList(Array.isArray(r)?r:[]); }; f(); },[lemAktif]);
   const onFile=e=>{
     const f=e.target.files[0]; if(!f) return;
     if(f.type!=='application/pdf'){Swal.fire('Format Salah','Hanya PDF diizinkan.','warning');e.target.value='';return;}
@@ -2489,7 +2517,7 @@ const PengajuanPSW = ({ user }) => {
     if(!fd.nip||!fd.jenis||!fd.tglAwal||!fd.tglAkhir){Swal.fire('Peringatan','Semua field wajib diisi.','warning');return;}
     const pg=pegList.find(p=>p.nip===fd.nip); if(!pg){Swal.fire('Error','Pegawai tidak ditemukan.','error');return;}
     setLoad(true);
-    const r=await runGoogleScript('submitPengajuan',{lembaga:user.lembaga,namaPegawai:pg.nama,nip:pg.nip,jenis:fd.jenis,tglAwal:fd.tglAwal,tglAkhir:fd.tglAkhir,fileName:file.name,fileBase64:file.base64});
+    const r=await runGoogleScript('submitPengajuan',{lembaga:lemAktif,namaPegawai:pg.nama,nip:pg.nip,jenis:fd.jenis,tglAwal:fd.tglAwal,tglAkhir:fd.tglAkhir,fileName:file.name,fileBase64:file.base64});
     setLoad(false);
     if(r.success){Swal.fire({icon:'success',title:'Terkirim',text:'Pengajuan berhasil diteruskan ke Korwil.',confirmButtonColor:'#2563eb'});setFd({nip:'',jenis:'',tglAwal:'',tglAkhir:''});setFile(null);document.getElementById('fileInput').value='';}
     else Swal.fire('Gagal',r.message,'error');
@@ -2499,7 +2527,7 @@ const PengajuanPSW = ({ user }) => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-md shadow-blue-500/25 flex-shrink-0"><i className="fas fa-file-upload text-white"></i></div>
-          <div><h3 className="font-black text-slate-800">Form Pengajuan PSW</h3><p className="text-xs text-slate-500 mt-0.5">Lembaga: <span className="font-bold text-blue-600">{user.lembaga}</span></p></div>
+          <div><h3 className="font-black text-slate-800">Form Pengajuan PSW</h3><p className="text-xs text-slate-500 mt-0.5">Lembaga: <span className="font-bold text-blue-600">{lemAktif}</span></p></div>
         </div>
         <form onSubmit={submit} className="p-6 md:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2751,7 +2779,7 @@ const App = () => {
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
                 {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} /></div>}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} />}
-                {tab==='pengajuan_psw'        && <PengajuanPSW user={user} />}
+                {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} />}
                 {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} />}
                 {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={fetchData} userRole={user.role} />}
                 {tab==='arsip_data'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><ArsipData userRole={user.role} username={user.username} refreshData={fetchData} ijinData={ijin} pegawaiData={pegawai} /></div>}
