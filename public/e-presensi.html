@@ -221,10 +221,65 @@ const isDateInRange = (d,s,e) => {
   const n = x => { const [a,b,c]=x.split('/').map(Number); return c*10000+b*100+a; };
   return n(d)>=n(s) && n(d)<=n(e);
 };
-const enrichPresensiWithIjin = (prs, ijin) => {
+// Helper: parse tanggal dari string "Senin, 29 Juni 2026 pukul 07.12.48" → "2026-06-29"
+const parsePresensiDateISO = w => {
+  if (!w) return null;
+  const dateParts = w.split('pukul')[0].trim().split(', ')[1];
+  if (!dateParts) return null;
+  const [day, mon, yr] = dateParts.trim().split(' ');
+  const MAP = {Januari:'01',Februari:'02',Maret:'03',April:'04',Mei:'05',Juni:'06',
+               Juli:'07',Agustus:'08',September:'09',Oktober:'10',November:'11',Desember:'12'};
+  const m = MAP[mon]; if (!m) return null;
+  return `${yr}-${m}-${day.padStart(2,'0')}`;
+};
+
+const enrichPresensiWithIjin = (prs, ijin, jadwal) => {
   if (!prs||!ijin) return prs;
   const approved = ijin.filter(i=>i.Status&&i.Status.toLowerCase()==='disetujui');
+  const jadwalAktif = (jadwal||[]).filter(j=>j['Status']==='Aktif'||j['Status']==='Terjadwal'||j['Status']==='Selesai');
+
+  // Buat set: "username|tanggalISO" → true, untuk pegawai dalam jadwal acara
+  // agar lookup O(1) per presensi
+  const jadwalSet = new Set();
+  jadwalAktif.forEach(j => {
+    let daftarUsername = [];
+    try { daftarUsername = JSON.parse(j['Daftar Pegawai']||'[]'); } catch(e){}
+    if (!daftarUsername.length) return;
+    const mulai = j['Tanggal Mulai'], akhir = j['Tanggal Akhir'];
+    if (!mulai||!akhir) return;
+    daftarUsername.forEach(uname => {
+      jadwalSet.add(`${uname}||${mulai}||${akhir}`);
+    });
+  });
+
+  // Helper cek apakah pegawai username masuk jadwal pada tanggal ISO tertentu
+  const isInJadwal = (username, tglISO) => {
+    for (const key of jadwalSet) {
+      const [uname, mulai, akhir] = key.split('||');
+      if (uname !== username) continue;
+      if (tglISO >= mulai && tglISO <= akhir) return true;
+    }
+    return false;
+  };
+
+  // Buat map: "username|tanggalISO" → ada presensi DI DALAM RADIUS (datang atau pulang)
+  // Dipakai untuk logik: jika salah satu (datang/pulang) absen di dalam radius pada hari itu,
+  // maka presensi lainnya pada hari yang sama juga dianggap aman (DI DALAM RADIUS).
+  const jadwalPresensiBaikSet = new Set();
+  prs.forEach(p => {
+    const uname = p['Username (MP/ID)'] || p['Nip'] || normalizeName(p['Nama Pegawai']||'');
+    const tgl   = parsePresensiDateISO(p['Waktu']);
+    if (!uname||!tgl) return;
+    if (!isInJadwal(uname, tgl)) return;
+    const kr = (p['Keterangan Radius']||'').toLowerCase();
+    // Sudah ada presensi di dalam radius pada hari+user ini
+    if (kr.includes('di dalam radius') || kr === 'psw') {
+      jadwalPresensiBaikSet.add(`${uname}||${tgl}`);
+    }
+  });
+
   return prs.map(p => {
+    // 1. Cek PSW (ijin disetujui) — tetap prioritas tertinggi
     const psw = approved.some(ij => {
       if (normalizeName(p['Nama Pegawai']||'')!==normalizeName(ij['Nama Pegawai']||'')) return false;
       const pd = parsePresensiDate(p['Waktu']); if (!pd) return false;
@@ -232,7 +287,20 @@ const enrichPresensiWithIjin = (prs, ijin) => {
       if (!s||!e) return false;
       return isDateInRange(pd,s,e);
     });
-    return psw ? {...p,isPSW:true,displayRadius:'PSW'} : {...p,isPSW:false,displayRadius:p['Keterangan Radius']};
+    if (psw) return {...p, isPSW:true, displayRadius:'PSW'};
+
+    // 2. Cek jadwal acara
+    const uname = p['Username (MP/ID)'] || p['Nip'] || normalizeName(p['Nama Pegawai']||'');
+    const tgl   = parsePresensiDateISO(p['Waktu']);
+    if (uname && tgl && isInJadwal(uname, tgl)) {
+      // Jika ada minimal 1 presensi baik (DI DALAM RADIUS) pada hari itu untuk user ini
+      if (jadwalPresensiBaikSet.has(`${uname}||${tgl}`)) {
+        return {...p, isPSW:false, isJadwal:true, displayRadius:'DI DALAM RADIUS'};
+      }
+    }
+
+    // 3. Default: pakai Keterangan Radius asli
+    return {...p, isPSW:false, isJadwal:false, displayRadius:p['Keterangan Radius']};
   });
 };
 
@@ -603,7 +671,7 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
     }).catch(()=>{ if(aktif) setArsipRaw([]); }).finally(()=>{ if(aktif) setLoadingArsip(false); });
     return ()=>{ aktif=false; };
   },[sumber]);
-  const dataAktif = useMemo(()=> isLive ? data : enrichPresensiWithIjin(arsipRaw, ijinData), [isLive,data,arsipRaw,ijinData]);
+  const dataAktif = useMemo(()=> isLive ? data : enrichPresensiWithIjin(arsipRaw, ijinData, []), [isLive,data,arsipRaw,ijinData]);
 
   const canEdit = userRole==='Admin'||userRole==='User'||userRole==='Superuser';
   const canLibur= userRole==='Admin'||userRole==='Superuser';
@@ -1880,7 +1948,7 @@ const ArsipData = ({ userRole, username, refreshData, ijinData, pegawaiData }) =
       const r = await runGoogleScript('getPresensiArsip', namaSheet);
       const raw = (r && r.success) ? (r.data||[]) : [];
       if(!raw.length){ la.close(); Swal.fire('Data Kosong','Sheet arsip ini tidak memiliki data presensi.','info'); setCetakProses(null); return; }
-      const enrichedArsip = enrichPresensiWithIjin(raw, ijinData);
+      const enrichedArsip = enrichPresensiWithIjin(raw, ijinData, []);
       const fns = createExportFns({ presensiData: enrichedArsip, ijinData, pegawaiData, flLem:'', dStart: range.start, dEnd: range.end });
       la.close();
       if(jenis==='rekap') fns.exportRekapitulasiPDF();
@@ -2471,7 +2539,7 @@ const PengajuanPSW = ({ user }) => {
 const App = () => {
   const [user,setUser]=useState(()=>{ try{ const s=sessionStorage.getItem('korwil_user'); return s?JSON.parse(s):null; }catch{return null;} });
   const [tab,setTab]=useState('dashboard');
-  const [presensi,setPresensi]=useState([]), [ijin,setIjin]=useState([]), [pegawai,setPegawai]=useState([]);
+  const [presensi,setPresensi]=useState([]), [ijin,setIjin]=useState([]), [pegawai,setPegawai]=useState([]), [jadwal,setJadwal]=useState([]);
   const [load,setLoad]=useState(false), [sideOpen,setSideOpen]=useState(false);
   const [fetchDuration,setFetchDuration]=useState(null);  // ms
   const [lastSync,setLastSync]=useState(null);             // Date
@@ -2490,8 +2558,8 @@ const App = () => {
     setLoad(true);
     const t0=Date.now();
     try{
-      const [rP,rI,rPg]=await Promise.all([runGoogleScript('getPresensi'),runGoogleScript('getIjin'),runGoogleScript('getPegawai')]);
-      setPresensi(rP||[]); setIjin(rI||[]); setPegawai(rPg||[]);
+      const [rP,rI,rPg,rJ]=await Promise.all([runGoogleScript('getPresensi'),runGoogleScript('getIjin'),runGoogleScript('getPegawai'),runGoogleScript('getJadwalAcara')]);
+      setPresensi(rP||[]); setIjin(rI||[]); setPegawai(rPg||[]); setJadwal(rJ||[]);
       const dur=Date.now()-t0;
       setFetchDuration(dur);
       setLastSync(new Date());
@@ -2499,7 +2567,7 @@ const App = () => {
     setLoad(false);
   };
   useEffect(()=>{ if(user) fetchData(); },[user]);
-  const enriched = useMemo(()=>enrichPresensiWithIjin(presensi,ijin),[presensi,ijin]);
+  const enriched = useMemo(()=>enrichPresensiWithIjin(presensi,ijin,jadwal),[presensi,ijin,jadwal]);
   const canPegawai = user&&(user.role==='Admin'||user.role==='Superuser'||user.role==='User');
   const canAll     = user&&(user.role==='Admin'||user.role==='Superuser'||user.role==='User');
   const canArsip   = user&&(user.role==='Admin'||user.role==='Superuser');
