@@ -237,6 +237,19 @@ const enrichPresensiWithIjin = (prs, ijin) => {
 };
 
 
+// ★ Parser nama sheet arsip, contoh: "01 Januari 2026 - 31 Januari 2026" -> {start:'2026-01-01', end:'2026-01-31'}
+const INA_MONTHS_MAP = {Januari:1,Februari:2,Maret:3,April:4,Mei:5,Juni:6,Juli:7,Agustus:8,September:9,Oktober:10,November:11,Desember:12};
+const parseArsipSheetRange = nama => {
+  if(!nama) return null;
+  const m = nama.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})\s*[-–—]\s*(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+  if(!m) return null;
+  const [,d1,mo1,y1,d2,mo2,y2] = m;
+  const mn1=INA_MONTHS_MAP[mo1], mn2=INA_MONTHS_MAP[mo2];
+  if(!mn1||!mn2) return null;
+  const pad=n=>String(n).padStart(2,'0');
+  return { start:`${y1}-${pad(mn1)}-${pad(d1)}`, end:`${y2}-${pad(mn2)}-${pad(d2)}` };
+};
+
 const fmtTs = ts => {
   if (!ts) return '-';
   try {
@@ -572,7 +585,7 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
   const [showCRUD,setShowCRUD]=useState(false), [cMode,setCMode]=useState('add'), [cRowIdx,setCRowIdx]=useState(null);
   const [fv,setFv]=useState({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''});
 
-  // ★ Sumber data: 'live' = RekapPresensi (Presensi Sekarang) atau  arsip hasil pengarsipan
+  // ★ Sumber data: 'live' = RekapPresensi (Presensi Sekarang) atau nama sheet arsip hasil pengarsipan
   const [sumber,setSumber]=useState('live');
   const [daftarArsip,setDaftarArsip]=useState([]);
   const [arsipRaw,setArsipRaw]=useState([]);
@@ -1323,13 +1336,7 @@ const DatabasePegawai = ({ refreshParent, userRole, pegawaiData }) => {
 };
 
 
-const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, userRole }) => {
-  const [flLem,setFlLem]=useState(''), [dStart,setDStart]=useState(''), [dEnd,setDEnd]=useState('');
-  const isAdmin  = userRole==='Admin';
-  const canExport= userRole==='Admin'||userRole==='User'||userRole==='Superuser';
-  const thisMonth= ()=>{ const n=new Date(); setDStart(new Date(n.getFullYear(),n.getMonth(),1).toISOString().split('T')[0]); setDEnd(new Date(n.getFullYear(),n.getMonth()+1,0).toISOString().split('T')[0]); };
-  const clearD   = ()=>{ setDStart(''); setDEnd(''); };
-
+const createExportFns = ({ presensiData, ijinData, pegawaiData, flLem, dStart, dEnd }) => {
   const getFiltered = (lem=null) => {
     let f=[...presensiData];
     const tl=lem!==null?lem:flLem;
@@ -1752,6 +1759,17 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
       doc.save(`Rekap_Keterlambatan_${(flLem||'Semua').replace(/\s/g,'_')}_${n.toISOString().slice(0,10)}.pdf`);
     }catch(err){console.error(err);Swal.fire('Error','Terjadi kesalahan saat membuat PDF: '+err.message,'error');}
   };
+  return { exportDaftarHadirRingkas, generateLaporanPDF, exportRekapitulasiPDF, exportRekapKeterlambatan };
+};
+
+const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, userRole }) => {
+  const [flLem,setFlLem]=useState(''), [dStart,setDStart]=useState(''), [dEnd,setDEnd]=useState('');
+  const isAdmin  = userRole==='Admin';
+  const canExport= userRole==='Admin'||userRole==='User'||userRole==='Superuser';
+  const thisMonth= ()=>{ const n=new Date(); setDStart(new Date(n.getFullYear(),n.getMonth(),1).toISOString().split('T')[0]); setDEnd(new Date(n.getFullYear(),n.getMonth()+1,0).toISOString().split('T')[0]); };
+  const clearD   = ()=>{ setDStart(''); setDEnd(''); };
+
+  const { exportDaftarHadirRingkas, generateLaporanPDF, exportRekapitulasiPDF, exportRekapKeterlambatan } = createExportFns({ presensiData, ijinData, pegawaiData, flLem, dStart, dEnd });
 
   const handleReset = async () => {
     const c=await Swal.fire({title:'RESET SEMUA DATA?',text:'Tidak bisa dibatalkan! Unduh laporan dulu.',icon:'warning',showCancelButton:true,confirmButtonColor:'#d33',cancelButtonColor:'#334155',confirmButtonText:'Ya, Reset'});
@@ -1792,9 +1810,11 @@ const MonitoringExport = ({ presensiData, ijinData, pegawaiData, refreshData, us
 };
 
 
-const ArsipData = ({ userRole, username, refreshData }) => {
+const ArsipData = ({ userRole, username, refreshData, ijinData, pegawaiData }) => {
   const [rStart,setRStart]=useState(''), [rEnd,setREnd]=useState('');
   const [daftar,setDaftar]=useState([]), [loading,setLoading]=useState(false), [proses,setProses]=useState(false);
+  const [cetakModal,setCetakModal]=useState(null); // baris arsip yang sedang dipilih untuk dicetak
+  const [cetakProses,setCetakProses]=useState(null); // 'rekap' | 'hadir' | 'terlambat' saat sedang diproses
 
   const canArsip = userRole==='Admin'||userRole==='Superuser';
 
@@ -1846,6 +1866,32 @@ const ArsipData = ({ userRole, username, refreshData }) => {
     else Swal.fire('Error', r.message||'Gagal menghapus arsip.', 'error');
   };
 
+  // ★ Cetak laporan (Rekapitulasi / Daftar Hadir / Rekap Terlambat) langsung dari satu sheet arsip.
+  // Rentang tanggal TIDAK dipilih manual — diambil otomatis dari nama sheet arsip,
+  // dan logikanya memakai createExportFns yang sama dengan menu "Monitoring & Ekspor" agar hasilnya identik.
+  const handleCetak = async (namaSheet, jenis) => {
+    const range = parseArsipSheetRange(namaSheet);
+    if(!range){ Swal.fire('Gagal','Rentang tanggal arsip tidak dapat dibaca dari nama sheet ini.','error'); return; }
+    setCetakProses(jenis);
+    const la = Swal.fire({title:'Menyiapkan laporan...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+    try {
+      const r = await runGoogleScript('getPresensiArsip', namaSheet);
+      const raw = (r && r.success) ? (r.data||[]) : [];
+      if(!raw.length){ la.close(); Swal.fire('Data Kosong','Sheet arsip ini tidak memiliki data presensi.','info'); setCetakProses(null); return; }
+      const enrichedArsip = enrichPresensiWithIjin(raw, ijinData);
+      const fns = createExportFns({ presensiData: enrichedArsip, ijinData, pegawaiData, flLem:'', dStart: range.start, dEnd: range.end });
+      la.close();
+      if(jenis==='rekap') fns.exportRekapitulasiPDF();
+      else if(jenis==='hadir') fns.exportDaftarHadirRingkas();
+      else if(jenis==='terlambat') fns.exportRekapKeterlambatan();
+      setCetakModal(null);
+    } catch(e) {
+      la.close();
+      Swal.fire('Error', e.message||'Terjadi kesalahan saat membuat laporan.', 'error');
+    }
+    setCetakProses(null);
+  };
+
   if(!canArsip) return <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-100 text-center"><div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4"><i className="fas fa-lock text-3xl text-slate-300"></i></div><h3 className="text-lg font-bold text-slate-700">Akses Ditolak</h3><p className="text-slate-400 text-sm mt-2">Arsip Data hanya untuk Admin.</p></div>;
 
   const iCls = "w-full border border-slate-200 px-3 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-white transition-shadow";
@@ -1864,7 +1910,7 @@ const ArsipData = ({ userRole, username, refreshData }) => {
           <div><label className={lCls}>Tanggal Akhir</label><input type="date" className={iCls} value={rEnd} onChange={e=>setREnd(e.target.value)} /></div>
           <button onClick={prosesArsip} disabled={proses} className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm shadow-indigo-500/20"><i className="fas fa-archive"></i> Arsipkan Data</button>
         </div>
-        <p className="text-[11px] text-slate-400 mt-3"><i className="fas fa-info-circle mr-1"></i>arsip otomatis dibuat sesuai rentang tanggal, misalnya <b>"01 Januari 2026 - 31 Januari 2026"</b>.</p>
+        <p className="text-[11px] text-slate-400 mt-3"><i className="fas fa-info-circle mr-1"></i>Nama sheet arsip otomatis dibuat sesuai rentang tanggal, misalnya <b>"01 Januari 2026 - 31 Januari 2026"</b>.</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
@@ -1891,7 +1937,10 @@ const ArsipData = ({ userRole, username, refreshData }) => {
                   <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">{fmtTs(a['Timestamp Arsip'])}</td>
                   <td className="px-4 py-3 text-xs text-slate-500">{a['Diarsipkan Oleh']||'-'}</td>
                   <td className="px-4 py-3 text-center">
-                    <button onClick={()=>hapusArsip(a['Nama Sheet'])} className="w-8 h-8 bg-red-50 text-red-600 border border-red-100 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors mx-auto"><i className="fas fa-trash-alt text-xs"></i></button>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button onClick={()=>setCetakModal(a)} className="w-8 h-8 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg flex items-center justify-center hover:bg-blue-100 transition-colors" title="Cetak Laporan"><i className="fas fa-print text-xs"></i></button>
+                      <button onClick={()=>hapusArsip(a['Nama Sheet'])} className="w-8 h-8 bg-red-50 text-red-600 border border-red-100 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors"><i className="fas fa-trash-alt text-xs"></i></button>
+                    </div>
                   </td>
                 </tr>
               )) : <tr><td colSpan="5" className="text-center py-14 text-slate-300"><i className="fas fa-box-open text-4xl block mb-3"></i><span className="text-sm font-medium">{loading?'Memuat data...':'Belum ada arsip data presensi'}</span></td></tr>}
@@ -1899,6 +1948,28 @@ const ArsipData = ({ userRole, username, refreshData }) => {
           </table>
         </div>
       </div>
+
+      {/* Modal Cetak Arsip — tanpa pilih rentang tanggal, langsung pakai rentang sheet arsip */}
+      {cetakModal && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center" style={{padding:'20px'}} onClick={()=>{ if(!cetakProses) setCetakModal(null); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full" style={{maxWidth:'460px'}} onClick={e=>e.stopPropagation()}>
+            <div className="px-6 py-4 flex justify-between items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white rounded-t-2xl">
+              <span className="font-bold flex items-center gap-2.5"><i className="fas fa-print text-blue-200"></i>Cetak Laporan Arsip</span>
+              <button onClick={()=>{ if(!cetakProses) setCetakModal(null); }} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors" style={{fontSize:'24px',lineHeight:1}}>&times;</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-400">Laporan dibuat langsung untuk rentang tanggal sheet arsip ini, hasilnya sama seperti menu "Monitoring &amp; Ekspor".</p>
+              <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 flex items-center gap-2"><i className="fas fa-box-archive text-indigo-400"></i>{cetakModal['Nama Sheet']}</div>
+              <div className="space-y-2.5 pt-1">
+                <button onClick={()=>handleCetak(cetakModal['Nama Sheet'],'rekap')} disabled={!!cetakProses} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"><i className={`fas ${cetakProses==='rekap'?'fa-spinner fa-spin':'fa-table-list'}`}></i>Rekapitulasi PDF</button>
+                <button onClick={()=>handleCetak(cetakModal['Nama Sheet'],'hadir')} disabled={!!cetakProses} className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"><i className={`fas ${cetakProses==='hadir'?'fa-spinner fa-spin':'fa-list-ul'}`}></i>Daftar Hadir Bulanan</button>
+                <button onClick={()=>handleCetak(cetakModal['Nama Sheet'],'terlambat')} disabled={!!cetakProses} className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"><i className={`fas ${cetakProses==='terlambat'?'fa-spinner fa-spin':'fa-stopwatch'}`}></i>Rekap Keterlambatan</button>
+              </div>
+              <button onClick={()=>{ if(!cetakProses) setCetakModal(null); }} disabled={!!cetakProses} className="w-full text-center text-xs font-semibold text-slate-400 hover:text-slate-600 pt-1 disabled:opacity-50">Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -2532,7 +2603,7 @@ const App = () => {
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} />}
                 {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} />}
                 {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={fetchData} userRole={user.role} />}
-                {tab==='arsip_data'&&canArsip && <ArsipData userRole={user.role} username={user.username} refreshData={fetchData} />}
+                {tab==='arsip_data'&&canArsip && <ArsipData userRole={user.role} username={user.username} refreshData={fetchData} ijinData={ijin} pegawaiData={pegawai} />}
                 {tab==='jadwal_acara'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><JadwalAcara userRole={user.role} username={user.username} pegawaiData={pegawai} refreshData={fetchData} /></div>}
                 {tab==='activity'             && <ActivityLog userRole={user.role} />}
               </div>
