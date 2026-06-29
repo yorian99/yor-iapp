@@ -1898,13 +1898,13 @@ const ArsipData = ({ userRole, username, refreshData, ijinData, pegawaiData }) =
   const lCls = "block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1";
 
   return (
-    <div className="space-y-4 anim-f">
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+    <div className="flex flex-col flex-1 min-h-0 gap-4 anim-f">
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex-shrink-0">
         <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><span className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><i className="fas fa-box-archive text-indigo-600 text-sm"></i></span>Arsip Data Presensi</h3>
         <p className="text-xs text-slate-400 mt-1 ml-10">Pindahkan data RekapPresensi ke arsip berdasarkan rentang tanggal. Data yang sudah diarsipkan dapat dilihat kembali lewat dropdown "Sumber Data" pada menu Monitoring Presensi.</p>
       </div>
 
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex-shrink-0">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div><label className={lCls}>Tanggal Mulai</label><input type="date" className={iCls} value={rStart} onChange={e=>setRStart(e.target.value)} /></div>
           <div><label className={lCls}>Tanggal Akhir</label><input type="date" className={iCls} value={rEnd} onChange={e=>setREnd(e.target.value)} /></div>
@@ -1914,7 +1914,7 @@ const ArsipData = ({ userRole, username, refreshData, ijinData, pegawaiData }) =
       </div>
 
       {/* ── Daftar Arsip: tampilan jadwal acara + dokumen ijin ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex-1 flex flex-col min-h-0">
         {/* Header strip — sama seperti JadwalAcara */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-700 to-indigo-800 rounded-t-2xl">
           <span className="font-bold text-sm text-white flex items-center gap-2">
@@ -1927,7 +1927,7 @@ const ArsipData = ({ userRole, username, refreshData, ijinData, pegawaiData }) =
         </div>
 
         {/* Konten kartu */}
-        <div className="p-4">
+        <div className="p-4 flex-1 overflow-y-auto">
           {loading&&daftar.length===0 ? (
             <div className="text-center py-14 text-slate-300">
               <i className="fas fa-spinner fa-spin text-3xl block mb-3 text-indigo-300"></i>
@@ -2684,7 +2684,7 @@ const App = () => {
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} />}
                 {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} />}
                 {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={fetchData} userRole={user.role} />}
-                {tab==='arsip_data'&&canArsip && <ArsipData userRole={user.role} username={user.username} refreshData={fetchData} ijinData={ijin} pegawaiData={pegawai} />}
+                {tab==='arsip_data'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><ArsipData userRole={user.role} username={user.username} refreshData={fetchData} ijinData={ijin} pegawaiData={pegawai} /></div>}
                 {tab==='jadwal_acara'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><JadwalAcara userRole={user.role} username={user.username} pegawaiData={pegawai} refreshData={fetchData} /></div>}
                 {tab==='activity'             && <ActivityLog userRole={user.role} />}
               </div>
