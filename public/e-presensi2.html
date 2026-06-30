@@ -792,7 +792,9 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, hardRefresh, userRole
       if(!r || r.success===false){
         setOverrides(p=>{const n={...p};delete n[idx];return n;});
         Swal.fire('Error','Gagal menyimpan keterangan. Perubahan dikembalikan.','error');
-      } else { refreshData(); } // sinkron diam-diam ke data sheet asli setelah aksi berhasil (bukan auto-poll berkala)
+      }
+      // Sukses: data sudah benar di layar (optimistic) — tidak perlu tarik ulang dari server.
+      // Tekan "Tarik Data Presensi" kapan saja untuk menyamakan dengan sheet.
     }catch(e){
       setOverrides(p=>{const n={...p};delete n[idx];return n;});
       Swal.fire('Error','Koneksi bermasalah. Perubahan dikembalikan.','error');
@@ -811,7 +813,13 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, hardRefresh, userRole
       if(!r || r.success===false){
         setPendingDeletes(p=>{const n=new Set(p);n.delete(idx);return n;});
         Swal.fire('Gagal menghapus','Data dikembalikan ke layar.','error');
-      } else { refreshData(); }
+      }
+    }catch(e){
+      setPendingDeletes(p=>{const n=new Set(p);n.delete(idx);return n;});
+      Swal.fire('Gagal menghapus','Koneksi bermasalah, data dikembalikan ke layar.','error');
+    }
+  };
+  const submitCRUD = async () => {
     if(!fv['Waktu']||!fv['Jenis Presensi']||!fv['Nama Pegawai']){ Swal.fire('Peringatan','Waktu, Jenis Presensi, dan Nama Pegawai wajib diisi.','warning'); return; }
     let finalFv = {...fv};
     // Upload foto bukti jika ada file dipilih — ini satu-satunya bagian yang
@@ -3368,7 +3376,7 @@ const App = () => {
               </div>
             : <div className="w-full flex flex-col flex-1 min-h-0">
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
-                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={()=>fetchData({silent:true})} hardRefresh={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} pegawaiData={pegawai} /></div>}
+                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} hardRefresh={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} pegawaiData={pegawai} /></div>}
                 {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={()=>fetchData({silent:true})} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} />}
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} pegawaiData={pegawai} />}
                 {tab==='manajemen_lembaga'&&canPegawai && <ManajemenLembaga refreshParent={()=>fetchData({silent:true})} userRole={user.role} lembagaData={lembagaData} />}
