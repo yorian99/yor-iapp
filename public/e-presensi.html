@@ -149,7 +149,7 @@
 <body class="bg-slate-100 text-slate-800 font-sans antialiased">
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useEffect, useMemo, useRef } = React;
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
 
 
 const lembagaList = [
@@ -162,18 +162,68 @@ const lembagaList = [
 ];
 
 
+// runGoogleScript: pemanggil API terpusat — DIPAKAI DI SELURUH APLIKASI.
+// Versi tahan-banting: timeout per percobaan + retry otomatis untuk error
+// koneksi/timeout (bukan error bisnis seperti validasi gagal), supaya aksi
+// jarang sekali gagal hanya karena GAS sedang lambat sesaat.
+const RGS_TIMEOUT_MS = 28000;
+const RGS_MAX_ATTEMPTS = 3;
+const rgsSleep = ms => new Promise(r => setTimeout(r, ms));
+
 const runGoogleScript = async (fn, ...args) => {
-  const res = await fetch('/api/gas', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: fn, args })
-  });
-  if (!res.ok) throw new Error(`Server error: HTTP ${res.status}`);
-  const data = await res.json();
-  if (data && data.success === false && data.message) {
-    throw new Error(data.message);
+  let lastErr = null;
+  for (let attempt = 1; attempt <= RGS_MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), RGS_TIMEOUT_MS);
+    try {
+      const res = await fetch('/api/gas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: fn, args }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok && res.status !== 502) throw new Error(`Server error: HTTP ${res.status}`);
+      const data = await res.json();
+      // Proxy mengembalikan {success:false, retryable:true} kalau GAS gagal merespons
+      // setelah dicoba berkali-kali di sisi server — coba lagi dari sisi klien juga.
+      if (data && data.retryable && attempt < RGS_MAX_ATTEMPTS) {
+        await rgsSleep(500 * attempt);
+        continue;
+      }
+      if (data && data.success === false && data.message) {
+        throw new Error(data.message);
+      }
+      return data;
+    } catch (err) {
+      clearTimeout(timer);
+      lastErr = err;
+      const isAbort = err.name === 'AbortError';
+      const isNetwork = err instanceof TypeError; // fetch gagal total (offline, dll)
+      if ((isAbort || isNetwork) && attempt < RGS_MAX_ATTEMPTS) {
+        await rgsSleep(500 * attempt);
+        continue;
+      }
+      throw err;
+    }
   }
-  return data;
+  throw lastErr || new Error('Gagal menghubungi server.');
+};
+
+// ── Cache lokal untuk "instant load" ──────────────────────────────────────
+// Saat aplikasi dibuka, data terakhir yang berhasil dimuat langsung
+// ditampilkan dari localStorage (tanpa menunggu jaringan), lalu di-refresh
+// di belakang layar. Ini membuat layar TIDAK PERNAH kosong/blank walau
+// koneksi ke GAS sedang lambat.
+const LOCAL_CACHE_KEY = 'korwil_data_cache_v1';
+const readLocalCache = () => {
+  try {
+    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+const writeLocalCache = (payload) => {
+  try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(payload)); } catch { /* storage penuh/disabled, abaikan */ }
 };
 
 const extractFileId = (url) => {
@@ -681,6 +731,19 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
   const [fv,setFv]=useState({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''});
   const [buktiFile,setBuktiFile]=useState(null), [buktiPreview,setBuktiPreview]=useState(''), [uploadingBukti,setUploadingBukti]=useState(false);
 
+  // ★ OPTIMISTIC UI: perubahan dari delete/edit/tambah langsung tampil di
+  // layar tanpa menunggu balasan server. `overrides`/`pendingDeletes`/`tempRows`
+  // di-reset otomatis begitu data terbaru dari server (prop `data`) datang,
+  // sehingga akhirnya selalu konsisten dengan database sheet.
+  const [overrides,setOverrides]=useState({});       // {_rowIndex: {field: value}}
+  const [pendingDeletes,setPendingDeletes]=useState(()=>new Set());
+  const [tempRows,setTempRows]=useState([]);          // baris baru yang belum dikonfirmasi server
+  useEffect(()=>{ setOverrides({}); setPendingDeletes(new Set()); setTempRows([]); },[data]);
+  const applyOverlay = useCallback(arr => {
+    const withOverride = arr.filter(i=>!pendingDeletes.has(i._rowIndex)).map(i=> overrides[i._rowIndex] ? {...i,...overrides[i._rowIndex]} : i);
+    return [...tempRows, ...withOverride];
+  },[overrides,pendingDeletes,tempRows]);
+
   // ★ Sumber data: 'live' = RekapPresensi (Presensi Sekarang) atau nama sheet arsip hasil pengarsipan
   const [sumber,setSumber]=useState('live');
   const [daftarArsip,setDaftarArsip]=useState([]);
@@ -699,7 +762,10 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
     }).catch(()=>{ if(aktif) setArsipRaw([]); }).finally(()=>{ if(aktif) setLoadingArsip(false); });
     return ()=>{ aktif=false; };
   },[sumber]);
-  const dataAktif = useMemo(()=> isLive ? data : enrichPresensiWithIjin(arsipRaw, ijinData, []), [isLive,data,arsipRaw,ijinData]);
+  const dataAktif = useMemo(()=>{
+    const base = isLive ? data : enrichPresensiWithIjin(arsipRaw, ijinData, []);
+    return isLive ? applyOverlay(base) : base; // overlay optimistic hanya untuk mode live
+  }, [isLive,data,arsipRaw,ijinData,applyOverlay]);
 
   const canEdit = userRole==='Admin'||userRole==='User'||userRole==='Superuser';
   const canLibur= userRole==='Admin'||userRole==='Superuser';
@@ -716,21 +782,48 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
   const paged = filtered.slice((page-1)*eff, page*eff);
 
   const saveKet = async idx => {
-    const r = await runGoogleScript('updateKeteranganBukti',idx,editVal);
-    if(r.success){ Swal.fire({icon:'success',title:'Tersimpan',timer:700,showConfirmButton:false,toast:true,position:'top-end'}); setEditingRow(null); refreshData(); }
+    const prevVal = editVal;
+    // Optimistic: langsung tampilkan keterangan baru & tutup mode edit, baru kirim ke server
+    setOverrides(p=>({...p,[idx]:{'Keterangan Bukti':prevVal}}));
+    setEditingRow(null);
+    Swal.fire({icon:'success',title:'Tersimpan',timer:700,showConfirmButton:false,toast:true,position:'top-end'});
+    try{
+      const r = await runGoogleScript('updateKeteranganBukti',idx,prevVal);
+      if(!r || r.success===false){
+        setOverrides(p=>{const n={...p};delete n[idx];return n;});
+        Swal.fire('Error','Gagal menyimpan keterangan. Perubahan dikembalikan.','error');
+      } else { refreshData(); }
+    }catch(e){
+      setOverrides(p=>{const n={...p};delete n[idx];return n;});
+      Swal.fire('Error','Koneksi bermasalah. Perubahan dikembalikan.','error');
+    }
   };
   const openAdd = () => { setCMode('add'); setCRowIdx(null); setFv({'Hari Tanggal':'','Waktu':'','Jenis Presensi':'','Nama Lembaga':'','Nama Pegawai':'','Nip':'','Bukti Dukung':'','Latitude':'','Longitude':'','Jarak Absen':'','Keterangan Radius':'','Keterangan Bukti':''}); setBuktiFile(null); setBuktiPreview(''); setShowCRUD(true); };
   const openEdit= item => { setCMode('edit'); setCRowIdx(item._rowIndex); setFv({'Hari Tanggal':item['Hari Tanggal']||'','Waktu':item['Waktu']||'','Jenis Presensi':item['Jenis Presensi']||'','Nama Lembaga':item['Nama Lembaga']||'','Nama Pegawai':item['Nama Pegawai']||'','Nip':item['Nip']||'','Bukti Dukung':item['Bukti Dukung']||'','Latitude':item['Latitude']||'','Longitude':item['Longitude']||'','Jarak Absen':item['Jarak Absen']||'','Keterangan Radius':item['Keterangan Radius']||'','Keterangan Bukti':item['Keterangan Bukti']||''}); setBuktiFile(null); setBuktiPreview(item['Bukti Dukung']||''); setShowCRUD(true); };
   const delItem = async (idx,nm) => {
     const c = await Swal.fire({title:'Hapus Presensi?',text:`Yakin hapus presensi ${nm}?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#d33',cancelButtonColor:'#334155',confirmButtonText:'Ya, Hapus'});
-    if(c.isConfirmed){ const la=Swal.fire({title:'Menghapus...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()}); const r=await runGoogleScript('deletePresensi',idx); la.close(); if(r.success){Swal.fire({icon:'success',title:'Terhapus',timer:1200,showConfirmButton:false});refreshData();}else Swal.fire('Error','Gagal menghapus','error'); }
+    if(!c.isConfirmed) return;
+    // Optimistic: hilang dari layar seketika, baru proses ke server di belakang layar
+    setPendingDeletes(p=>new Set(p).add(idx));
+    Swal.fire({icon:'success',title:'Terhapus',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
+    try{
+      const r = await runGoogleScript('deletePresensi',idx);
+      if(!r || r.success===false){
+        setPendingDeletes(p=>{const n=new Set(p);n.delete(idx);return n;});
+        Swal.fire('Gagal menghapus','Data dikembalikan ke layar.','error');
+      } else { refreshData(); }
+    }catch(e){
+      setPendingDeletes(p=>{const n=new Set(p);n.delete(idx);return n;});
+      Swal.fire('Gagal menghapus','Koneksi bermasalah, data dikembalikan ke layar.','error');
+    }
   };
   const submitCRUD = async () => {
     if(!fv['Waktu']||!fv['Jenis Presensi']||!fv['Nama Pegawai']){ Swal.fire('Peringatan','Waktu, Jenis Presensi, dan Nama Pegawai wajib diisi.','warning'); return; }
-    const la=Swal.fire({title:'Menyimpan...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
     let finalFv = {...fv};
-    // Upload foto bukti jika ada file dipilih
+    // Upload foto bukti jika ada file dipilih — ini satu-satunya bagian yang
+    // tetap menunggu (perlu URL Drive nyata sebelum baris bisa ditampilkan).
     if(buktiFile){
+      const lu=Swal.fire({title:'Mengunggah foto...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
       try {
         const reader = new FileReader();
         const base64 = await new Promise((res,rej)=>{ reader.onload=e=>res(e.target.result); reader.onerror=rej; reader.readAsDataURL(buktiFile); });
@@ -739,14 +832,30 @@ const MonitoringPresensi = ({ data, ijinData, refreshData, userRole, userLembaga
         const ext = buktiFile.name.split('.').pop()||'jpg';
         const fileName = `bukti_${ts}_${safeNama}.${ext}`;
         const up = await runGoogleScript('uploadBuktiFoto', base64, fileName);
-        if(!up.success){ la.close(); Swal.fire('Gagal Upload','Gagal mengunggah foto bukti: '+(up.message||''),'error'); return; }
+        lu.close();
+        if(!up.success){ Swal.fire('Gagal Upload','Gagal mengunggah foto bukti: '+(up.message||''),'error'); return; }
         finalFv = {...finalFv, 'Bukti Dukung': up.url};
-      } catch(err){ la.close(); Swal.fire('Error','Gagal membaca file foto.','error'); return; }
+      } catch(err){ lu.close(); Swal.fire('Error','Gagal membaca file foto.','error'); return; }
     }
-    const r = cMode==='add' ? await runGoogleScript('addPresensi',finalFv) : await runGoogleScript('updatePresensi',cRowIdx,finalFv);
-    la.close();
-    if(r.success){ Swal.fire({icon:'success',title:cMode==='add'?'Ditambahkan':'Diperbarui',timer:1200,showConfirmButton:false}); setShowCRUD(false); setBuktiFile(null); setBuktiPreview(''); refreshData(); }
-    else Swal.fire('Error','Gagal menyimpan data','error');
+    // Optimistic: tampilkan baris baru/berubah seketika, tutup modal, baru kirim ke server
+    if(cMode==='add'){
+      const tmpId = '__tmp_'+Date.now();
+      setTempRows(p=>[{...finalFv,_rowIndex:tmpId},...p]);
+    } else {
+      setOverrides(p=>({...p,[cRowIdx]:finalFv}));
+    }
+    setShowCRUD(false); setBuktiFile(null); setBuktiPreview('');
+    Swal.fire({icon:'success',title:cMode==='add'?'Ditambahkan':'Diperbarui',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
+    try{
+      const r = cMode==='add' ? await runGoogleScript('addPresensi',finalFv) : await runGoogleScript('updatePresensi',cRowIdx,finalFv);
+      if(!r || r.success===false){
+        Swal.fire('Error','Gagal menyimpan data. Memuat ulang data terbaru...','error');
+        refreshData();
+      } else { refreshData(); }
+    }catch(e){
+      Swal.fire('Error','Koneksi bermasalah. Memuat ulang data terbaru...','error');
+      refreshData();
+    }
   };
 
   const iCls = "w-full border border-slate-200 px-3 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 outline-none bg-white transition-shadow";
@@ -971,12 +1080,15 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga, lembagaData }) 
   const [ketEdit,setKetEdit]=useState(null);
   const [ketVals,setKetVals]=useState({});
   const [savingKet,setSavingKet]=useState(null);
+  const [pendingDeletes,setPendingDeletes]=useState(()=>new Set());
+  useEffect(()=>{ setPendingDeletes(new Set()); },[data]);
 
   const canEditLem = userRole==='Admin'||userRole==='User'||userRole==='Superuser';
   const canEdit    = userRole==='Admin'||userRole==='User'||userRole==='Superuser';
 
   useEffect(()=>{ if(!canEditLem&&userLembaga) setFlLem(userLembaga); },[canEditLem,userLembaga]);
-  const filtered = useMemo(()=>data.filter(i=>(i['Nama Lembaga']||'').toLowerCase().includes(flLem.toLowerCase())&&(i['Nama Pegawai']||'').toLowerCase().includes(flNama.toLowerCase())),[data,flLem,flNama]);
+  const dataVisible = useMemo(()=>data.filter(i=>!pendingDeletes.has(i._rowIndex)),[data,pendingDeletes]);
+  const filtered = useMemo(()=>dataVisible.filter(i=>(i['Nama Lembaga']||'').toLowerCase().includes(flLem.toLowerCase())&&(i['Nama Pegawai']||'').toLowerCase().includes(flNama.toLowerCase())),[dataVisible,flLem,flNama]);
   useEffect(()=>{ setPage(1); setRpp(10); },[flLem,flNama]);
   const total = filtered.length;
   const eff   = rpp===total?total:rpp;
@@ -1025,7 +1137,19 @@ const DokumenIjin = ({ data, refreshData, userRole, userLembaga, lembagaData }) 
 
   const delItem = async (idx,nm) => {
     const c = await Swal.fire({title:'Hapus Dokumen Ijin?',text:`Yakin hapus pengajuan ${nm}?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#d33',cancelButtonColor:'#334155',confirmButtonText:'Ya, Hapus'});
-    if(c.isConfirmed){ const r=await runGoogleScript('deleteDokumenIjin',idx); if(r.success){Swal.fire({icon:'success',title:'Terhapus',timer:1200,showConfirmButton:false});refreshData();}else Swal.fire('Error','Gagal','error'); }
+    if(!c.isConfirmed) return;
+    setPendingDeletes(p=>new Set(p).add(idx));
+    Swal.fire({icon:'success',title:'Terhapus',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
+    try{
+      const r = await runGoogleScript('deleteDokumenIjin',idx);
+      if(!r || r.success===false){
+        setPendingDeletes(p=>{const n=new Set(p);n.delete(idx);return n;});
+        Swal.fire('Gagal','Gagal menghapus, data dikembalikan.','error');
+      } else { refreshData(); }
+    }catch(e){
+      setPendingDeletes(p=>{const n=new Set(p);n.delete(idx);return n;});
+      Swal.fire('Gagal','Koneksi bermasalah, data dikembalikan.','error');
+    }
   };
 
   const STATS = ['Diajukan','Disetujui','Ditolak'];
@@ -2586,28 +2710,35 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
     if(new Date(fd.tanggalMulai) > new Date(fd.tanggalAkhir)){ Swal.fire('Peringatan','Tanggal Mulai tidak boleh lebih besar dari Tanggal Akhir.','warning'); return; }
     if(fd.latitude===''||fd.longitude===''||fd.radius===''){ Swal.fire('Peringatan','Latitude, Longitude, dan Radius wajib diisi.','warning'); return; }
     if(selected.size===0){ Swal.fire('Peringatan','Pilih minimal satu pegawai untuk jadwal ini.','warning'); return; }
-    setProses(true);
-    const la = Swal.fire({title:'Menyimpan jadwal...',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+    const today0 = new Date(); today0.setHours(0,0,0,0);
+    const tglMulai0 = new Date(fd.tanggalMulai); tglMulai0.setHours(0,0,0,0);
+    const tmpItem = {
+      _rowIndex: '__tmp_'+Date.now(), 'Nama Acara': fd.namaAcara, 'Tanggal Mulai': fd.tanggalMulai, 'Tanggal Akhir': fd.tanggalAkhir,
+      'Latitude': fd.latitude, 'Longitude': fd.longitude, 'Radius (m)': fd.radius,
+      'Daftar Pegawai': JSON.stringify(Array.from(selected)),
+      'Status': today0 >= tglMulai0 ? 'Aktif' : 'Terjadwal',
+    };
+    // Optimistic: langsung muncul di daftar & tutup modal, baru kirim ke server
+    setList(prev=>[tmpItem,...prev]);
+    setModal(false);
+    Swal.fire({icon:'success',title:'Jadwal disimpan',timer:1200,showConfirmButton:false,toast:true,position:'top-end'});
     try {
       const r = await runGoogleScript('addJadwalAcara', {
         namaAcara: fd.namaAcara, tanggalMulai: fd.tanggalMulai, tanggalAkhir: fd.tanggalAkhir,
         latitude: fd.latitude, longitude: fd.longitude, radius: fd.radius,
         daftarPegawai: Array.from(selected), username
       });
-      la.close();
       if(r.success){
-        Swal.fire({icon:'success',title:'Berhasil',text:r.message});
-        setModal(false);
-        await muatDaftar();
+        await muatDaftar(); // reconcile: ganti baris sementara dengan data asli dari server
         if(refreshData) refreshData();
       } else {
+        setList(prev=>prev.filter(i=>i._rowIndex!==tmpItem._rowIndex));
         Swal.fire('Gagal', r.message||'Terjadi kesalahan.', 'error');
       }
     } catch(e) {
-      la.close();
-      Swal.fire('Error', e.message||'Terjadi kesalahan.', 'error');
+      setList(prev=>prev.filter(i=>i._rowIndex!==tmpItem._rowIndex));
+      Swal.fire('Error', e.message||'Koneksi bermasalah.', 'error');
     }
-    setProses(false);
   };
 
   const batalkan = async (item) => {
@@ -2618,17 +2749,28 @@ const JadwalAcara = ({ userRole, username, pegawaiData, refreshData }) => {
       confirmButtonText:'Ya, Batalkan', cancelButtonText:'Tidak'
     });
     if(!c.isConfirmed) return;
-    const r = await runGoogleScript('batalkanJadwalAcara', item._rowIndex, username);
-    if(r.success){ Swal.fire({icon:'success',title:'Dibatalkan',timer:1200,showConfirmButton:false}); muatDaftar(); if(refreshData) refreshData(); }
-    else Swal.fire('Gagal', r.message||'Gagal membatalkan.', 'error');
+    const prevList = list;
+    // Optimistic: status langsung berubah di layar
+    setList(prev=>prev.map(i=>i._rowIndex===item._rowIndex?{...i,Status:'Dibatalkan'}:i));
+    Swal.fire({icon:'success',title:'Dibatalkan',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
+    try{
+      const r = await runGoogleScript('batalkanJadwalAcara', item._rowIndex, username);
+      if(r.success){ if(refreshData) refreshData(); }
+      else { setList(prevList); Swal.fire('Gagal', r.message||'Gagal membatalkan.', 'error'); }
+    }catch(e){ setList(prevList); Swal.fire('Error', e.message||'Koneksi bermasalah.', 'error'); }
   };
 
   const hapus = async (item) => {
     const c = await Swal.fire({title:'Hapus Riwayat?',html:`Riwayat jadwal <b>"${item['Nama Acara']}"</b> akan dihapus permanen.`,icon:'warning',showCancelButton:true,confirmButtonColor:'#d33',cancelButtonColor:'#334155',confirmButtonText:'Ya, Hapus'});
     if(!c.isConfirmed) return;
-    const r = await runGoogleScript('hapusJadwalAcara', item._rowIndex);
-    if(r.success){ Swal.fire({icon:'success',title:'Terhapus',timer:1000,showConfirmButton:false}); muatDaftar(); }
-    else Swal.fire('Error', r.message||'Gagal menghapus.', 'error');
+    const prevList = list;
+    // Optimistic: hilang dari layar seketika
+    setList(prev=>prev.filter(i=>i._rowIndex!==item._rowIndex));
+    Swal.fire({icon:'success',title:'Terhapus',timer:1000,showConfirmButton:false,toast:true,position:'top-end'});
+    try{
+      const r = await runGoogleScript('hapusJadwalAcara', item._rowIndex);
+      if(!r.success){ setList(prevList); Swal.fire('Error', r.message||'Gagal menghapus.', 'error'); }
+    }catch(e){ setList(prevList); Swal.fire('Error', e.message||'Koneksi bermasalah.', 'error'); }
   };
 
   const lihatPegawai = (item) => {
@@ -2997,8 +3139,9 @@ const App = () => {
   };
   const fmtTime = d => d?d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):null;
 
-  const fetchData = async()=>{
-    setLoad(true);
+  const fetchData = async(opts)=>{
+    const silent = opts && opts.silent; // true = refresh latar belakang, tanpa spinner full-screen
+    if(!silent) setLoad(true);
     const t0=Date.now();
     try{
       const [rP,rI,rPg,rJ,rL]=await Promise.all([runGoogleScript('getPresensi'),runGoogleScript('getIjin'),runGoogleScript('getPegawai'),runGoogleScript('getJadwalAcara'),runGoogleScript('getLembaga')]);
@@ -3006,10 +3149,44 @@ const App = () => {
       const dur=Date.now()-t0;
       setFetchDuration(dur);
       setLastSync(new Date());
-    }catch(e){console.error(e);}
-    setLoad(false);
+      // Simpan ke cache lokal supaya buka aplikasi berikutnya langsung tampil instan
+      writeLocalCache({ presensi:rP||[], ijin:rI||[], pegawai:rPg||[], jadwal:rJ||[], lembagaData:rL||[], savedAt:Date.now() });
+    }catch(e){
+      console.error(e);
+      // Gagal total (mis. tidak ada koneksi sama sekali) -> kalau ini load pertama
+      // dan belum ada data sama sekali di layar, tetap pakai cache lokal yang ada.
+      if(!silent && presensi.length===0 && pegawai.length===0){
+        const cached = readLocalCache();
+        if(cached){
+          setPresensi(cached.presensi||[]); setIjin(cached.ijin||[]); setPegawai(cached.pegawai||[]);
+          setJadwal(cached.jadwal||[]); setLembagaData(cached.lembagaData||[]);
+        }
+      }
+      if(!silent){
+        Swal.fire({icon:'warning',title:'Koneksi lambat',text:'Menampilkan data terakhir yang tersimpan. Aplikasi akan otomatis sinkron ulang.',toast:true,position:'top-end',timer:3500,showConfirmButton:false});
+      }
+    }
+    if(!silent) setLoad(false);
   };
-  useEffect(()=>{ if(user) fetchData(); },[user]);
+
+  // ★ Saat login: tampilkan instan dari cache lokal (kalau ada) tanpa menunggu
+  // jaringan sama sekali, baru tarik data terbaru di belakang layar.
+  useEffect(()=>{
+    if(!user) return;
+    const cached = readLocalCache();
+    if(cached){
+      setPresensi(cached.presensi||[]); setIjin(cached.ijin||[]); setPegawai(cached.pegawai||[]);
+      setJadwal(cached.jadwal||[]); setLembagaData(cached.lembagaData||[]);
+      if(cached.savedAt) setLastSync(new Date(cached.savedAt));
+      fetchData({silent:true}); // sinkron diam-diam di belakang layar
+    } else {
+      fetchData(); // belum ada cache -> tampilkan loading seperti biasa
+    }
+    // ★ Auto-sync berkala tiap 60 detik di belakang layar, supaya data antar-perangkat
+    // tetap sinkron tanpa user harus klik refresh manual.
+    const interval = setInterval(()=>{ fetchData({silent:true}); }, 60000);
+    return ()=>clearInterval(interval);
+  },[user]);
   const enriched = useMemo(()=>enrichPresensiWithIjin(presensi,ijin,jadwal),[presensi,ijin,jadwal]);
   const canPegawai = user&&(user.role==='Admin'||user.role==='Superuser'||user.role==='User');
   const canAll     = user&&(user.role==='Admin'||user.role==='Superuser'||user.role==='User');
@@ -3193,14 +3370,14 @@ const App = () => {
               </div>
             : <div className="w-full flex flex-col flex-1 min-h-0">
                 {tab==='dashboard'            && <Dashboard presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} />}
-                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} pegawaiData={pegawai} /></div>}
-                {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={fetchData} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} />}
+                {tab==='monitoring_presensi'  && <div className="flex-1 flex flex-col min-h-0"><MonitoringPresensi data={enriched} ijinData={ijin} refreshData={()=>fetchData({silent:true})} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} pegawaiData={pegawai} /></div>}
+                {tab==='dokumen_ijin'         && <DokumenIjin data={ijin} refreshData={()=>fetchData({silent:true})} userRole={user.role} userLembaga={uLembaga} lembagaData={lembagaData} />}
                 {tab==='pengajuan_psw'        && <PengajuanPSW user={user} userLembaga={uLembaga} pegawaiData={pegawai} />}
-                {tab==='manajemen_lembaga'&&canPegawai && <ManajemenLembaga refreshParent={fetchData} userRole={user.role} lembagaData={lembagaData} />}
-                {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={fetchData} userRole={user.role} pegawaiData={pegawai} lembagaData={lembagaData} />}
-                {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={fetchData} userRole={user.role} lembagaData={lembagaData} />}
-                {tab==='arsip_data'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><ArsipData userRole={user.role} username={user.username} refreshData={fetchData} ijinData={ijin} pegawaiData={pegawai} /></div>}
-                {tab==='jadwal_acara'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><JadwalAcara userRole={user.role} username={user.username} pegawaiData={pegawai} refreshData={fetchData} /></div>}
+                {tab==='manajemen_lembaga'&&canPegawai && <ManajemenLembaga refreshParent={()=>fetchData({silent:true})} userRole={user.role} lembagaData={lembagaData} />}
+                {tab==='pegawai'&&canPegawai  && <DatabasePegawai refreshParent={()=>fetchData({silent:true})} userRole={user.role} pegawaiData={pegawai} lembagaData={lembagaData} />}
+                {tab==='monitoring_export'    && <MonitoringExport presensiData={enriched} ijinData={ijin} pegawaiData={pegawai} refreshData={()=>fetchData({silent:true})} userRole={user.role} lembagaData={lembagaData} />}
+                {tab==='arsip_data'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><ArsipData userRole={user.role} username={user.username} refreshData={()=>fetchData({silent:true})} ijinData={ijin} pegawaiData={pegawai} /></div>}
+                {tab==='jadwal_acara'&&canArsip && <div className="flex-1 flex flex-col min-h-0"><JadwalAcara userRole={user.role} username={user.username} pegawaiData={pegawai} refreshData={()=>fetchData({silent:true})} /></div>}
                 {tab==='activity'             && <ActivityLog userRole={user.role} />}
               </div>
           }
