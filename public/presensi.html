@@ -117,9 +117,67 @@
       font-size: 1.5rem;
     }
 
+    .countdown-bar {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #4361ee;
+      border-radius: 8px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .countdown-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #4361ee;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .countdown-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .countdown-box {
+      background: #f8f9ff;
+      border: 1px solid #dde3ff;
+      border-radius: 6px;
+      padding: 5px 8px;
+      min-width: 44px;
+    }
+
+    .countdown-box .num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #212529;
+      line-height: 1;
+      display: block;
+    }
+
+    .countdown-box .lbl {
+      font-size: 0.55rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .countdown-deadline {
+      font-size: 0.68rem;
+      color: #6c757d;
+    }
+
     .update-bar {
-      background: #fff8e1;
-      border: 2px solid #ffc107;
+      border: 2px solid #f97316;
+      border-left: 5px solid #ea580c;
       padding: 15px;
       border-radius: var(--border-radius);
       margin-top: 25px;
@@ -129,7 +187,7 @@
     .update-title {
       font-size: 0.85rem;
       font-weight: 700;
-      color: #856404;
+      color: #9a3412;
       margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -140,15 +198,15 @@
 
     .update-desc {
       font-size: 0.78rem;
-      color: #856404;
+      color: #7c2d12;
       margin-bottom: 4px;
       line-height: 1.6;
     }
 
     @keyframes pulse-update {
-      0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.5); }
-      70% { box-shadow: 0 0 0 8px rgba(255, 193, 7, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(249, 115, 22, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
     }
 
     .form-group {
@@ -411,12 +469,34 @@
     <p class="subtitle">"KORWIL SINE"</p>
 
     <div class="update-bar">
-      <div class="update-title"><i class="fas fa-info-circle"></i> HIMBAUAN</div>
+      <div class="update-title"><i class="fas fa-exclamation-circle"></i> PEMBERITAHUAN PENTING</div>
       <p class="update-desc">
-        Untuk mengakses aplikasi presensi versi terbaru, silahkan kunjungi:<br>
-        <a href="https://www.korwilsine.web.id" target="_blank" style="color:#5a3e00; font-weight:700; text-decoration:underline;">www.korwilsine.web.id</a><br>
-        pada bagian <strong>Aplikasi Presensi</strong>.
+        Seluruh pegawai diharapkan segera beralih ke aplikasi presensi versi terbaru sebelum <strong>31 Juli 2026</strong>. Akses melalui:<br>
+        <a href="https://www.korwilsine.web.id" target="_blank" style="color:#9a3412; font-weight:700; text-decoration:underline;">www.korwilsine.web.id</a>
+        &nbsp;→ bagian <strong>Aplikasi Presensi</strong>.
       </p>
+      <div class="countdown-bar">
+        <div class="countdown-label"><i class="fas fa-power-off"></i> Server ini dimatikan 31 Juli 2026</div>
+        <div class="countdown-boxes">
+          <div class="countdown-box">
+            <span class="num" id="cd-days">--</span>
+            <span class="lbl">Hari</span>
+          </div>
+          <div class="countdown-box">
+            <span class="num" id="cd-hours">--</span>
+            <span class="lbl">Jam</span>
+          </div>
+          <div class="countdown-box">
+            <span class="num" id="cd-minutes">--</span>
+            <span class="lbl">Menit</span>
+          </div>
+          <div class="countdown-box">
+            <span class="num" id="cd-seconds">--</span>
+            <span class="lbl">Detik</span>
+          </div>
+        </div>
+        <div class="countdown-deadline">Segera beralih sebelum server dinonaktifkan</div>
+      </div>
     </div>
 
     <div id="timeAlertContainer" style="display: none;" class="time-alert">
@@ -898,6 +978,37 @@
       localStorage.removeItem('sessionId');
       startPeriodicTimeCheck();
     });
+    // ---------- COUNTDOWN SERVER SHUTDOWN 31 JULI 2026 ----------
+    (function() {
+      const deadline = new Date('2026-07-31T23:59:00+07:00').getTime();
+
+      function updateCountdown() {
+        const now = Date.now();
+        const diff = deadline - now;
+
+        if (diff <= 0) {
+          document.getElementById('cd-days').textContent = '0';
+          document.getElementById('cd-hours').textContent = '00';
+          document.getElementById('cd-minutes').textContent = '00';
+          document.getElementById('cd-seconds').textContent = '00';
+          return;
+        }
+
+        const days    = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('cd-days').textContent    = days;
+        document.getElementById('cd-hours').textContent   = String(hours).padStart(2, '0');
+        document.getElementById('cd-minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('cd-seconds').textContent = String(seconds).padStart(2, '0');
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    })();
+
   </script>
 </body>
 </html>
