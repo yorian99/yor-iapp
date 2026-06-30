@@ -117,63 +117,38 @@
       font-size: 1.5rem;
     }
 
-    .info-bar {
-      background: #fff5f8;
-      border: 2px dashed var(--danger);
+    .update-bar {
+      background: #fff8e1;
+      border: 2px solid #ffc107;
       padding: 15px;
       border-radius: var(--border-radius);
       margin-top: 25px;
-      animation: blink-border 1.5s infinite;
+      animation: pulse-update 2.5s infinite;
     }
 
-    .info-title {
+    .update-title {
       font-size: 0.85rem;
       font-weight: 700;
-      color: var(--danger);
-      margin-bottom: 5px;
+      color: #856404;
+      margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 1px;
-    }
-
-    .info-link-container {
       display: flex;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 8px;
+      align-items: center;
+      gap: 6px;
     }
 
-    .info-url {
-      flex: 1;
-      padding: 8px 12px;
-      font-size: 0.85rem;
-      color: var(--primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-align: left;
-      font-weight: 500;
+    .update-desc {
+      font-size: 0.78rem;
+      color: #856404;
+      margin-bottom: 4px;
+      line-height: 1.6;
     }
 
-    .copy-btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: var(--transition);
-    }
-
-    .copy-btn:hover {
-      background: var(--primary-dark);
-    }
-
-    @keyframes blink-border {
-      0% { border-color: var(--danger); box-shadow: 0 0 0px rgba(247, 37, 133, 0); }
-      50% { border-color: var(--primary); box-shadow: 0 0 10px rgba(67, 97, 238, 0.2); }
-      100% { border-color: var(--danger); box-shadow: 0 0 0px rgba(247, 37, 133, 0); }
+    @keyframes pulse-update {
+      0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.5); }
+      70% { box-shadow: 0 0 0 8px rgba(255, 193, 7, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
     }
 
     .form-group {
@@ -435,6 +410,15 @@
     <h2>Presensi Pegawai</h2>
     <p class="subtitle">"KORWIL SINE"</p>
 
+    <div class="update-bar">
+      <div class="update-title"><i class="fas fa-info-circle"></i> HIMBAUAN</div>
+      <p class="update-desc">
+        Untuk mengakses aplikasi presensi versi terbaru, silahkan kunjungi:<br>
+        <a href="https://www.korwilsine.web.id" target="_blank" style="color:#5a3e00; font-weight:700; text-decoration:underline;">www.korwilsine.web.id</a><br>
+        pada bagian <strong>Aplikasi Presensi</strong>.
+      </p>
+    </div>
+
     <div id="timeAlertContainer" style="display: none;" class="time-alert">
       <h4><i class="fas fa-clock"></i> PERINGATAN WAKTU TIDAK SINKRON</h4>
       <div id="timeDetails" class="time-detail">Memeriksa waktu server...</div>
@@ -475,17 +459,6 @@
     <a href="https://www.yoriapp.site/cekpresensi" class="btn btn-primary" style="margin-top: 18px; text-decoration: none;">
       <i class="fas fa-clipboard-check"></i> CEK PRESENSI HARIAN
     </a>
-
-    <div class="info-bar">
-      <div class="info-title"><i class="fas fa-bullhorn"></i> E-MONITORING & PENGAJUAN PSW</div>
-      <p style="font-size: 0.75rem; color: #555;">Silahkan Salin / Ketik Link dibawah ini untuk melakukan monitoring dan pengajuan PSW:</p>
-      <div class="info-link-container">
-        <div class="info-url" id="newUrl">yoriapp.site/e-presensi</div>
-        <button class="copy-btn" id="copyUrlBtn" title="Salin Link">
-          <i class="fas fa-copy"></i>
-        </button>
-      </div>
-    </div>
 
     <div class="footer">© 2026 Sistem Presensi ASN Korwil</div>
   </div>
@@ -605,18 +578,7 @@
     const resetBtnText = document.getElementById('resetBtnText');
     const resetMessageEl = document.getElementById('resetMessage');
 
-    document.getElementById('copyUrlBtn').addEventListener('click', function() {
-      const textToCopy = document.getElementById('newUrl').innerText;
-      const dummy = document.createElement("textarea");
-      document.body.appendChild(dummy);
-      dummy.value = textToCopy;
-      dummy.select();
-      document.execCommand("copy");
-      document.body.removeChild(dummy);
-      const toast = document.getElementById("toast");
-      toast.className = "show";
-      setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
-    });
+
 
     // ---------- FITUR DETEKSI WAKTU DENGAN TOLERANSI 1 MENIT (60 detik) ----------
     const timeAlertContainer = document.getElementById('timeAlertContainer');
