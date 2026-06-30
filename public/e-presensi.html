@@ -163,32 +163,13 @@ const lembagaList = [
 
 
 const runGoogleScript = async (fn, ...args) => {
-  // Timeout 28dtk supaya request yang menggantung tidak membuat UI stuck selamanya
-  // (sebelumnya tidak ada timeout di sisi client, hanya mengandalkan proxy/GAS)
-  const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 28000);
-  let res;
-  try {
-    res = await fetch('/api/gas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: fn, args }),
-      signal: ctrl.signal
-    });
-  } catch (e) {
-    clearTimeout(timer);
-    if (e.name === 'AbortError') throw new Error('Waktu tunggu server habis (timeout). Coba lagi.');
-    throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
-  }
-  clearTimeout(timer);
+  const res = await fetch('/api/gas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: fn, args })
+  });
   if (!res.ok) throw new Error(`Server error: HTTP ${res.status}`);
-  let data;
-  try {
-    data = await res.json();
-  } catch (e) {
-    // Proxy/GAS mengembalikan respon non-JSON (mis. halaman error Google) — beri pesan jelas
-    throw new Error('Respon server tidak valid, kemungkinan server sedang sibuk. Coba lagi sebentar lagi.');
-  }
+  const data = await res.json();
   if (data && data.success === false && data.message) {
     throw new Error(data.message);
   }
@@ -3001,16 +2982,10 @@ const PengajuanPSW = ({ user, userLembaga, pegawaiData }) => {
 const App = () => {
   const [user,setUser]=useState(()=>{ try{ const s=sessionStorage.getItem('korwil_user'); return s?JSON.parse(s):null; }catch{return null;} });
   const [tab,setTab]=useState('dashboard');
-  // Hidrasi awal dari cache (sessionStorage) supaya data lama langsung tampil
-  // sambil fetch terbaru jalan di background — jika GAS sedang lambat/error,
-  // user tetap melihat data terakhir, bukan layar kosong/loading penuh.
-  const CACHE_KEY = 'korwil_data_cache_v1';
-  const readCache = () => { try{ const s=sessionStorage.getItem(CACHE_KEY); return s?JSON.parse(s):null; }catch{ return null; } };
-  const cached0 = readCache();
-  const [presensi,setPresensi]=useState(cached0?.presensi||[]), [ijin,setIjin]=useState(cached0?.ijin||[]), [pegawai,setPegawai]=useState(cached0?.pegawai||[]), [jadwal,setJadwal]=useState(cached0?.jadwal||[]), [lembagaData,setLembagaData]=useState(cached0?.lembagaData||[]);
+  const [presensi,setPresensi]=useState([]), [ijin,setIjin]=useState([]), [pegawai,setPegawai]=useState([]), [jadwal,setJadwal]=useState([]), [lembagaData,setLembagaData]=useState([]);
   const [load,setLoad]=useState(false), [sideOpen,setSideOpen]=useState(false);
   const [fetchDuration,setFetchDuration]=useState(null);  // ms
-  const [lastSync,setLastSync]=useState(cached0?.ts?new Date(cached0.ts):null);
+  const [lastSync,setLastSync]=useState(null);             // Date
 
   const fmtDuration = ms => {
     if(ms===null) return null;
@@ -3025,59 +3000,13 @@ const App = () => {
   const fetchData = async()=>{
     setLoad(true);
     const t0=Date.now();
-    // Jangan tembak 5 request ke /api/gas secara bersamaan — itu yang memicu
-    // GAS kewalahan (concurrent execution) sehingga sering balas HTML/error,
-    // bukan JSON. Pecah jadi 2 gelombang kecil + allSettled supaya satu
-    // bagian gagal tidak ikut mengosongkan bagian lain yang berhasil.
-    const gelombang1 = ['getPresensi','getIjin'];
-    const gelombang2 = ['getPegawai','getJadwalAcara','getLembaga'];
-    const setters = { getPresensi:setPresensi, getIjin:setIjin, getPegawai:setPegawai, getJadwalAcara:setJadwal, getLembaga:setLembagaData };
-    const hasil = {};
-    const gagal = [];
-
-    const jalankanGelombang = async (daftarAksi) => {
-      const settled = await Promise.allSettled(daftarAksi.map(a=>runGoogleScript(a)));
-      settled.forEach((r,i)=>{
-        const aksi = daftarAksi[i];
-        if (r.status==='fulfilled') {
-          hasil[aksi] = r.value||[];
-          setters[aksi](r.value||[]);
-        } else {
-          gagal.push(aksi);
-          console.error(`[fetchData] ${aksi} gagal:`, r.reason);
-        }
-      });
-    };
-
-    await jalankanGelombang(gelombang1);
-    await jalankanGelombang(gelombang2);
-
-    const dur=Date.now()-t0;
-    setFetchDuration(dur);
-
-    if (gagal.length === 0) {
+    try{
+      const [rP,rI,rPg,rJ,rL]=await Promise.all([runGoogleScript('getPresensi'),runGoogleScript('getIjin'),runGoogleScript('getPegawai'),runGoogleScript('getJadwalAcara'),runGoogleScript('getLembaga')]);
+      setPresensi(rP||[]); setIjin(rI||[]); setPegawai(rPg||[]); setJadwal(rJ||[]); setLembagaData(rL||[]);
+      const dur=Date.now()-t0;
+      setFetchDuration(dur);
       setLastSync(new Date());
-      // Simpan snapshot terbaru ke cache (gabungan hasil baru + yang sudah ada)
-      try {
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-          presensi: hasil.getPresensi ?? presensi,
-          ijin: hasil.getIjin ?? ijin,
-          pegawai: hasil.getPegawai ?? pegawai,
-          jadwal: hasil.getJadwalAcara ?? jadwal,
-          lembagaData: hasil.getLembaga ?? lembagaData,
-          ts: Date.now()
-        }));
-      } catch(e){}
-    } else if (Object.keys(hasil).length > 0) {
-      // Sukses sebagian: tetap update cache utk bagian yg berhasil, beri tahu user ringan (tidak blocking)
-      try {
-        const prevCache = readCache() || {};
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ...prevCache, ...hasil, ts: Date.now() }));
-      } catch(e){}
-      Swal.fire({toast:true,position:'top-end',icon:'warning',title:`Sebagian data gagal dimuat (${gagal.length}), data lain tetap tampil`,showConfirmButton:false,timer:3500});
-    } else {
-      Swal.fire({toast:true,position:'top-end',icon:'error',title:'Gagal memuat data, menampilkan data terakhir',showConfirmButton:false,timer:3500});
-    }
+    }catch(e){console.error(e);}
     setLoad(false);
   };
   useEffect(()=>{ if(user) fetchData(); },[user]);
