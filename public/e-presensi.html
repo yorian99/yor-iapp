@@ -162,18 +162,70 @@ const lembagaList = [
 ];
 
 
+const _gasDelay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Panggil action GAS via proxy Vercel.
+ * Otomatis retry hingga 3x jika terjadi error jaringan / server busy
+ * (mis. GAS sempat mengembalikan HTML alih-alih JSON karena overload).
+ * Error LOGIS dari GAS (validasi gagal, data tidak ditemukan, dsb)
+ * TIDAK di-retry — langsung dilempar sebagai exception seperti biasa.
+ *
+ * @param {string} fn   - Nama action GAS (misal: 'getPresensi')
+ * @param {...any} args - Argumen untuk action tersebut
+ * @returns {Promise<any>} Data hasil dari GAS
+ */
 const runGoogleScript = async (fn, ...args) => {
-  const res = await fetch('/api/gas', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: fn, args })
-  });
-  if (!res.ok) throw new Error(`Server error: HTTP ${res.status}`);
-  const data = await res.json();
-  if (data && data.success === false && data.message) {
-    throw new Error(data.message);
+  const MAX_RETRIES = 3;
+  const BACKOFF_MS = [0, 1500, 3000]; // delay sebelum retry ke-1, ke-2, ke-3
+
+  let lastErr = null;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 1) {
+      await _gasDelay(BACKOFF_MS[attempt - 1]);
+    }
+
+    try {
+      const res = await fetch('/api/gas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: fn, args }),
+      });
+
+      // HTTP 502/503/504 = proxy Vercel sudah retry ke GAS tapi tetap gagal
+      if (res.status === 502 || res.status === 503 || res.status === 504) {
+        const errData = await res.json().catch(() => ({}));
+        lastErr = new Error(errData.message || `Server error: HTTP ${res.status}`);
+        continue; // coba lagi dari sisi client
+      }
+
+      if (!res.ok) throw new Error(`Server error: HTTP ${res.status}`);
+
+      const data = await res.json();
+      if (data && data.success === false && data.message) {
+        throw new Error(data.message); // error logis — tidak perlu retry
+      }
+      return data; // sukses
+
+    } catch (err) {
+      // Hanya retry untuk error jaringan/server, bukan error logis dari GAS
+      const isNetworkish =
+        err.message &&
+        (err.message.startsWith('Server error') ||
+          err.message.includes('Failed to fetch') ||
+          err.message.includes('NetworkError') ||
+          err.message.includes('sedang sibuk') ||
+          err.message.includes('tidak merespons'));
+
+      if (!isNetworkish) throw err;
+
+      lastErr = err;
+      if (attempt === MAX_RETRIES) break;
+    }
   }
-  return data;
+
+  throw lastErr || new Error('Gagal menghubungi server. Periksa koneksi internet Anda.');
 };
 
 const extractFileId = (url) => {
