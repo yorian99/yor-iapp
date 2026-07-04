@@ -8,7 +8,7 @@
 // Kalau dipakai di XAMPP lokal, ganti kembali ke:
 //   DB_NAME = 'presensi_db', DB_USER = 'root', DB_PASS = 'k[01k[-yT0Z]rVgf'
 // Versi di bawah ini sudah disesuaikan untuk HOSTING (rumahweb/cPanel).
-define('DB_HOST', 'localhost');
+define('DB_HOST', 'https://manglayang.iixcp.rumahweb.net:2083/cpsess3015187768/3rdparty/phpMyAdmin/index.php?route=/database/structure&db=korh3495_presensi_db');
 define('DB_NAME', 'korh3495_presensi_db');
 define('DB_USER', 'korh3495_yori');
 define('DB_PASS', '@YorianJP94');
