@@ -1,0 +1,2 @@
+[2026-07-04 18:04:08] SUKSES: 1734 baris presensi "Tidak Hadir" berhasil ditambahkan.
+[2026-07-04 20:00:02] SUKSES: Tidak ada pegawai yang perlu ditandai Tidak Hadir (semua sudah punya rekaman presensi).
