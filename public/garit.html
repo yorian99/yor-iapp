@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pemuda Garit - Manajemen Keuangan</title>
+<link rel="icon" type="image/png" href="https://korwilkedunggalar.web.id/yori.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  body { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .sidebar-link.active { background:#1d4ed8; color:#fff; }
+</style>
+</head>
+<body class="bg-slate-50">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+// ============================================================
+// KONFIGURASI — ganti dengan URL Web App GAS Anda
+// ============================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbyTMsoed7_QElpM7kETpn2x9DybJDBcI8Y2WDyIWQWLPb3QIHhQC6NriRulWpTS4r3zbQ/exec";
+// CDN fallback pribadi (pola yang sudah dipakai di proyek lain)
+const CDN_FALLBACK = "https://cdn.jsdelivr.net/gh/yorian99/my-cdn@main/";
+
+function formatRupiah(n) {
+  return "Rp " + Number(n || 0).toLocaleString("id-ID");
+}
+function formatTanggal(d) {
+  if (!d) return "-";
+  return new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+}
+
+// ============================================================
+// API CLIENT
+// ============================================================
+async function callApi(action, payload = {}) {
+  const session = JSON.parse(localStorage.getItem("pg_session") || "null");
+  const body = Object.assign({ action, token: session?.token, username: session?.user?.username }, payload);
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body)
+    });
+    return await res.json();
+  } catch (err) {
+    return { success: false, message: "Gagal terhubung ke server: " + err.message };
+  }
+}
+
+// ============================================================
+// LOGIN PAGE
+// ============================================================
+function LoginPage({ onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const res = await callApi("login", { username, password });
+    setLoading(false);
+    if (res.success) {
+      localStorage.setItem("pg_session", JSON.stringify(res));
+      onLogin(res);
+    } else {
+      const pesan = {
+        USER_NOT_FOUND: "Username tidak ditemukan",
+        WRONG_PASSWORD: "Password salah",
+        NO_ACCESS: "Akun tidak aktif / tidak memiliki akses"
+      }[res.message] || res.message || "Login gagal";
+      Swal.fire({ icon: "error", title: "Gagal Masuk", text: pesan });
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-700 to-blue-900">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
+        <div className="flex justify-center mb-4">
+          <img src="https://korwilkedunggalar.web.id/yori.png" alt="Logo Pemuda Garit"
+            className="w-16 h-16 rounded-full object-cover shadow"
+            onError={(e) => { e.target.style.display = 'none'; }} />
+        </div>
+        <h1 className="text-2xl font-bold text-center text-slate-800">Pemuda Garit</h1>
+        <p className="text-center text-slate-500 mb-6 text-sm">Sistem Manajemen Keuangan</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm text-slate-600">Username</label>
+            <input value={username} onChange={e => setUsername(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+          </div>
+          <div>
+            <label className="text-sm text-slate-600">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              className="w-full mt-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+          </div>
+          <button disabled={loading} className="w-full bg-blue-700 text-white py-2 rounded-lg font-medium hover:bg-blue-800 disabled:opacity-50">
+            {loading ? "Memproses..." : "Masuk"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+const MENU = [
+  { key: "dashboard", label: "Dashboard", icon: "📊", roles: ["Admin","Bendahara","Ketua","Anggota"] },
+  { key: "anggota", label: "Data Anggota", icon: "👥", roles: ["Admin","Bendahara","Ketua"] },
+  { key: "kasmasuk", label: "Kas Masuk", icon: "⬇️", roles: ["Admin","Bendahara","Ketua"] },
+  { key: "kaskeluar", label: "Kas Keluar", icon: "⬆️", roles: ["Admin","Bendahara","Ketua"] },
+  { key: "kategori", label: "Kategori Transaksi", icon: "🏷️", roles: ["Admin","Bendahara"] },
+  { key: "anggaran", label: "Anggaran Kegiatan", icon: "🎯", roles: ["Admin","Bendahara","Ketua"] },
+  { key: "approval", label: "Persetujuan Pengeluaran", icon: "✅", roles: ["Admin","Ketua"] },
+  { key: "laporan", label: "Laporan Keuangan", icon: "📄", roles: ["Admin","Bendahara","Ketua","Anggota"] },
+  { key: "pengguna", label: "Pengguna", icon: "🔐", roles: ["Admin"] },
+];
+
+function Sidebar({ active, setActive, user, onLogout }) {
+  const items = MENU.filter(m => m.roles.includes(user.jabatan));
+  return (
+    <div className="w-64 bg-slate-900 text-slate-200 min-h-screen flex flex-col">
+      <div className="p-5 border-b border-slate-700 flex items-center gap-3">
+        <img src="https://korwilkedunggalar.web.id/yori.png" alt="Logo"
+          className="w-10 h-10 rounded-full object-cover"
+          onError={(e) => { e.target.style.display = 'none'; }} />
+        <div>
+          <h2 className="text-lg font-bold text-white leading-tight">Pemuda Garit</h2>
+          <p className="text-xs text-slate-400">{user.nama} · {user.jabatan}</p>
+        </div>
+      </div>
+      <nav className="flex-1 py-3">
+        {items.map(m => (
+          <div key={m.key} onClick={() => setActive(m.key)}
+            className={`sidebar-link flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-800 text-sm ${active === m.key ? "active" : ""}`}>
+            <span>{m.icon}</span><span>{m.label}</span>
+          </div>
+        ))}
+      </nav>
+      <div onClick={onLogout} className="p-4 border-t border-slate-700 text-sm cursor-pointer hover:bg-slate-800 text-red-300">
+        🚪 Keluar
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function Dashboard() {
+  const [data, setData] = useState(null);
+  const chartRef = React.useRef(null);
+  const chartInstance = React.useRef(null);
+
+  useEffect(() => {
+    callApi("getDashboard").then(res => { if (res.success) setData(res.data); });
+  }, []);
+
+  useEffect(() => {
+    if (!data || !chartRef.current) return;
+    if (chartInstance.current) chartInstance.current.destroy();
+    chartInstance.current = new Chart(chartRef.current, {
+      type: "bar",
+      data: {
+        labels: data.grafik.map(g => "Bln " + g.bulan),
+        datasets: [
+          { label: "Masuk", data: data.grafik.map(g => g.masuk), backgroundColor: "#2563eb" },
+          { label: "Keluar", data: data.grafik.map(g => g.keluar), backgroundColor: "#dc2626" }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+    });
+  }, [data]);
+
+  if (!data) return <div className="p-8">Memuat data...</div>;
+
+  const cards = [
+    { label: "Saldo Kas", value: data.saldo, color: "bg-blue-600" },
+    { label: "Total Pemasukan", value: data.totalMasuk, color: "bg-emerald-600" },
+    { label: "Total Pengeluaran", value: data.totalKeluar, color: "bg-rose-600" },
+    { label: "Menunggu Persetujuan", value: data.pendingApproval, color: "bg-amber-500", isCount: true }
+  ];
+
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {cards.map((c, i) => (
+          <div key={i} className={`${c.color} text-white rounded-xl p-5 shadow`}>
+            <p className="text-sm opacity-90">{c.label}</p>
+            <p className="text-2xl font-bold mt-1">{c.isCount ? c.value : formatRupiah(c.value)}</p>
+          </div>
+        ))}
+      </div>
+      <div className="bg-white rounded-xl p-5 shadow">
+        <h3 className="font-semibold mb-3 text-slate-700">Grafik Kas Tahun Ini</h3>
+        <canvas ref={chartRef} height="90"></canvas>
+      </div>
+      <div className="bg-white rounded-xl p-5 shadow">
+        <h3 className="font-semibold mb-3 text-slate-700">Aktivitas Terbaru</h3>
+        <ul className="text-sm divide-y">
+          {data.aktivitasTerbaru.map((log, i) => (
+            <li key={i} className="py-2 flex justify-between">
+              <span>{log.user} — {log.aksi} ({log.detail})</span>
+              <span className="text-slate-400">{formatTanggal(log.timestamp)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// TABEL GENERIK (dipakai untuk KasMasuk / KasKeluar / dll)
+// ============================================================
+function DataTable({ title, columns, rows, onAdd, addLabel, extraActions }) {
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
+        {onAdd && (
+          <button onClick={onAdd} className="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-800">
+            + {addLabel || "Tambah"}
+          </button>
+        )}
+      </div>
+      <div className="bg-white rounded-xl shadow overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-100 text-slate-600">
+            <tr>
+              {columns.map(c => <th key={c.key} className="text-left px-4 py-3">{c.label}</th>)}
+              {extraActions && <th className="px-4 py-3">Aksi</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {rows.map((r, i) => (
+              <tr key={i} className="hover:bg-slate-50">
+                {columns.map(c => (
+                  <td key={c.key} className="px-4 py-3">{c.render ? c.render(r) : r[c.key]}</td>
+                ))}
+                {extraActions && <td className="px-4 py-3">{extraActions(r)}</td>}
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr><td colSpan={columns.length + 1} className="text-center text-slate-400 py-6">Belum ada data</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// KAS MASUK
+// ============================================================
+function KasMasukPage({ user }) {
+  const [rows, setRows] = useState([]);
+  const [kategori, setKategori] = useState([]);
+
+  const load = () => callApi("getKasMasuk").then(r => r.success && setRows(r.data));
+  useEffect(() => {
+    load();
+    callApi("getKategori").then(r => r.success && setKategori(r.data.filter(k => k.tipe === "masuk")));
+  }, []);
+
+  const handleAdd = async () => {
+    const opsi = kategori.map(k => `<option value="${k.id}">${k.nama}</option>`).join("");
+    const { value: form } = await Swal.fire({
+      title: "Tambah Kas Masuk",
+      html: `
+        <input id="tanggal" type="date" class="swal2-input" placeholder="Tanggal">
+        <select id="kategori" class="swal2-input">${opsi}</select>
+        <input id="jumlah" type="number" class="swal2-input" placeholder="Jumlah (Rp)">
+        <input id="sumber" class="swal2-input" placeholder="Sumber (nama donatur/anggota)">
+        <input id="keterangan" class="swal2-input" placeholder="Keterangan">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      preConfirm: () => ({
+        tanggal: document.getElementById("tanggal").value,
+        kategori_id: document.getElementById("kategori").value,
+        jumlah: document.getElementById("jumlah").value,
+        sumber: document.getElementById("sumber").value,
+        keterangan: document.getElementById("keterangan").value
+      })
+    });
+    if (!form) return;
+    const res = await callApi("addKasMasuk", form);
+    if (res.success) { Swal.fire("Berhasil", "Data kas masuk ditambahkan", "success"); load(); }
+    else Swal.fire("Gagal", res.message, "error");
+  };
+
+  const columns = [
+    { key: "tanggal", label: "Tanggal", render: r => formatTanggal(r.tanggal) },
+    { key: "kategori_id", label: "Kategori", render: r => kategori.find(k => k.id === r.kategori_id)?.nama || r.kategori_id },
+    { key: "sumber", label: "Sumber" },
+    { key: "jumlah", label: "Jumlah", render: r => formatRupiah(r.jumlah) },
+    { key: "dicatat_oleh", label: "Dicatat Oleh" }
+  ];
+
+  return <DataTable title="Kas Masuk" columns={columns} rows={rows} onAdd={handleAdd} addLabel="Pemasukan" />;
+}
+
+// ============================================================
+// KAS KELUAR
+// ============================================================
+function KasKeluarPage({ user }) {
+  const [rows, setRows] = useState([]);
+  const [kategori, setKategori] = useState([]);
+
+  const load = () => callApi("getKasKeluar").then(r => r.success && setRows(r.data));
+  useEffect(() => {
+    load();
+    callApi("getKategori").then(r => r.success && setKategori(r.data.filter(k => k.tipe === "keluar")));
+  }, []);
+
+  const handleAdd = async () => {
+    const opsi = kategori.map(k => `<option value="${k.id}">${k.nama}</option>`).join("");
+    const { value: form } = await Swal.fire({
+      title: "Tambah Kas Keluar",
+      html: `
+        <input id="tanggal" type="date" class="swal2-input" placeholder="Tanggal">
+        <select id="kategori" class="swal2-input">${opsi}</select>
+        <input id="jumlah" type="number" class="swal2-input" placeholder="Jumlah (Rp)">
+        <input id="keterangan" class="swal2-input" placeholder="Keterangan">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      preConfirm: () => ({
+        tanggal: document.getElementById("tanggal").value,
+        kategori_id: document.getElementById("kategori").value,
+        jumlah: document.getElementById("jumlah").value,
+        keterangan: document.getElementById("keterangan").value
+      })
+    });
+    if (!form) return;
+    const res = await callApi("addKasKeluar", form);
+    if (res.success) {
+      Swal.fire("Berhasil", res.perluApproval ? "Menunggu persetujuan Ketua" : "Data kas keluar ditambahkan", "success");
+      load();
+    } else Swal.fire("Gagal", res.message, "error");
+  };
+
+  const badge = (status) => {
+    const map = { pending: "bg-amber-100 text-amber-700", disetujui: "bg-emerald-100 text-emerald-700", ditolak: "bg-rose-100 text-rose-700" };
+    return <span className={`px-2 py-1 rounded-full text-xs ${map[status]}`}>{status}</span>;
+  };
+
+  const columns = [
+    { key: "tanggal", label: "Tanggal", render: r => formatTanggal(r.tanggal) },
+    { key: "kategori_id", label: "Kategori", render: r => kategori.find(k => k.id === r.kategori_id)?.nama || r.kategori_id },
+    { key: "jumlah", label: "Jumlah", render: r => formatRupiah(r.jumlah) },
+    { key: "status_approval", label: "Status", render: r => badge(r.status_approval) },
+    { key: "dicatat_oleh", label: "Dicatat Oleh" }
+  ];
+
+  return <DataTable title="Kas Keluar" columns={columns} rows={rows} onAdd={handleAdd} addLabel="Pengeluaran" />;
+}
+
+// ============================================================
+// PERSETUJUAN PENGELUARAN
+// ============================================================
+function ApprovalPage() {
+  const [rows, setRows] = useState([]);
+  const load = () => callApi("getKasKeluar").then(r => r.success && setRows(r.data.filter(k => k.status_approval === "pending")));
+  useEffect(load, []);
+
+  const handleApprove = async (id, disetujui) => {
+    const res = await callApi("approveKasKeluar", { id, disetujui });
+    if (res.success) { Swal.fire("Berhasil", disetujui ? "Disetujui" : "Ditolak", "success"); load(); }
+  };
+
+  const columns = [
+    { key: "tanggal", label: "Tanggal", render: r => formatTanggal(r.tanggal) },
+    { key: "jumlah", label: "Jumlah", render: r => formatRupiah(r.jumlah) },
+    { key: "keterangan", label: "Keterangan" },
+    { key: "dicatat_oleh", label: "Diajukan Oleh" }
+  ];
+
+  return (
+    <DataTable
+      title="Persetujuan Pengeluaran"
+      columns={columns}
+      rows={rows}
+      extraActions={(r) => (
+        <div className="flex gap-2">
+          <button onClick={() => handleApprove(r.id, true)} className="text-emerald-600 hover:underline text-xs">Setujui</button>
+          <button onClick={() => handleApprove(r.id, false)} className="text-rose-600 hover:underline text-xs">Tolak</button>
+        </div>
+      )}
+    />
+  );
+}
+
+// ============================================================
+// LAPORAN KEUANGAN (dengan export PDF/Excel)
+// ============================================================
+function LaporanPage() {
+  const [data, setData] = useState(null);
+  const load = () => callApi("getLaporan", {}).then(r => r.success && setData(r.data));
+  useEffect(load, []);
+
+  const exportPDF = () => {
+    const doc = new window.jspdf.jsPDF();
+    doc.text("Laporan Keuangan - Pemuda Garit", 14, 15);
+    doc.autoTable({
+      startY: 22,
+      head: [["Tanggal", "Keterangan", "Jumlah"]],
+      body: [
+        ...data.kasMasuk.map(r => [formatTanggal(r.tanggal), "Masuk: " + r.keterangan, formatRupiah(r.jumlah)]),
+        ...data.kasKeluar.map(r => [formatTanggal(r.tanggal), "Keluar: " + r.keterangan, formatRupiah(r.jumlah)])
+      ]
+    });
+    doc.save("laporan-keuangan.pdf");
+  };
+
+  const exportExcel = () => {
+    const wsData = [
+      ["Tanggal", "Tipe", "Keterangan", "Jumlah"],
+      ...data.kasMasuk.map(r => [formatTanggal(r.tanggal), "Masuk", r.keterangan, r.jumlah]),
+      ...data.kasKeluar.map(r => [formatTanggal(r.tanggal), "Keluar", r.keterangan, r.jumlah])
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+    XLSX.writeFile(wb, "laporan-keuangan.xlsx");
+  };
+
+  if (!data) return <div className="p-8">Memuat laporan...</div>;
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-slate-800">Laporan Keuangan</h1>
+        <div className="flex gap-2">
+          <button onClick={exportPDF} className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm">Export PDF</button>
+          <button onClick={exportExcel} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm">Export Excel</button>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-xl shadow"><p className="text-sm text-slate-500">Total Masuk</p><p className="text-xl font-bold text-emerald-600">{formatRupiah(data.totalMasuk)}</p></div>
+        <div className="bg-white p-4 rounded-xl shadow"><p className="text-sm text-slate-500">Total Keluar</p><p className="text-xl font-bold text-rose-600">{formatRupiah(data.totalKeluar)}</p></div>
+        <div className="bg-white p-4 rounded-xl shadow"><p className="text-sm text-slate-500">Saldo</p><p className="text-xl font-bold text-blue-700">{formatRupiah(data.saldo)}</p></div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// HALAMAN SEDERHANA LAIN (Anggota, Kategori, Anggaran, Pengguna)
+// Kerangka dasar — sudah terhubung API, siap dikembangkan lebih detail
+// ============================================================
+function SimpleListPage({ title, getAction, addAction, fields }) {
+  const [rows, setRows] = useState([]);
+  const load = () => callApi(getAction).then(r => r.success && setRows(r.data));
+  useEffect(load, []);
+
+  const handleAdd = async () => {
+    const inputs = fields.map(f => `<input id="${f.key}" class="swal2-input" placeholder="${f.label}">`).join("");
+    const { value: form } = await Swal.fire({
+      title: "Tambah " + title,
+      html: inputs,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      preConfirm: () => {
+        const obj = {};
+        fields.forEach(f => (obj[f.key] = document.getElementById(f.key).value));
+        return obj;
+      }
+    });
+    if (!form) return;
+    const res = await callApi(addAction, form);
+    if (res.success) { Swal.fire("Berhasil", "Data ditambahkan", "success"); load(); }
+    else Swal.fire("Gagal", res.message, "error");
+  };
+
+  const columns = fields.map(f => ({ key: f.key, label: f.label }));
+  return <DataTable title={title} columns={columns} rows={rows} onAdd={handleAdd} />;
+}
+
+// ============================================================
+// APP UTAMA
+// ============================================================
+function App() {
+  const [session, setSession] = useState(() => JSON.parse(localStorage.getItem("pg_session") || "null"));
+  const [active, setActive] = useState("dashboard");
+
+  if (!session) return <LoginPage onLogin={setSession} />;
+
+  const handleLogout = () => {
+    localStorage.removeItem("pg_session");
+    setSession(null);
+  };
+
+  const pages = {
+    dashboard: <Dashboard />,
+    kasmasuk: <KasMasukPage user={session.user} />,
+    kaskeluar: <KasKeluarPage user={session.user} />,
+    approval: <ApprovalPage />,
+    laporan: <LaporanPage />,
+    kategori: <SimpleListPage title="Kategori" getAction="getKategori" addAction="addKategori"
+      fields={[{ key: "nama", label: "Nama Kategori" }, { key: "tipe", label: "Tipe (masuk/keluar)" }]} />,
+    anggota: <SimpleListPage title="Data Anggota" getAction="getAnggota" addAction="addAnggota"
+      fields={[{ key: "nama", label: "Nama" }, { key: "alamat", label: "Alamat" }, { key: "no_hp", label: "No. HP" }]} />,
+    anggaran: <SimpleListPage title="Anggaran Kegiatan" getAction="getAnggaran" addAction="addAnggaran"
+      fields={[{ key: "kegiatan_id", label: "ID Kegiatan" }, { key: "kategori_id", label: "ID Kategori" }, { key: "jumlah_anggaran", label: "Jumlah Anggaran" }, { key: "tahun", label: "Tahun" }]} />,
+    pengguna: <SimpleListPage title="Pengguna" getAction="getUsers" addAction="addUser"
+      fields={[{ key: "username", label: "Username" }, { key: "password", label: "Password" }, { key: "nama", label: "Nama" }, { key: "jabatan", label: "Jabatan" }]} />
+  };
+
+  return (
+    <div className="flex">
+      <Sidebar active={active} setActive={setActive} user={session.user} onLogout={handleLogout} />
+      <div className="flex-1">{pages[active]}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
