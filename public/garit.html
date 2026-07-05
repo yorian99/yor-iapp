@@ -16,7 +16,16 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   body { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .sidebar-link { transition: background-color .18s ease, color .18s ease, transform .12s ease; }
+  .sidebar-link:active { transform: scale(0.98); }
   .sidebar-link.active { background:#1d4ed8; color:#fff; }
+  .fade-in { animation: fadeIn .25s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .btn { transition: all .15s ease; }
+  .btn:active { transform: scale(0.97); }
+  table tbody tr { transition: background-color .12s ease; }
+  .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%); background-size: 400% 100%; animation: skeleton 1.4s ease infinite; }
+  @keyframes skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 </style>
 </head>
 <body class="bg-slate-50">
@@ -50,11 +59,21 @@ async function callApi(action, payload = {}) {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      redirect: "follow"
     });
-    return await res.json();
+    if (!res.ok) {
+      return { success: false, message: "Server merespons status " + res.status };
+    }
+    const json = await res.json();
+    // Jika sesi ditolak backend, paksa logout supaya tidak stuck di layar error
+    if (json && json.code === "AUTH_FAILED" && action !== "login") {
+      localStorage.removeItem("pg_session");
+      window.location.reload();
+    }
+    return json;
   } catch (err) {
-    return { success: false, message: "Gagal terhubung ke server: " + err.message };
+    return { success: false, message: "Gagal terhubung ke server. Periksa koneksi internet Anda. (" + err.message + ")" };
   }
 }
 
@@ -162,11 +181,15 @@ function Sidebar({ active, setActive, user, onLogout }) {
 // ============================================================
 function Dashboard() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
   const chartRef = React.useRef(null);
   const chartInstance = React.useRef(null);
 
   useEffect(() => {
-    callApi("getDashboard").then(res => { if (res.success) setData(res.data); });
+    callApi("getDashboard").then(res => {
+      if (res.success) setData(res.data);
+      else setError(res.message || "Gagal memuat dashboard");
+    });
   }, []);
 
   useEffect(() => {
@@ -185,7 +208,26 @@ function Dashboard() {
     });
   }, [data]);
 
-  if (!data) return <div className="p-8">Memuat data...</div>;
+  if (error) {
+    return (
+      <div className="p-6 fade-in">
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 text-sm">
+          Gagal memuat dashboard: {error}
+        </div>
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="skeleton h-8 w-40 rounded"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="skeleton h-24 rounded-xl"></div>)}
+        </div>
+        <div className="skeleton h-64 rounded-xl"></div>
+      </div>
+    );
+  }
 
   const cards = [
     { label: "Saldo Kas", value: data.saldo, color: "bg-blue-600" },
@@ -227,13 +269,13 @@ function Dashboard() {
 // ============================================================
 // TABEL GENERIK (dipakai untuk KasMasuk / KasKeluar / dll)
 // ============================================================
-function DataTable({ title, columns, rows, onAdd, addLabel, extraActions }) {
+function DataTable({ title, columns, rows, onAdd, addLabel, extraActions, loading }) {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-slate-800">{title}</h1>
         {onAdd && (
-          <button onClick={onAdd} className="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-800">
+          <button onClick={onAdd} className="btn bg-blue-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-800 shadow-sm hover:shadow">
             + {addLabel || "Tambah"}
           </button>
         )}
@@ -247,7 +289,13 @@ function DataTable({ title, columns, rows, onAdd, addLabel, extraActions }) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {rows.map((r, i) => (
+            {loading && Array.from({ length: 4 }).map((_, i) => (
+              <tr key={"sk" + i}>
+                {columns.map(c => <td key={c.key} className="px-4 py-3"><div className="skeleton h-4 rounded w-full"></div></td>)}
+                {extraActions && <td className="px-4 py-3"><div className="skeleton h-4 rounded w-16"></div></td>}
+              </tr>
+            ))}
+            {!loading && rows.map((r, i) => (
               <tr key={i} className="hover:bg-slate-50">
                 {columns.map(c => (
                   <td key={c.key} className="px-4 py-3">{c.render ? c.render(r) : r[c.key]}</td>
@@ -255,7 +303,7 @@ function DataTable({ title, columns, rows, onAdd, addLabel, extraActions }) {
                 {extraActions && <td className="px-4 py-3">{extraActions(r)}</td>}
               </tr>
             ))}
-            {rows.length === 0 && (
+            {!loading && rows.length === 0 && (
               <tr><td colSpan={columns.length + 1} className="text-center text-slate-400 py-6">Belum ada data</td></tr>
             )}
           </tbody>
@@ -271,39 +319,61 @@ function DataTable({ title, columns, rows, onAdd, addLabel, extraActions }) {
 function KasMasukPage({ user }) {
   const [rows, setRows] = useState([]);
   const [kategori, setKategori] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const load = () => callApi("getKasMasuk").then(r => r.success && setRows(r.data));
+  const load = () => {
+    setLoading(true);
+    callApi("getKasMasuk").then(r => {
+      if (r.success) setRows(r.data);
+      else Swal.fire("Gagal Memuat Data", r.message || "Terjadi kesalahan", "error");
+      setLoading(false);
+    });
+  };
   useEffect(() => {
     load();
-    callApi("getKategori").then(r => r.success && setKategori(r.data.filter(k => k.tipe === "masuk")));
+    callApi("getKategori").then(r => {
+      if (r.success) setKategori(r.data.filter(k => k.tipe === "masuk"));
+      else Swal.fire("Gagal Memuat Kategori", r.message || "Terjadi kesalahan", "error");
+    });
   }, []);
 
   const handleAdd = async () => {
+    if (kategori.length === 0) {
+      Swal.fire("Kategori Kosong", "Belum ada kategori pemasukan. Tambahkan dulu di menu Kategori Transaksi.", "warning");
+      return;
+    }
     const opsi = kategori.map(k => `<option value="${k.id}">${k.nama}</option>`).join("");
     const { value: form } = await Swal.fire({
       title: "Tambah Kas Masuk",
       html: `
         <input id="tanggal" type="date" class="swal2-input" placeholder="Tanggal">
         <select id="kategori" class="swal2-input">${opsi}</select>
-        <input id="jumlah" type="number" class="swal2-input" placeholder="Jumlah (Rp)">
+        <input id="jumlah" type="number" min="0" class="swal2-input" placeholder="Jumlah (Rp)">
         <input id="sumber" class="swal2-input" placeholder="Sumber (nama donatur/anggota)">
         <input id="keterangan" class="swal2-input" placeholder="Keterangan">
       `,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: "Simpan",
-      preConfirm: () => ({
-        tanggal: document.getElementById("tanggal").value,
-        kategori_id: document.getElementById("kategori").value,
-        jumlah: document.getElementById("jumlah").value,
-        sumber: document.getElementById("sumber").value,
-        keterangan: document.getElementById("keterangan").value
-      })
+      preConfirm: () => {
+        const tanggal = document.getElementById("tanggal").value;
+        const jumlah = document.getElementById("jumlah").value;
+        if (!tanggal) { Swal.showValidationMessage("Tanggal wajib diisi"); return false; }
+        if (!jumlah || Number(jumlah) <= 0) { Swal.showValidationMessage("Jumlah harus lebih dari 0"); return false; }
+        return {
+          tanggal,
+          kategori_id: document.getElementById("kategori").value,
+          jumlah,
+          sumber: document.getElementById("sumber").value,
+          keterangan: document.getElementById("keterangan").value
+        };
+      }
     });
     if (!form) return;
+    Swal.fire({ title: "Menyimpan...", didOpen: () => Swal.showLoading(), allowOutsideClick: false });
     const res = await callApi("addKasMasuk", form);
-    if (res.success) { Swal.fire("Berhasil", "Data kas masuk ditambahkan", "success"); load(); }
-    else Swal.fire("Gagal", res.message, "error");
+    if (res.success) { Swal.fire({ icon: "success", title: "Berhasil", text: "Data kas masuk ditambahkan", timer: 1500, showConfirmButton: false }); load(); }
+    else Swal.fire("Gagal", res.message || "Terjadi kesalahan pada server", "error");
   };
 
   const columns = [
@@ -314,7 +384,7 @@ function KasMasukPage({ user }) {
     { key: "dicatat_oleh", label: "Dicatat Oleh" }
   ];
 
-  return <DataTable title="Kas Masuk" columns={columns} rows={rows} onAdd={handleAdd} addLabel="Pemasukan" />;
+  return <DataTable title="Kas Masuk" columns={columns} rows={rows} onAdd={handleAdd} addLabel="Pemasukan" loading={loading} />;
 }
 
 // ============================================================
@@ -323,44 +393,66 @@ function KasMasukPage({ user }) {
 function KasKeluarPage({ user }) {
   const [rows, setRows] = useState([]);
   const [kategori, setKategori] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const load = () => callApi("getKasKeluar").then(r => r.success && setRows(r.data));
+  const load = () => {
+    setLoading(true);
+    callApi("getKasKeluar").then(r => {
+      if (r.success) setRows(r.data);
+      else Swal.fire("Gagal Memuat Data", r.message || "Terjadi kesalahan", "error");
+      setLoading(false);
+    });
+  };
   useEffect(() => {
     load();
-    callApi("getKategori").then(r => r.success && setKategori(r.data.filter(k => k.tipe === "keluar")));
+    callApi("getKategori").then(r => {
+      if (r.success) setKategori(r.data.filter(k => k.tipe === "keluar"));
+      else Swal.fire("Gagal Memuat Kategori", r.message || "Terjadi kesalahan", "error");
+    });
   }, []);
 
   const handleAdd = async () => {
+    if (kategori.length === 0) {
+      Swal.fire("Kategori Kosong", "Belum ada kategori pengeluaran. Tambahkan dulu di menu Kategori Transaksi.", "warning");
+      return;
+    }
     const opsi = kategori.map(k => `<option value="${k.id}">${k.nama}</option>`).join("");
     const { value: form } = await Swal.fire({
       title: "Tambah Kas Keluar",
       html: `
         <input id="tanggal" type="date" class="swal2-input" placeholder="Tanggal">
         <select id="kategori" class="swal2-input">${opsi}</select>
-        <input id="jumlah" type="number" class="swal2-input" placeholder="Jumlah (Rp)">
+        <input id="jumlah" type="number" min="0" class="swal2-input" placeholder="Jumlah (Rp)">
         <input id="keterangan" class="swal2-input" placeholder="Keterangan">
       `,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: "Simpan",
-      preConfirm: () => ({
-        tanggal: document.getElementById("tanggal").value,
-        kategori_id: document.getElementById("kategori").value,
-        jumlah: document.getElementById("jumlah").value,
-        keterangan: document.getElementById("keterangan").value
-      })
+      preConfirm: () => {
+        const tanggal = document.getElementById("tanggal").value;
+        const jumlah = document.getElementById("jumlah").value;
+        if (!tanggal) { Swal.showValidationMessage("Tanggal wajib diisi"); return false; }
+        if (!jumlah || Number(jumlah) <= 0) { Swal.showValidationMessage("Jumlah harus lebih dari 0"); return false; }
+        return {
+          tanggal,
+          kategori_id: document.getElementById("kategori").value,
+          jumlah,
+          keterangan: document.getElementById("keterangan").value
+        };
+      }
     });
     if (!form) return;
+    Swal.fire({ title: "Menyimpan...", didOpen: () => Swal.showLoading(), allowOutsideClick: false });
     const res = await callApi("addKasKeluar", form);
     if (res.success) {
-      Swal.fire("Berhasil", res.perluApproval ? "Menunggu persetujuan Ketua" : "Data kas keluar ditambahkan", "success");
+      Swal.fire({ icon: "success", title: "Berhasil", text: res.perluApproval ? "Menunggu persetujuan Ketua" : "Data kas keluar ditambahkan", timer: 1800, showConfirmButton: false });
       load();
-    } else Swal.fire("Gagal", res.message, "error");
+    } else Swal.fire("Gagal", res.message || "Terjadi kesalahan pada server", "error");
   };
 
   const badge = (status) => {
     const map = { pending: "bg-amber-100 text-amber-700", disetujui: "bg-emerald-100 text-emerald-700", ditolak: "bg-rose-100 text-rose-700" };
-    return <span className={`px-2 py-1 rounded-full text-xs ${map[status]}`}>{status}</span>;
+    return <span className={`px-2 py-1 rounded-full text-xs ${map[status] || "bg-slate-100 text-slate-600"}`}>{status}</span>;
   };
 
   const columns = [
@@ -371,7 +463,7 @@ function KasKeluarPage({ user }) {
     { key: "dicatat_oleh", label: "Dicatat Oleh" }
   ];
 
-  return <DataTable title="Kas Keluar" columns={columns} rows={rows} onAdd={handleAdd} addLabel="Pengeluaran" />;
+  return <DataTable title="Kas Keluar" columns={columns} rows={rows} onAdd={handleAdd} addLabel="Pengeluaran" loading={loading} />;
 }
 
 // ============================================================
@@ -379,12 +471,29 @@ function KasKeluarPage({ user }) {
 // ============================================================
 function ApprovalPage() {
   const [rows, setRows] = useState([]);
-  const load = () => callApi("getKasKeluar").then(r => r.success && setRows(r.data.filter(k => k.status_approval === "pending")));
+  const [loading, setLoading] = useState(true);
+  const load = () => {
+    setLoading(true);
+    callApi("getKasKeluar").then(r => {
+      if (r.success) setRows(r.data.filter(k => k.status_approval === "pending"));
+      else Swal.fire("Gagal Memuat", r.message || "Terjadi kesalahan", "error");
+      setLoading(false);
+    });
+  };
   useEffect(load, []);
 
   const handleApprove = async (id, disetujui) => {
+    const konfirmasi = await Swal.fire({
+      title: disetujui ? "Setujui pengeluaran ini?" : "Tolak pengeluaran ini?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Ya",
+      cancelButtonText: "Batal"
+    });
+    if (!konfirmasi.isConfirmed) return;
     const res = await callApi("approveKasKeluar", { id, disetujui });
-    if (res.success) { Swal.fire("Berhasil", disetujui ? "Disetujui" : "Ditolak", "success"); load(); }
+    if (res.success) { Swal.fire({ icon: "success", title: disetujui ? "Disetujui" : "Ditolak", timer: 1200, showConfirmButton: false }); load(); }
+    else Swal.fire("Gagal", res.message || "Terjadi kesalahan", "error");
   };
 
   const columns = [
@@ -399,10 +508,11 @@ function ApprovalPage() {
       title="Persetujuan Pengeluaran"
       columns={columns}
       rows={rows}
+      loading={loading}
       extraActions={(r) => (
         <div className="flex gap-2">
-          <button onClick={() => handleApprove(r.id, true)} className="text-emerald-600 hover:underline text-xs">Setujui</button>
-          <button onClick={() => handleApprove(r.id, false)} className="text-rose-600 hover:underline text-xs">Tolak</button>
+          <button onClick={() => handleApprove(r.id, true)} className="btn text-emerald-600 hover:underline text-xs">Setujui</button>
+          <button onClick={() => handleApprove(r.id, false)} className="btn text-rose-600 hover:underline text-xs">Tolak</button>
         </div>
       )}
     />
@@ -414,47 +524,105 @@ function ApprovalPage() {
 // ============================================================
 function LaporanPage() {
   const [data, setData] = useState(null);
-  const load = () => callApi("getLaporan", {}).then(r => r.success && setData(r.data));
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  const load = () => {
+    setLoading(true);
+    callApi("getLaporan", {}).then(r => {
+      if (r.success) setData(r.data);
+      else Swal.fire("Gagal Memuat Laporan", r.message || "Terjadi kesalahan", "error");
+      setLoading(false);
+    });
+  };
   useEffect(load, []);
 
   const exportPDF = () => {
-    const doc = new window.jspdf.jsPDF();
-    doc.text("Laporan Keuangan - Pemuda Garit", 14, 15);
-    doc.autoTable({
-      startY: 22,
-      head: [["Tanggal", "Keterangan", "Jumlah"]],
-      body: [
-        ...data.kasMasuk.map(r => [formatTanggal(r.tanggal), "Masuk: " + r.keterangan, formatRupiah(r.jumlah)]),
-        ...data.kasKeluar.map(r => [formatTanggal(r.tanggal), "Keluar: " + r.keterangan, formatRupiah(r.jumlah)])
-      ]
-    });
-    doc.save("laporan-keuangan.pdf");
+    if (!data || (data.kasMasuk.length === 0 && data.kasKeluar.length === 0)) {
+      Swal.fire("Tidak Ada Data", "Belum ada transaksi untuk diekspor.", "info");
+      return;
+    }
+    setExporting(true);
+    try {
+      const doc = new window.jspdf.jsPDF();
+      doc.setFontSize(14);
+      doc.text("Laporan Keuangan - Pemuda Garit", 14, 15);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text("Dicetak: " + new Date().toLocaleDateString("id-ID"), 14, 21);
+
+      const body = [
+        ...data.kasMasuk.map(r => [formatTanggal(r.tanggal), "Masuk", r.keterangan || "-", formatRupiah(r.jumlah)]),
+        ...data.kasKeluar.map(r => [formatTanggal(r.tanggal), "Keluar", r.keterangan || "-", formatRupiah(r.jumlah)])
+      ].sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+      doc.autoTable({
+        startY: 26,
+        head: [["Tanggal", "Tipe", "Keterangan", "Jumlah"]],
+        body,
+        headStyles: { fillColor: [29, 78, 216] },
+        styles: { fontSize: 9 }
+      });
+
+      const finalY = doc.lastAutoTable.finalY || 26;
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text("Total Masuk: " + formatRupiah(data.totalMasuk), 14, finalY + 10);
+      doc.text("Total Keluar: " + formatRupiah(data.totalKeluar), 14, finalY + 17);
+      doc.text("Saldo Akhir: " + formatRupiah(data.saldo), 14, finalY + 24);
+
+      doc.save("laporan-keuangan-" + new Date().toISOString().slice(0, 10) + ".pdf");
+    } catch (err) {
+      Swal.fire("Gagal Export PDF", err.message, "error");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const exportExcel = () => {
-    const wsData = [
-      ["Tanggal", "Tipe", "Keterangan", "Jumlah"],
-      ...data.kasMasuk.map(r => [formatTanggal(r.tanggal), "Masuk", r.keterangan, r.jumlah]),
-      ...data.kasKeluar.map(r => [formatTanggal(r.tanggal), "Keluar", r.keterangan, r.jumlah])
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-    XLSX.writeFile(wb, "laporan-keuangan.xlsx");
+    if (!data || (data.kasMasuk.length === 0 && data.kasKeluar.length === 0)) {
+      Swal.fire("Tidak Ada Data", "Belum ada transaksi untuk diekspor.", "info");
+      return;
+    }
+    try {
+      const wsData = [
+        ["Tanggal", "Tipe", "Keterangan", "Jumlah"],
+        ...data.kasMasuk.map(r => [formatTanggal(r.tanggal), "Masuk", r.keterangan || "-", r.jumlah]),
+        ...data.kasKeluar.map(r => [formatTanggal(r.tanggal), "Keluar", r.keterangan || "-", r.jumlah])
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+      XLSX.writeFile(wb, "laporan-keuangan-" + new Date().toISOString().slice(0, 10) + ".xlsx");
+    } catch (err) {
+      Swal.fire("Gagal Export Excel", err.message, "error");
+    }
   };
 
-  if (!data) return <div className="p-8">Memuat laporan...</div>;
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="skeleton h-8 w-64 rounded"></div>
+        <div className="grid grid-cols-3 gap-4">
+          {[1,2,3].map(i => <div key={i} className="skeleton h-20 rounded-xl"></div>)}
+        </div>
+      </div>
+    );
+  }
+  if (!data) return <div className="p-8 text-slate-400">Data tidak tersedia.</div>;
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-slate-800">Laporan Keuangan</h1>
         <div className="flex gap-2">
-          <button onClick={exportPDF} className="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm">Export PDF</button>
-          <button onClick={exportExcel} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm">Export Excel</button>
+          <button onClick={exportPDF} disabled={exporting} className="btn bg-rose-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-rose-700 disabled:opacity-50 shadow-sm">
+            {exporting ? "Membuat PDF..." : "Export PDF"}
+          </button>
+          <button onClick={exportExcel} className="btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-emerald-700 shadow-sm">Export Excel</button>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-xl shadow"><p className="text-sm text-slate-500">Total Masuk</p><p className="text-xl font-bold text-emerald-600">{formatRupiah(data.totalMasuk)}</p></div>
         <div className="bg-white p-4 rounded-xl shadow"><p className="text-sm text-slate-500">Total Keluar</p><p className="text-xl font-bold text-rose-600">{formatRupiah(data.totalKeluar)}</p></div>
         <div className="bg-white p-4 rounded-xl shadow"><p className="text-sm text-slate-500">Saldo</p><p className="text-xl font-bold text-blue-700">{formatRupiah(data.saldo)}</p></div>
@@ -469,11 +637,26 @@ function LaporanPage() {
 // ============================================================
 function SimpleListPage({ title, getAction, addAction, fields }) {
   const [rows, setRows] = useState([]);
-  const load = () => callApi(getAction).then(r => r.success && setRows(r.data));
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    callApi(getAction).then(r => {
+      if (r.success) setRows(r.data);
+      else if (r.message) Swal.fire("Gagal Memuat", r.message, "error");
+      setLoading(false);
+    });
+  };
   useEffect(load, []);
 
   const handleAdd = async () => {
-    const inputs = fields.map(f => `<input id="${f.key}" class="swal2-input" placeholder="${f.label}">`).join("");
+    const inputs = fields.map(f => {
+      if (f.type === "select") {
+        const opts = f.options.map(o => `<option value="${o.v}">${o.l}</option>`).join("");
+        return `<select id="${f.key}" class="swal2-input">${opts}</select>`;
+      }
+      return `<input id="${f.key}" class="swal2-input" placeholder="${f.label}">`;
+    }).join("");
     const { value: form } = await Swal.fire({
       title: "Tambah " + title,
       html: inputs,
@@ -488,12 +671,12 @@ function SimpleListPage({ title, getAction, addAction, fields }) {
     });
     if (!form) return;
     const res = await callApi(addAction, form);
-    if (res.success) { Swal.fire("Berhasil", "Data ditambahkan", "success"); load(); }
-    else Swal.fire("Gagal", res.message, "error");
+    if (res.success) { Swal.fire({ icon: "success", title: "Berhasil", text: "Data ditambahkan", timer: 1500, showConfirmButton: false }); load(); }
+    else Swal.fire("Gagal", res.message || "Terjadi kesalahan", "error");
   };
 
   const columns = fields.map(f => ({ key: f.key, label: f.label }));
-  return <DataTable title={title} columns={columns} rows={rows} onAdd={handleAdd} />;
+  return <DataTable title={title} columns={columns} rows={rows} onAdd={handleAdd} loading={loading} />;
 }
 
 // ============================================================
@@ -502,6 +685,31 @@ function SimpleListPage({ title, getAction, addAction, fields }) {
 function App() {
   const [session, setSession] = useState(() => JSON.parse(localStorage.getItem("pg_session") || "null"));
   const [active, setActive] = useState("dashboard");
+  const [checking, setChecking] = useState(true);
+
+  // Validasi sesi ke server saat pertama kali dimuat / reload,
+  // supaya token yang sudah tidak valid (user dinonaktifkan dll) tidak nyangkut.
+  useEffect(() => {
+    if (!session) { setChecking(false); return; }
+    callApi("getDashboard").then(res => {
+      if (res.success === false && res.code === "AUTH_FAILED") {
+        localStorage.removeItem("pg_session");
+        setSession(null);
+      }
+      setChecking(false);
+    });
+  }, []);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3 fade-in">
+          <img src="https://korwilkedunggalar.web.id/yori.png" className="w-12 h-12 rounded-full" onError={(e) => { e.target.style.display = 'none'; }} />
+          <p className="text-slate-400 text-sm">Memuat sesi...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!session) return <LoginPage onLogin={setSession} />;
 
@@ -517,19 +725,19 @@ function App() {
     approval: <ApprovalPage />,
     laporan: <LaporanPage />,
     kategori: <SimpleListPage title="Kategori" getAction="getKategori" addAction="addKategori"
-      fields={[{ key: "nama", label: "Nama Kategori" }, { key: "tipe", label: "Tipe (masuk/keluar)" }]} />,
+      fields={[{ key: "nama", label: "Nama Kategori" }, { key: "tipe", label: "Tipe", type: "select", options: [{v:"masuk",l:"Masuk"},{v:"keluar",l:"Keluar"}] }]} />,
     anggota: <SimpleListPage title="Data Anggota" getAction="getAnggota" addAction="addAnggota"
       fields={[{ key: "nama", label: "Nama" }, { key: "alamat", label: "Alamat" }, { key: "no_hp", label: "No. HP" }]} />,
     anggaran: <SimpleListPage title="Anggaran Kegiatan" getAction="getAnggaran" addAction="addAnggaran"
       fields={[{ key: "kegiatan_id", label: "ID Kegiatan" }, { key: "kategori_id", label: "ID Kategori" }, { key: "jumlah_anggaran", label: "Jumlah Anggaran" }, { key: "tahun", label: "Tahun" }]} />,
     pengguna: <SimpleListPage title="Pengguna" getAction="getUsers" addAction="addUser"
-      fields={[{ key: "username", label: "Username" }, { key: "password", label: "Password" }, { key: "nama", label: "Nama" }, { key: "jabatan", label: "Jabatan" }]} />
+      fields={[{ key: "username", label: "Username" }, { key: "password", label: "Password" }, { key: "nama", label: "Nama" }, { key: "jabatan", label: "Jabatan", type: "select", options: [{v:"Admin",l:"Admin"},{v:"Bendahara",l:"Bendahara"},{v:"Ketua",l:"Ketua"},{v:"Anggota",l:"Anggota"}] }]} />
   };
 
   return (
     <div className="flex">
       <Sidebar active={active} setActive={setActive} user={session.user} onLogout={handleLogout} />
-      <div className="flex-1">{pages[active]}</div>
+      <div key={active} className="flex-1 fade-in">{pages[active]}</div>
     </div>
   );
 }
